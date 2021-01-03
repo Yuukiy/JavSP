@@ -6,5 +6,11 @@ def test_fc2():
     assert 'FC2-123456' == get_id('(2017) [FC2-123456] 【個人撮影】')
     assert 'FC2-123456' == get_id('fc2-ppv-123456-1.delogo.mp4')
     assert 'FC2-123456' == get_id('FC2-PPV-123456.mp4')
-    assert 'FC2-123456' == get_id('FC2PPV-123456 Riku')
+    assert 'FC2-123456' == get_id('FC2PPV-123456 Yuukiy')
     assert 'FC2-1234567' == get_id('fc2-ppv_1234567-2.mp4')
+
+
+def test_normal():
+    assert 'ABC-12' == get_id('ABC-12_01.mkv')
+    assert 'ABC-123' == get_id('Sky Angel Vol.6 月丘うさぎ(ABC-123).avi')
+    assert 'ABCD-123' == get_id('ABCD-123.mp4')
