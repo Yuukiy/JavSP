@@ -1,7 +1,6 @@
 """获取各个网站的免代理地址"""
 import re
 import sys
-import lxml.html
 
 sys.path.append('../')
 from web.base import get_html, is_connectable
@@ -24,29 +23,26 @@ def get_proxy_free_url(site_name: str) -> str:
 
 def _choose_one(urls) -> str:
     for url in urls:
-        if is_connectable(url):
+        if is_connectable(url, timeout=5):
             return url
     return ''
 
 
 def _get_avsox_urls() -> list:
-    resp = get_html('https://tellme.pw/avsox')
-    html = lxml.html.fromstring(resp)
+    html = get_html('https://tellme.pw/avsox')
     urls = html.xpath('//h4/strong/a/@href')
     return urls
 
 
 def _get_javbus_urls() -> list:
-    resp = get_html('https://www.javbus.one/')
-    html = lxml.html.fromstring(resp)
+    html = get_html('https://www.javbus.one/')
     text = html.text_content()
     urls = re.findall(r'防屏蔽地址：(https://(?:[\d\w][-\d\w]{1,61}[\d\w]\.){1,2}[a-z]{2,})', text, re.I | re.A)
     return urls
 
 
 def _get_javlib_urls() -> list:
-    resp = get_html('https://www.ebay.com/usr/javlibrary')
-    html = lxml.html.fromstring(resp)
+    html = get_html('https://www.ebay.com/usr/javlibrary')
     text = html.xpath('//h2[@class="bio inline_value"]')[0].text_content()
     match = re.search(r'[\w\.]+', text, re.A)
     if match:
@@ -55,8 +51,7 @@ def _get_javlib_urls() -> list:
 
 
 def _get_javdb_urls() -> list:
-    resp = get_html('https://lynnconway.me/javdbnews')
-    html = lxml.html.fromstring(resp)
+    html = get_html('https://lynnconway.me/javdbnews')
     text = html.xpath('//p[@class="text3"]')[0].text_content()
     urls = [i.strip() for i in text.split('/')]
     return urls
