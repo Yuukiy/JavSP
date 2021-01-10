@@ -18,7 +18,7 @@ def parse_data(movie: Movie):
     title = container.xpath("h3/text()")[0]
     cover = container.xpath("//a[@class='bigImage']/img/@src")
     # avatar = container.xpath("//div[@class='star-name']/../a/img/@src")
-    sample_pics = container.xpath("div[@id='sample-waterfall']/a/div/img/@src")
+    preview_pics = container.xpath("div[@id='sample-waterfall']/a/div/img/@src")
     info = container.xpath("//div[@class='col-md-3 info']")[0]
     dvdid = info.xpath("p/span[text()='識別碼:']")[0].getnext().text
     date_str = info.xpath("p/span[text()='發行日期:']")[0].tail.strip()
@@ -33,7 +33,7 @@ def parse_data(movie: Movie):
     # 整理数据并更新movie的相应属性
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
-    movie.sample_pics = sample_pics
+    movie.preview_pics = preview_pics
     movie.publish_date = date.fromisoformat(date_str)
     movie.duration = duration
     movie.director = director

@@ -6,17 +6,17 @@ import lxml.html
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
 
-def get_html_text(url):
+def get_html_text(url, encoding=None):
     """获取指定网页的原始html文本"""
     r = requests.get(url, headers=headers)
     r.raise_for_status()
-    r.encoding = r.apparent_encoding
+    r.encoding = encoding if encoding else r.apparent_encoding
     return r.text
 
 
-def get_html(url):
+def get_html(url, encoding=None):
     """获取指定网页经lxml解析后的document"""
-    text = get_html_text(url)
+    text = get_html_text(url, encoding=encoding)
     html = lxml.html.fromstring(text)
     return html
 
