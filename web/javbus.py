@@ -45,6 +45,6 @@ def parse_data(movie: Movie):
 
 
 if __name__ == "__main__":
-    movie = Movie('ipx-177')
+    movie = Movie('IPX-177')
     parse_data(movie)
-    pass
+    print(movie)
