@@ -1,10 +1,12 @@
 """定义数据类型"""
+import os
 import json
 from datetime import date
 
 
 class Movie:
-    def __init__(self, dvdid: str, *, cid=None, pid=None):
+    def __init__(self, dvdid=None, *, cid=None, pid=None, from_file=None):
+        # 创建类的默认属性
         self.dvdid = dvdid          # DVD ID，即通常的番号
         self.cid = cid              # DMM Content ID
         self.pid = pid              # DMM Product ID
@@ -22,6 +24,14 @@ class Movie:
         self.publish_date = None    # 发布日期
         self.preview_pics = None    # 预览图片
         self.preview_video = None   # 预览视频
+
+        if from_file:
+            if os.path.isfile(from_file):
+                self.load(from_file)
+            else:
+                raise TypeError('A valid file path is required')
+        else:
+            raise TypeError("Require argument 'dvdid' or 'from_file'")
 
     def __str__(self) -> str:
         d = vars(self)
