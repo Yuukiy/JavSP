@@ -8,7 +8,7 @@ class Movie:
         self.pid = pid              # DMM Product ID
         self.cover = None           # 封面图片
         self.genre = None           # 影片分类的标签
-        self.score = None           # 评分（目前为5分制）
+        self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
         self.magnet = None          # 磁力链接
         self.actress = None         # 出演女优

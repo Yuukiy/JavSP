@@ -48,7 +48,7 @@ def parse_data(movie: Movie):
     movie.director = director
     movie.producer = producer
     movie.publisher = publisher
-    movie.score = score
+    movie.score = "{:.2f}".format(float(score)*2)
     movie.genre = genre
     movie.actress = actress
     movie.magnet = magnet
