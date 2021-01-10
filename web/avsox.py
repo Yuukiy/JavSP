@@ -46,4 +46,4 @@ def parse_data(movie: Movie):
 if __name__ == "__main__":
     movie = Movie('082713-417')
     parse_data(movie)
-    pass
+    print(movie)
