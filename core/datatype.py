@@ -5,7 +5,12 @@ from datetime import date
 
 
 class Movie:
-    def __init__(self, dvdid=None, *, cid=None, pid=None, from_file=None):
+    def __init__(self, dvdid=None, /, *, cid=None, pid=None, from_file=None):
+        """
+        Args:
+            dvdid ([str], optional): 番号，要通过其他方式创建实例时此参数应留空
+            from_file: 从指定的文件(json格式)中加载数据来创建实例
+        """
         # 创建类的默认属性
         self.dvdid = dvdid          # DVD ID，即通常的番号
         self.cid = cid              # DMM Content ID
@@ -25,13 +30,14 @@ class Movie:
         self.preview_pics = None    # 预览图片
         self.preview_video = None   # 预览视频
 
-        if from_file:
-            if os.path.isfile(from_file):
-                self.load(from_file)
+        if not dvdid:
+            if from_file:
+                if os.path.isfile(from_file):
+                    self.load(from_file)
+                else:
+                    raise TypeError('A valid file path is required')
             else:
-                raise TypeError('A valid file path is required')
-        else:
-            raise TypeError("Require argument 'dvdid' or 'from_file'")
+                raise TypeError("Require additional keyword parameter when 'dvdid' is left blank")
 
     def __str__(self) -> str:
         d = vars(self)
