@@ -1,8 +1,9 @@
 """从JavLibrary抓取数据"""
+import os
 import sys
 from datetime import date
 
-sys.path.append('../') 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
 from core.datatype import Movie
 
