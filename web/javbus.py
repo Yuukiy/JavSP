@@ -17,15 +17,19 @@ def parse_data(movie: Movie):
     container = html.xpath("/html/body/div[@class='container']")[0]
     title = container.xpath("h3/text()")[0]
     cover = container.xpath("//a[@class='bigImage']/img/@src")
-    # avatar = container.xpath("//div[@class='star-name']/../a/img/@src")
     preview_pics = container.xpath("div[@id='sample-waterfall']/a/div/img/@src")
     info = container.xpath("//div[@class='col-md-3 info']")[0]
     dvdid = info.xpath("p/span[text()='識別碼:']")[0].getnext().text
     date_str = info.xpath("p/span[text()='發行日期:']")[0].tail.strip()
     duration = info.xpath("p/span[text()='長度:']")[0].tail.replace('分鐘', '').strip()
-    director = info.xpath("p/span[text()='導演:']")[0].getnext().text.strip()
+    director_tag = info.xpath("p/span[text()='導演:']")
+    if director_tag:    # xpath没有匹配时将得到空列表
+        movie.director = director_tag[0].getnext().text.strip()
     producer = info.xpath("p/span[text()='製作商:']")[0].getnext().text.strip()
     publisher = info.xpath("p/span[text()='發行商:']")[0].getnext().text.strip()
+    serial_tag = info.xpath("p/span[text()='系列:']")
+    if serial_tag:
+        movie.serial = serial_tag[0].getnext().text
     genre_tags = info.xpath("p[text()='類別:']")[0].getnext().xpath("span/a")
     actress = info.xpath("//div[@class='star-name']/a/@title")
     magnet = html.xpath("//table[@id='magnet-table']/tr/td[1]/a/@href")
@@ -36,7 +40,6 @@ def parse_data(movie: Movie):
     movie.preview_pics = preview_pics
     movie.publish_date = date.fromisoformat(date_str)
     movie.duration = duration
-    movie.director = director
     movie.producer = producer
     movie.publisher = publisher
     movie.genre = genre

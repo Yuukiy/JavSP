@@ -20,7 +20,7 @@ class Movie:
         self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
         self.magnet = None          # 磁力链接
-        self.serial = None          # 系列（目前仅avsox使用了该字段）
+        self.serial = None          # 系列
         self.actress = None         # 出演女优
         self.director = None        # 导演
         self.duration = None        # 影片时长
