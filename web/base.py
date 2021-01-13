@@ -27,7 +27,7 @@ def is_connectable(url, timeout=3):
         r = requests.get(url, headers=headers, timeout=timeout)
         r.raise_for_status()
         return True
-    except:
+    except requests.exceptions.RequestException:
         return False
 
 

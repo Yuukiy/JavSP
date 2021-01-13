@@ -53,7 +53,8 @@ def _get_javlib_urls() -> list:
 def _get_javdb_urls() -> list:
     html = get_html('https://lynnconway.me/javdbnews')
     text = html.xpath('//p[@class="text3"]')[0].text_content()
-    urls = [i.strip() for i in text.split('/')]
+    domains = [i.strip() for i in text.split('/')]
+    urls = [i if i.startswith('http') else ('https://' + i) for i in domains]
     return urls
 
 
