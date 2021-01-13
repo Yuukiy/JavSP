@@ -26,18 +26,26 @@ def parse_data(movie: Movie):
     info = container.xpath("div/div/div/nav")[0]
     title = container.xpath("h2/strong/text()")[0]
     cover = container.xpath("//img[@class='video-cover']/@src")[0]
-    preview_pics = container.xpath("//a[@class='tile-item'][@data-fancybox='gallery']")
+    preview_pics = container.xpath("//a[@class='tile-item'][@data-fancybox='gallery']/@href")
     preview_video = container.xpath("//video[@id='preview-video']/source/@src")
     dvdid = info.xpath("div/span")[0].text_content()
     date_str = info.xpath("div/strong[text()='日期:']")[0].getnext().text
     duration = info.xpath("div/strong[text()='時長:']")[0].getnext().text.replace('分鍾', '').strip()
-    director = info.xpath("div/strong[text()='導演:']")[0].getnext().text_content().strip()
+    director_tag = info.xpath("div/strong[text()='導演:']")
+    if director_tag:
+        movie.director = director_tag[0].getnext().text_content().strip()
     producer = info.xpath("div/strong[text()='片商:']")[0].getnext().text_content().strip()
     publisher = info.xpath("div/strong[text()='發行:']")[0].getnext().text_content().strip()
-    score_str = info.xpath("//span[@class='score-stars']")[0].tail
+    serial_tag = info.xpath("div/strong[text()='系列:']")
+    if serial_tag:
+        movie.serial = serial_tag[0].getnext().text
+    score_tag = info.xpath("//span[@class='score-stars']")
+    if score_tag:
+        score_str = score_tag[0].tail
+        score = re.search(r'([\d.]+)分', score_str).group(1)
+        movie.score = "{:.2f}".format(float(score)*2)
     genre = info.xpath("//strong[text()='類別:']/../span/a/text()")
     actress = info.xpath("//strong[text()='演員:']/../span/a/text()")
-    score = re.search(r'([\d.]+)分', score_str).group(1)
     magnet = container.xpath("//td[@class='magnet-name']/a/@href")
 
     movie.title = title.replace(dvdid, '').strip()
@@ -46,13 +54,11 @@ def parse_data(movie: Movie):
     movie.preview_video = preview_video
     movie.publish_date = date.fromisoformat(date_str)
     movie.duration = duration
-    movie.director = director
     movie.producer = producer
     movie.publisher = publisher
-    movie.score = "{:.2f}".format(float(score)*2)
     movie.genre = genre
     movie.actress = actress
-    movie.magnet = magnet
+    movie.magnet = [i.replace('[javdb.com]','') for i in magnet]
 
 
 if __name__ == "__main__":
