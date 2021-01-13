@@ -17,8 +17,8 @@ def parse_data(movie: Movie):
     html = get_html(f'{base_url}/{movie.dvdid}')
     container = html.xpath("/html/body/div[@class='container']")[0]
     title = container.xpath("h3/text()")[0]
-    cover = container.xpath("//a[@class='bigImage']/img/@src")
-    preview_pics = container.xpath("div[@id='sample-waterfall']/a/div/img/@src")
+    cover = container.xpath("//a[@class='bigImage']/img/@src")[0]
+    preview_pics = container.xpath("//div[@id='sample-waterfall']/a/@href")
     info = container.xpath("//div[@class='col-md-3 info']")[0]
     dvdid = info.xpath("p/span[text()='識別碼:']")[0].getnext().text
     date_str = info.xpath("p/span[text()='發行日期:']")[0].tail.strip()

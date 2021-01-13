@@ -27,7 +27,12 @@ def parse_data(movie: Movie):
     title = container.xpath("h2/strong/text()")[0]
     cover = container.xpath("//img[@class='video-cover']/@src")[0]
     preview_pics = container.xpath("//a[@class='tile-item'][@data-fancybox='gallery']/@href")
-    preview_video = container.xpath("//video[@id='preview-video']/source/@src")
+    preview_video_tag = container.xpath("//video[@id='preview-video']/source/@src")
+    if preview_video_tag:
+        preview_video = preview_video_tag[0]
+        if preview_video.startswith('//'):
+            preview_video = 'https:' + preview_video
+        movie.preview_video = preview_video
     dvdid = info.xpath("div/span")[0].text_content()
     date_str = info.xpath("div/strong[text()='日期:']")[0].getnext().text
     duration = info.xpath("div/strong[text()='時長:']")[0].getnext().text.replace('分鍾', '').strip()
@@ -51,7 +56,6 @@ def parse_data(movie: Movie):
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.preview_pics = preview_pics
-    movie.preview_video = preview_video
     movie.publish_date = date.fromisoformat(date_str)
     movie.duration = duration
     movie.producer = producer

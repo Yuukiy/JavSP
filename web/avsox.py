@@ -28,9 +28,12 @@ def parse_data(movie: Movie):
     dvdid = info.xpath("p/span[@style]/text()")[0]
     date_str = info.xpath("p/span[text()='发行时间:']")[0].tail.strip()
     duration = info.xpath("p/span[text()='长度:']")[0].tail.replace('分钟', '').strip()
-    producer_tags = info.xpath("p[text()='制作商: ']")[0].getnext().xpath("a")
-    producer = [i.text_content() for i in producer_tags]
-    serial = info.xpath("p[text()='系列:']")[0].getnext().xpath("a/text()")
+    producer_tag = info.xpath("p[text()='制作商: ']")[0].getnext().xpath("a")
+    if producer_tag:
+        movie.producer = producer_tag[0].text_content()
+    serial_tag = info.xpath("p[text()='系列:']")[0].getnext().xpath("a/text()")
+    if serial_tag:
+        movie.serial = serial_tag[0]
     genre = info.xpath("p/span[@class='genre']/a/text()")
     actress = container.xpath("//a[@class='avatar-box']/span/text()")
 
@@ -38,8 +41,6 @@ def parse_data(movie: Movie):
     movie.cover = cover
     movie.publish_date = date.fromisoformat(date_str)
     movie.duration = duration
-    movie.producer = producer
-    movie.serial = serial
     movie.genre = genre
     movie.actress = actress
 
