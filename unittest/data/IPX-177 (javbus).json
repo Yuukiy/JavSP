@@ -2,9 +2,7 @@
   "dvdid": "IPX-177",
   "cid": null,
   "pid": null,
-  "cover": [
-    "https://pics.javcdn.pw/cover/6n54_b.jpg"
-  ],
+  "cover": "https://pics.javcdn.pw/cover/6n54_b.jpg",
   "genre": [
     "單體作品",
     "DMM獨家",
@@ -28,18 +26,18 @@
   "publisher": "ティッシュ",
   "publish_date": "2018-07-14",
   "preview_pics": [
-    "https://pics.javcdn.pw/sample/6n54_1.jpg",
-    "https://pics.javcdn.pw/sample/6n54_2.jpg",
-    "https://pics.javcdn.pw/sample/6n54_3.jpg",
-    "https://pics.javcdn.pw/sample/6n54_4.jpg",
-    "https://pics.javcdn.pw/sample/6n54_5.jpg",
-    "https://pics.javcdn.pw/sample/6n54_6.jpg",
-    "https://pics.javcdn.pw/sample/6n54_7.jpg",
-    "https://pics.javcdn.pw/sample/6n54_8.jpg",
-    "https://pics.javcdn.pw/sample/6n54_9.jpg",
-    "https://pics.javcdn.pw/sample/6n54_10.jpg",
-    "https://pics.javcdn.pw/sample/6n54_11.jpg",
-    "https://pics.javcdn.pw/sample/6n54_12.jpg"
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-1.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-2.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-3.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-4.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-5.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-6.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-7.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-8.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-9.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-10.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-11.jpg",
+    "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-12.jpg"
   ],
   "preview_video": null
 }
