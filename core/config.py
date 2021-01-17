@@ -1,3 +1,4 @@
+import os
 import configparser
 
 
@@ -30,12 +31,14 @@ class Config(configparser.ConfigParser):
                 super(Config, self).read(filenames, 'utf-8-sig')
 
 
+cfg = Config()
+cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+cfg.read(cfg_file)
+
+
 if __name__ == "__main__":
     import os
     import pretty_errors
     pretty_errors.configure(display_link=True)
 
-    cfg = Config()
-    cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
-    cfg.read(cfg_file)
     print(cfg.MovieID.media_ext)
