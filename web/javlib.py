@@ -27,7 +27,9 @@ def parse_data(movie: MovieInfo):
         movie.director = director_tag[0]
     producer = info.xpath("//span[@class='maker']/a/text()")[0]
     publisher = info.xpath("//span[@class='label']/a/text()")[0]
-    score = info.xpath("//span[@class='score']/text()")[0].strip('()')
+    score_tag = info.xpath("//span[@class='score']/text()")
+    if score_tag:
+        movie.score = score_tag[0].strip('()')
     genre = info.xpath("//span[@class='genre']/a/text()")
     actress = info.xpath("//span[@class='star']/a/text()")
 
@@ -39,7 +41,6 @@ def parse_data(movie: MovieInfo):
     movie.duration = duration
     movie.producer = producer
     movie.publisher = publisher
-    movie.score = score
     movie.genre = genre
     movie.actress = actress
 

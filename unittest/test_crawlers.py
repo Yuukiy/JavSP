@@ -75,4 +75,7 @@ def test_auto_compare():
 
 
 if __name__ == "__main__":
-    create_local_data(['IPX-177'])
+    if len(sys.argv) > 1:
+        create_local_data(sys.argv[1:])
+    else:
+        create_local_data(['IPX-177'])
