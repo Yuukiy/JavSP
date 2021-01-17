@@ -9,14 +9,14 @@ class DotDict(dict):
 
 
 class Config(configparser.ConfigParser):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         # 使用ConfigParser的__init__方法来创建配置实例
-        super(Config, self).__init__(*args, **kwargs)
+        super().__init__(dict_type=DotDict, **kwargs)
 
-    def __getattr__(self, sec: str) -> None:
-        if sec not in self._sections:
-            raise KeyError(sec)
-        return DotDict(self._sections.get(sec))
+    def __getattr__(self, name: str) -> None:
+        if name not in self._sections:
+            raise KeyError(name)
+        return self._sections.get(name)
 
     def read(self, filenames, encoding=None):
         # 覆盖原生的read方法，以自动处理不同的编码
