@@ -31,5 +31,13 @@ def is_connectable(url, timeout=3):
         return False
 
 
+def download(url, file):
+    """下载指定url的资源"""
+    r = requests.get(url, headers=headers)
+    r.raise_for_status()
+    with open(file, 'wb') as f:
+        f.write(r.content)
+
+
 if __name__ == "__main__":
     print(is_connectable('http://www.baidu.com'))
