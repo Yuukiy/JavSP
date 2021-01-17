@@ -10,7 +10,7 @@ file_dir = os.path.dirname(__file__)
 data_dir = os.path.join(file_dir, 'data')
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 
-from core.datatype import Movie
+from core.datatype import MovieInfo
 
 
 scrapers = ('javdb', 'javbus', 'javlib', 'avsox')
@@ -31,7 +31,7 @@ def create_local_data(dvdid_list: list):
             mod_name = scrapers[mods.index(mod)]
             inner_bar.set_description(f'正在抓取{mod_name}'.rjust(10+len(dvdid)))
             # 每次都会创建一个全新的实例，所以不同抓取器的结果之间不会有影响
-            movie = Movie(dvdid)
+            movie = MovieInfo(dvdid)
             parse_data = getattr(sys.modules[mod], 'parse_data')
             try:
                 parse_data(movie)
@@ -47,8 +47,8 @@ def create_local_data(dvdid_list: list):
 
 def compare(dvdid, scraper, file):
     """从本地的数据文件生成Movie实例，并与在线抓取到的数据进行比较"""
-    local = Movie(from_file=file)
-    online = Movie(dvdid)
+    local = MovieInfo(from_file=file)
+    online = MovieInfo(dvdid)
     parse_data = getattr(sys.modules[f'web.{scraper}'], 'parse_data')
     parse_data(online)
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值

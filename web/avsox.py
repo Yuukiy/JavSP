@@ -5,13 +5,13 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
-from core.datatype import Movie
+from core.datatype import MovieInfo
 
 
 base_url = 'https://avsox.website'
 
 
-def parse_data(movie: Movie):
+def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # avsox无法直接跳转到影片的网页，因此先搜索再从搜索结果中寻找目标网页
     html = get_html(f'{base_url}/cn/search/{movie.dvdid}')
@@ -46,6 +46,6 @@ def parse_data(movie: Movie):
 
 
 if __name__ == "__main__":
-    movie = Movie('082713-417')
+    movie = MovieInfo('082713-417')
     parse_data(movie)
     print(movie)

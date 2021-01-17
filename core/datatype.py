@@ -4,7 +4,7 @@ import json
 from datetime import date
 
 
-class Movie:
+class MovieInfo:
     def __init__(self, dvdid=None, /, *, cid=None, pid=None, from_file=None):
         """
         Args:

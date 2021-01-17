@@ -5,14 +5,14 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
-from core.datatype import Movie
+from core.datatype import MovieInfo
 
 
 base_url = 'https://www.b49t.com'
 permanent_url = 'https://www.javlib.com'
 
 
-def parse_data(movie: Movie):
+def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     html = get_html(f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}')
     container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
@@ -45,6 +45,6 @@ def parse_data(movie: Movie):
 
 
 if __name__ == "__main__":
-    movie = Movie('IPX-177')
+    movie = MovieInfo('IPX-177')
     parse_data(movie)
     print(movie)

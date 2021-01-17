@@ -6,14 +6,14 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
-from core.datatype import Movie
+from core.datatype import MovieInfo
 
 
 base_url = 'https://www.javdb6.com'
 permanent_url = 'https://www.javdb.com'
 
 
-def parse_data(movie: Movie):
+def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
     html = get_html(f'{base_url}/search?q={movie.dvdid}', encoding='utf-8')
@@ -66,6 +66,6 @@ def parse_data(movie: Movie):
 
 
 if __name__ == "__main__":
-    movie = Movie('IPX-177')
+    movie = MovieInfo('IPX-177')
     parse_data(movie)
     print(movie)
