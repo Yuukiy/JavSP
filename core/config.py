@@ -32,21 +32,27 @@ class Config(configparser.ConfigParser):
 
     def norm_config(self):
         """对配置中必要的项目进行格式转换，以便于其他模块直接使用"""
-        self.File.media_ext = _norm_media_ext(self.File.media_ext)
-        self.File.ignore_folder = _norm_ignore_folder(self.File.ignore_folder)
-        
+        # 扫描所有section中的key，如果某个key定义了对应的'_norm_key'方法，则调用该方法
+        methods = [name for name in dir(self) if callable(getattr(self, name))]
+        norm_methods = [name for name in methods if name.startswith('_norm_')]
+        for sec in self.sections():
+            for key, value in self[sec].items():
+                key_norm_method = '_norm_' + key
+                if key_norm_method in norm_methods:
+                    func = getattr(self, key_norm_method)
+                    self._sections[sec][key] = func(value)
 
+    @staticmethod
+    def _norm_media_ext(cfg_str: str) -> tuple:
+        # media_ext: 转换为全小写的.ext格式的元组
+        items = cfg_str.lower().split(';')
+        exts = [i if i.startswith('.') else '.'+i for i in items]
+        return tuple(set(exts))
 
-def _norm_media_ext(cfg_str: str) -> tuple:
-    # media_ext: 转换为全小写的.ext格式的元组
-    items = cfg_str.lower().split(';')
-    exts = [i if i.startswith('.') else '.'+i for i in items]
-    return tuple(set(exts))
-
-
-def _norm_ignore_folder(cfg_str: str) -> tuple:
-    # ignore_folder: 转换为元组
-    return cfg_str.split(';')
+    @staticmethod
+    def _norm_ignore_folder(cfg_str: str) -> tuple:
+        # ignore_folder: 转换为元组
+        return tuple(cfg_str.split(';'))
 
 
 cfg = Config()
