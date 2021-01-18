@@ -67,3 +67,13 @@ class MovieInfo:
         for k, v in d.items():
             if k in attrs:
                 self.__setattr__(k, v)
+
+
+class Movie:
+    """用于关联影片文件的类"""
+    def __init__(self, dvdid=None) -> None:
+        # 创建类的默认属性
+        self.dvdid = dvdid              # DVD ID，即通常的番号
+        self.cid = None                 # DMM Content ID
+        self.pid = None                 # DMM Product ID
+        self.files = []                 # 关联到此番号的所有影片文件的列表（用于管理带有多个分片的影片）

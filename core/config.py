@@ -30,10 +30,29 @@ class Config(configparser.ConfigParser):
             except:
                 super(Config, self).read(filenames, 'utf-8-sig')
 
+    def norm_config(self):
+        """对配置中必要的项目进行格式转换，以便于其他模块直接使用"""
+        self.File.media_ext = _norm_media_ext(self.File.media_ext)
+        self.File.ignore_folder = _norm_ignore_folder(self.File.ignore_folder)
+        
+
+
+def _norm_media_ext(cfg_str: str) -> tuple:
+    # media_ext: 转换为全小写的.ext格式的元组
+    items = cfg_str.lower().split(';')
+    exts = [i if i.startswith('.') else '.'+i for i in items]
+    return tuple(set(exts))
+
+
+def _norm_ignore_folder(cfg_str: str) -> tuple:
+    # ignore_folder: 转换为元组
+    return cfg_str.split(';')
+
 
 cfg = Config()
 cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
 cfg.read(cfg_file)
+cfg.norm_config()
 
 
 if __name__ == "__main__":
@@ -41,4 +60,4 @@ if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
 
-    print(cfg.MovieID.media_ext)
+    print(cfg.File.media_ext)
