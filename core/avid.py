@@ -32,8 +32,10 @@ def get_id(filepath: str) -> str:
 def get_cid(filepath: str) -> str:
     """尝试将给定的文件名匹配为CID（Content ID）"""
     basename = os.path.splitext(os.path.basename(filepath))[0]
-    # cid只由数字、小写字母和下划线组成。如果是分段影片，末尾可能还带有分段序号
-    match = re.match(r'^([a-z\d_]+)([-_]\w)?$', basename, re.A)
+    # 移除末尾可能带有的分段影片序号
+    possible = re.sub(r'[-_]\w$', '', basename)
+    # cid只由数字、小写字母和下划线组成。如果是
+    match = re.match(r'^([a-z\d_]+)$', possible, re.A)
     if match:
         possible = match.group(1)
         if '_' not in possible:
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     if len(sys.argv) <= 1:
         avid = get_id('ABC-123')
-        cid = get_cid('ad012st')
+        cid = get_cid('403ksxa54363_1')
         print(avid, cid)
     else:
         for file in sys.argv[1:]:
