@@ -43,6 +43,26 @@ def test_normal():
     assert 'ABCD-123' == get_id('ABCD-123.mp4')
 
 
+def test_cid_valid():
+    assert 'ab012st' == get_cid('ab012st')
+    assert 'ab012st' == get_cid('ab012st.mp4')
+    assert '123_0456' == get_cid('123_0456.mp4')
+    assert '123abc00045' == get_cid('123abc00045.mp4')
+    assert 'h_001abc00001' == get_cid('h_001abc00001.mp4')
+    assert '1234wvr00001rp' == get_cid('1234wvr00001rp.mp4')
+    assert '402abc_hello000089' == get_cid('402abc_hello000089.mp4')
+
+
+def test_cid_invalid():
+    assert '' == get_cid('hasUpperletter.mp4')
+    assert '' == get_cid('存在非ASCII字符.mp4')
+    assert '' == get_cid('has-dash.mp4')
+    assert '' == get_cid('many_parts1234-12.mp4')
+    assert '' == get_cid('abc12.mp4')
+    assert '' == get_cid('ab012st/仅文件夹名称为cid.mp4')
+    assert '' == get_cid('123_0456st.mp4')
+
+
 @pytest.mark.parametrize('files', [('Unknown.mp4',)])
 def test_by_folder_name1(prepare_files):
     assert '' == get_id('Unknown.mp4')
