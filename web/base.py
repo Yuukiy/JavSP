@@ -1,4 +1,5 @@
 """网络请求的统一接口"""
+import re
 import requests
 import lxml.html
 
@@ -19,6 +20,19 @@ def get_html(url, encoding=None):
     text = get_html_text(url, encoding=encoding)
     html = lxml.html.fromstring(text)
     return html
+
+
+def is_url(url: str):
+    """判断给定的字符串是否是有效的带协议字段的URL"""
+    # https://stackoverflow.com/a/7160778/6415337
+    pattern = re.compile(
+        r'^(?:http)s?://' # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+        r'localhost|'     #localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?'      # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return re.match(pattern, url) is not None
 
 
 def is_connectable(url, timeout=3):
