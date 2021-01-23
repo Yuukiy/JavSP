@@ -1,22 +1,30 @@
 """获取各个网站的免代理地址"""
+import os
 import re
 import sys
 
-sys.path.append('../')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html, is_connectable
 
 
-def get_proxy_free_url(site_name: str) -> str:
-    """获取指定网站的免代理地址"""
+def get_proxy_free_url(site_name: str, prefer_url=None) -> str:
+    """获取指定网站的免代理地址
+    Args:
+        site_name (str): 站点名称
+        prefer_url (str, optional): 优先测试此url是否可用
+    Returns:
+        str: 指定站点的免代理地址（失败时为空字符串）
+    """
+    if prefer_url and is_connectable(prefer_url, timeout=5):
+        return prefer_url
+    # 当prefer_url不可用时，尝试自动获取指定网站的免代理地址
     site_name = site_name.lower()
-    if site_name == 'avsox':
-        return _choose_one(_get_avsox_urls())
-    elif site_name == 'javbus':
-        return _choose_one(_get_javbus_urls())
-    elif site_name == 'javlib':
-        return _choose_one(_get_javlib_urls())
-    elif site_name == 'javdb':
-        return _choose_one(_get_javdb_urls())
+    func_name = f'_get_{site_name}_urls'
+    get_funcs = [i for i in dir(sys.modules[__name__]) if i.startswith('_get_')]
+    if func_name in get_funcs:
+        get_urls = getattr(sys.modules[__name__], func_name)
+        urls = get_urls()
+        return _choose_one(urls)
     else:
         raise Exception("Dont't know how to get proxy-free url for " + site_name)
 
