@@ -5,10 +5,11 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
+from core.config import cfg
 from core.datatype import MovieInfo
 
 
-base_url = 'https://avsox.website'
+base_url = cfg.ProxyFree.avsox
 
 
 def parse_data(movie: MovieInfo):

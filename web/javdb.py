@@ -6,10 +6,11 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
+from core.config import cfg
 from core.datatype import MovieInfo
 
 
-base_url = 'https://www.javdb6.com'
+base_url = cfg.ProxyFree.javdb
 permanent_url = 'https://www.javdb.com'
 
 
