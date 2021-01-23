@@ -5,16 +5,18 @@ from datetime import date
 
 
 class MovieInfo:
-    def __init__(self, dvdid=None, /, *, cid=None, pid=None, from_file=None):
+    def __init__(self, dvdid=None, /, *, cid=None, from_file=None):
         """
         Args:
             dvdid ([str], optional): 番号，要通过其他方式创建实例时此参数应留空
             from_file: 从指定的文件(json格式)中加载数据来创建实例
         """
+        arg_count = len([i for i in [dvdid, cid, from_file] if i])
+        if arg_count != 1:
+            raise TypeError(f'Require 1 parameter but {arg_count} given')
         # 创建类的默认属性
         self.dvdid = dvdid          # DVD ID，即通常的番号
         self.cid = cid              # DMM Content ID
-        self.pid = pid              # DMM Product ID
         self.cover = None           # 封面图片
         self.genre = None           # 影片分类的标签
         self.score = None           # 评分（10分制）
@@ -30,20 +32,20 @@ class MovieInfo:
         self.preview_pics = None    # 预览图片
         self.preview_video = None   # 预览视频
 
-        if not dvdid:
-            if from_file:
-                if os.path.isfile(from_file):
-                    self.load(from_file)
-                else:
-                    raise TypeError('A valid file path is required')
+        if from_file:
+            if os.path.isfile(from_file):
+                self.load(from_file)
             else:
-                raise TypeError("Require additional keyword parameter when 'dvdid' is left blank")
+                raise TypeError(f"Invalid file path: '{from_file}'")
 
     def __str__(self) -> str:
         d = vars(self)
         if type(d['publish_date']) is date:
             d['publish_date'] = d['publish_date'].isoformat()
         return json.dumps(d, indent=2, ensure_ascii=False)
+
+    def __repr__(self) -> str:
+        return __class__.__name__ + f"('{self.dvdid}')"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
@@ -71,9 +73,14 @@ class MovieInfo:
 
 class Movie:
     """用于关联影片文件的类"""
-    def __init__(self, dvdid=None) -> None:
+    def __init__(self, dvdid=None, /, *, cid=None) -> None:
+        arg_count = len([i for i in (dvdid, cid) if i])
+        if arg_count != 1:
+            raise TypeError(f'Require 1 parameter but {arg_count} given')
         # 创建类的默认属性
         self.dvdid = dvdid              # DVD ID，即通常的番号
-        self.cid = None                 # DMM Content ID
-        self.pid = None                 # DMM Product ID
+        self.cid = cid                  # DMM Content ID
         self.files = []                 # 关联到此番号的所有影片文件的列表（用于管理带有多个分片的影片）
+
+    def __repr__(self) -> str:
+        return __class__.__name__ + f"('{self.dvdid}')"
