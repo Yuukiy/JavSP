@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from core.datatype import MovieInfo
 
 
-def write_nfo(info: MovieInfo):
+def write_nfo(info: MovieInfo, nfo_file):
     """将存储了影片信息的'info'写入到nfo文件中"""
     # NFO spec: https://kodi.wiki/view/NFO_files/Movies
     nfo = E.movie()
@@ -77,7 +77,7 @@ def write_nfo(info: MovieInfo):
     for i in info.actress:
         nfo.append(E.actor(E.name(i)))
 
-    with open(f'{info.dvdid}.nfo', 'wt', encoding='utf-8') as f:
+    with open(nfo_file, 'wt', encoding='utf-8') as f:
         f.write(tostring(nfo, encoding='unicode', pretty_print=True,
                          doctype='<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'))
 

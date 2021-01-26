@@ -1,6 +1,7 @@
 import os
 import sys
 import configparser
+from string import Template
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import is_url
@@ -44,7 +45,7 @@ class Config(configparser.ConfigParser):
             sec_norm_method = '_norm_' + sec
             if sec_norm_method in norm_methods:
                 getattr(self, sec_norm_method)()
-                break   # 如果有sec级别的norm方法，就不再检查其下的key的norm方法
+                continue   # 如果有sec级别的norm方法，就不再检查其下的key的norm方法
             for key, value in self[sec].items():
                 key_norm_method = '_norm_' + key
                 if key_norm_method in norm_methods:
@@ -62,6 +63,14 @@ class Config(configparser.ConfigParser):
                 sec[site] = url
             else:
                 sec[site] = ''
+
+    def _norm_NamingRule(self):
+        """NamingRule: 转换为字符串Template"""
+        combine = self.NamingRule.output_folder + os.sep + self.NamingRule.folderpath
+        path_t = Template(combine)
+        file_t = Template(self.NamingRule.filename)
+        self.NamingRule.folderpath = path_t
+        self.NamingRule.filename = file_t
 
     @staticmethod
     def _norm_media_ext(cfg_str: str) -> tuple:
