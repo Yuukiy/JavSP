@@ -11,6 +11,7 @@ from core.file import select_folder, get_movies
 from core.config import cfg
 from core.image import crop_poster
 from core.datatype import Movie, MovieInfo
+from core.datatype import ColoredFormatter
 from web.base import download
 from web.javbus import parse_data
 
@@ -23,7 +24,18 @@ class TqdmOut:
 
 
 pretty_errors.configure(display_link=True)
-logging.basicConfig(stream=TqdmOut, level=logging.INFO)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter(
+    fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+console_handler = logging.StreamHandler(stream=TqdmOut)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(ColoredFormatter(fmt='%(message)s'))
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
 
 
 def info_summary(movie: Movie, all_info):
@@ -46,11 +58,12 @@ def info_summary(movie: Movie, all_info):
 
 if __name__ == "__main__":
     colorama.init(autoreset=True)
+    logger = logging.getLogger('main')
     root = select_folder()
     os.chdir(root)
 
     all_movies = get_movies(root)
-    logging.info(f'共找到{len(all_movies)}部影片\n')
+    logger.info(f'共找到{len(all_movies)}部影片\n')
 
     outer_bar = tqdm(all_movies, ascii=True, leave=False)
     for movie in outer_bar:
@@ -78,6 +91,6 @@ if __name__ == "__main__":
         inner_bar.set_description('写入NFO')
         write_nfo(info, movie.nfo_file)
         inner_bar.update()
-        logging.info(f'整理完成: {movie.dvdid}')
-        logging.info(f'相关文件已保存到: ' + movie.folderpath)
+        logger.info(f'整理完成: {movie.dvdid}')
+        logger.info(f'相关文件已保存到: ' + movie.folderpath)
         inner_bar.close()

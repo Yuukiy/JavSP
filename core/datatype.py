@@ -1,6 +1,7 @@
 """定义数据类型"""
 import os
 import json
+import logging
 from datetime import date
 
 
@@ -84,3 +85,22 @@ class Movie:
 
     def __repr__(self) -> str:
         return __class__.__name__ + f"('{self.dvdid}')"
+
+
+class ColoredFormatter(logging.Formatter):
+    """为不同level的日志着色"""
+    NO_STYLE = '\033[0m'
+    COLOR_MAP = {
+        logging.DEBUG:    '\033[1;30m', # grey
+        logging.WARNING:  '\033[1;33m', # light yellow
+        logging.ERROR:    '\033[1;31m', # light red
+        logging.CRITICAL: '\033[0;31m', # red
+    }
+
+    def __init__(self, fmt='%(levelname)-8s:%(message)s', datefmt='%Y-%m-%d %H:%M:%S', style='%', validate=True) -> None:
+        super().__init__(fmt=fmt, datefmt=datefmt, style=style, validate=validate)
+
+    def format(self, record):
+        raw = super().format(record)
+        color = self.COLOR_MAP.get(record.levelno, self.NO_STYLE)
+        return color + raw + self.NO_STYLE
