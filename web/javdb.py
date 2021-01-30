@@ -17,12 +17,12 @@ permanent_url = 'https://www.javdb.com'
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
-    html = get_html(f'{base_url}/search?q={movie.dvdid}', encoding='utf-8')
+    html = get_html(f'{base_url}/search?q={movie.dvdid}')
     ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
     paths = html.xpath("//div[@id='videos']/div/div/a/@href")
     path = paths[ids.index(movie.dvdid.lower())]
 
-    html = get_html(f'{base_url}/{path}', encoding='utf-8')
+    html = get_html(f'{base_url}/{path}')
     container = html.xpath("/html/body/section/div[@class='container']")[0]
     info = container.xpath("div/div/div/nav")[0]
     title = container.xpath("h2/strong/text()")[0]
