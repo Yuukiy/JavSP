@@ -6,14 +6,8 @@ import colorama
 import pretty_errors
 from tqdm import tqdm
 
-from core.nfo import write_nfo
-from core.file import select_folder, get_movies
-from core.config import cfg
-from core.image import crop_poster
-from core.datatype import Movie, MovieInfo
+
 from core.datatype import ColoredFormatter
-from web.base import download
-from web.javbus import parse_data
 
 
 class TqdmOut:
@@ -39,6 +33,15 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(ColoredFormatter(fmt='%(message)s'))
 root_logger.addHandler(file_handler)
 root_logger.addHandler(console_handler)
+
+
+from core.nfo import write_nfo
+from core.file import select_folder, get_movies
+from core.config import cfg
+from core.image import crop_poster
+from core.datatype import Movie, MovieInfo
+from web.base import download
+from web.javbus import parse_data
 
 
 def info_summary(movie: Movie, all_info):
