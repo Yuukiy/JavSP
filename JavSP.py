@@ -65,9 +65,52 @@ def parallel_crawler(movie: MovieInfo, tqdm_bar=None):
 
 
 def info_summary(movie: Movie, all_info):
-    """汇总多个来源的在线数据生成最终数据，生成本地资源的相关文件名"""
-    info = all_info['web.javbus']
-    d = {'title': info.title, 'actor': ','.join(info.actress), 'num': info.dvdid}
+    """汇总多个来源的在线数据生成最终数据"""
+    # 多线程下，all_info中的键值顺序不一定和爬虫的启动顺序一致，因此要重新获取优先级
+    crawlers = cfg.Priority[movie.data_src]
+    # 按照优先级取出各个爬虫获取到的信息
+    final_info = MovieInfo(movie.dvdid)
+    attrs = [i for i in dir(final_info) if not i.startswith('_')]
+    for c in crawlers:
+        absorbed = []
+        crawlered_info = all_info[c]
+        # 遍历所有属性，如果某一属性当前值为空而爬取的数据中含有该属性，则采用爬虫的属性
+        for attr in attrs:
+            current = getattr(final_info, attr)
+            incoming = getattr(crawlered_info, attr)
+            if (not current) and (incoming):
+                setattr(final_info, attr, incoming)
+                absorbed.append(attr)
+        if absorbed:
+            logger.debug(f"从'{c}'中获取了字段: " + ' '.join(absorbed))
+    # 检查是否所有必需的字段都已经获得了值
+    for attr in cfg.Crawler.required_keys:
+        if not getattr(final_info, attr, None):
+            logger.error(f"所有爬虫均未获取到字段: '{attr}'，抓取失败")
+            return False
+    # 必需字段均已获得了值：将最终的数据附加到movie
+    movie.info = final_info
+    return True
+
+
+def generate_names(movie: Movie):
+    """按照模板生成相关文件的文件名"""
+    info = movie.info
+    # 准备用来填充命名模板的字典
+    d = {'num': info.dvdid}
+    d['title'] = info.title if info.title else cfg.NamingRule.null_for_title
+    if info.actress:
+        d['actor'] = ','.join(info.actress)
+    else:
+        d['actor'] = cfg.NamingRule.null_for_actor
+    remaining_keys = ['socre', 'serial', 'director', 'producer', 'publisher', 'publish_date']
+    for i in remaining_keys:
+        value = getattr(info, i, None)
+        if value:
+            d[i] = value
+        else:
+            d[i] = cfg.NamingRule.null_for_others
+    # 生成相关文件的路径
     folderpath = os.path.normpath(cfg.NamingRule.folderpath.substitute(**d))
     basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d))
     new_filepath = os.path.join(folderpath, basename + os.path.splitext(movie.files[0])[1])
@@ -79,7 +122,6 @@ def info_summary(movie: Movie, all_info):
     setattr(movie, 'fanart_file', fanart)
     setattr(movie, 'poster_file', poster)
     setattr(movie, 'new_filepath', new_filepath)
-    return info
 
 
 if __name__ == "__main__":
@@ -105,27 +147,30 @@ if __name__ == "__main__":
         inner_bar.update()
 
         inner_bar.set_description('汇总数据')
-        info = info_summary(movie, all_info)
+        has_required_keys = info_summary(movie, all_info)
         inner_bar.update()
+        if has_required_keys:
+            inner_bar.set_description('移动影片文件')
+            generate_names(movie)
+            os.makedirs(movie.folderpath)
+            os.rename(movie.files[0], movie.new_filepath)
+            inner_bar.update()
 
-        inner_bar.set_description('移动影片文件')
-        os.makedirs(movie.folderpath)
-        os.rename(movie.files[0], movie.new_filepath)
-        inner_bar.update()
+            inner_bar.set_description('下载封面图片')
+            download(movie.info.cover, movie.fanart_file)
+            inner_bar.update()
 
-        inner_bar.set_description('下载封面图片')
-        download(info.cover, movie.fanart_file)
-        inner_bar.update()
+            inner_bar.set_description('裁剪海报封面')
+            crop_poster(movie.fanart_file, movie.poster_file)
+            time.sleep(1)
+            inner_bar.update()
 
-        inner_bar.set_description('裁剪海报封面')
-        crop_poster(movie.fanart_file, movie.poster_file)
-        time.sleep(1)
-        inner_bar.update()
+            inner_bar.set_description('写入NFO')
+            write_nfo(movie.info, movie.nfo_file)
+            inner_bar.update()
 
-        inner_bar.set_description('写入NFO')
-        write_nfo(info, movie.nfo_file)
-        inner_bar.update()
-
-        logger.info(f'整理完成: {movie.dvdid}')
-        logger.info(f'相关文件已保存到: ' + movie.folderpath)
+            logger.info(f'整理完成: {movie.dvdid}')
+            logger.info(f'相关文件已保存到: ' + movie.folderpath)
+        else:
+            logger.error('整理失败')
         inner_bar.close()

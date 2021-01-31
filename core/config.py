@@ -107,6 +107,11 @@ class Config(configparser.ConfigParser):
         """ignore_folder: 转换为元组"""
         return tuple(cfg_str.split(';'))
 
+    @staticmethod
+    def _norm_required_keys(cfg_str: str) -> tuple:
+        """required_keys: 转换为元组"""
+        return tuple(cfg_str.lower().split(','))
+
     def update_ProxyFree_urls(self):
         """验证和更新各个站点的免代理地址"""
         need_update = False

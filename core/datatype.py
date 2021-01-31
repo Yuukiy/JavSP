@@ -18,7 +18,7 @@ class MovieInfo:
         # 创建类的默认属性
         self.dvdid = dvdid          # DVD ID，即通常的番号
         self.cid = cid              # DMM Content ID
-        self.cover = None           # 封面图片
+        self.cover = None           # 封面图片（URL）
         self.genre = None           # 影片分类的标签
         self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
@@ -30,8 +30,8 @@ class MovieInfo:
         self.producer = None        # 制作商
         self.publisher = None       # 发行商
         self.publish_date = None    # 发布日期
-        self.preview_pics = None    # 预览图片
-        self.preview_video = None   # 预览视频
+        self.preview_pics = None    # 预览图片（URL）
+        self.preview_video = None   # 预览视频（URL）
 
         if from_file:
             if os.path.isfile(from_file):
@@ -83,6 +83,7 @@ class Movie:
         self.cid = cid                  # DMM Content ID
         self.files = []                 # 关联到此番号的所有影片文件的列表（用于管理带有多个分片的影片）
         self.data_src = 'normal'        # 数据源：不同的数据源将使用不同的爬虫
+        self.info = None                # 抓取到的影片信息
 
     def __repr__(self) -> str:
         return __class__.__name__ + f"('{self.dvdid}')"
