@@ -93,10 +93,10 @@ class Config(configparser.ConfigParser):
 
     def _norm_NamingRule(self):
         """NamingRule: 转换为字符串Template"""
-        combine = self.NamingRule.output_folder + os.sep + self.NamingRule.folderpath
+        combine = self.NamingRule.output_folder + os.sep + self.NamingRule.save_dir
         path_t = Template(combine)
         file_t = Template(self.NamingRule.filename)
-        self.NamingRule.folderpath = path_t
+        self.NamingRule.save_dir = path_t
         self.NamingRule.filename = file_t
 
     @staticmethod

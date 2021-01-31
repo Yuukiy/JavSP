@@ -84,6 +84,10 @@ class Movie:
         self.files = []                 # 关联到此番号的所有影片文件的列表（用于管理带有多个分片的影片）
         self.data_src = 'normal'        # 数据源：不同的数据源将使用不同的爬虫
         self.info = None                # 抓取到的影片信息
+        self.save_dir = None            # 存放影片、封面、NFO的文件夹路径
+        self.nfo_file = None            # nfo文件的路径
+        self.fanart_file = None         # fanart文件的路径
+        self.poster_file = None         # poster文件的路径
 
     def __repr__(self) -> str:
         return __class__.__name__ + f"('{self.dvdid}')"

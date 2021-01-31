@@ -52,7 +52,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     def wrapper(parser, info: MovieInfo):
         """对抓取器函数进行包装，便于更新提示信息和自动重试"""
         crawler_name = threading.current_thread().name
-        task_info = f'Thread: {crawler_name}: {info.dvdid}'
+        task_info = f'Crawler: {crawler_name}: {info.dvdid}'
         retry = 0
         while (retry < cfg.Network.retry):
             retry += 1
@@ -81,7 +81,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         thread_pool.append(th)
     # 等待所有线程结束
     for th in thread_pool:
-        th.join()
+        th.join(timeout=5)
     return all_info
 
 
@@ -132,16 +132,13 @@ def generate_names(movie: Movie):
         else:
             d[i] = cfg.NamingRule.null_for_others
     # 生成相关文件的路径
-    folderpath = os.path.normpath(cfg.NamingRule.folderpath.substitute(**d))
+    save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d))
     basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d))
-    new_filepath = os.path.join(folderpath, basename + os.path.splitext(movie.files[0])[1])
-    nfo_file = os.path.join(folderpath, f'{basename}.nfo')
-    fanart = os.path.join(folderpath, f'{basename}-fanart.jpg')
-    poster = os.path.join(folderpath, f'{basename}-poster.jpg')
-    setattr(movie, 'folderpath', folderpath)
-    setattr(movie, 'nfo_file', nfo_file)
-    setattr(movie, 'fanart_file', fanart)
-    setattr(movie, 'poster_file', poster)
+    new_filepath = os.path.join(save_dir, basename + os.path.splitext(movie.files[0])[1])
+    movie.save_dir = save_dir
+    movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
+    movie.fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
+    movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
     setattr(movie, 'new_filepath', new_filepath)
 
 
@@ -155,8 +152,10 @@ if __name__ == "__main__":
         os._exit(1)
     os.chdir(root)
 
+    logger.info(f'扫描影片文件...')
     all_movies = get_movies(root)
-    logger.info(f'共找到{len(all_movies)}部影片\n')
+    logger.info(f'    共找到{len(all_movies)}部影片')
+    tqdm.write('')
 
     outer_bar = tqdm(all_movies, ascii=True, leave=False)
     for movie in outer_bar:
@@ -173,7 +172,7 @@ if __name__ == "__main__":
         if has_required_keys:
             inner_bar.set_description('移动影片文件')
             generate_names(movie)
-            os.makedirs(movie.folderpath)
+            os.makedirs(movie.save_dir)
             os.rename(movie.files[0], movie.new_filepath)
             inner_bar.update()
 
@@ -183,7 +182,6 @@ if __name__ == "__main__":
 
             inner_bar.set_description('裁剪海报封面')
             crop_poster(movie.fanart_file, movie.poster_file)
-            time.sleep(1)
             inner_bar.update()
 
             inner_bar.set_description('写入NFO')
@@ -191,7 +189,7 @@ if __name__ == "__main__":
             inner_bar.update()
 
             logger.info(f'整理完成: {movie.dvdid}')
-            logger.info(f'相关文件已保存到: ' + movie.folderpath)
+            logger.info(f'相关文件已保存到: {movie.save_dir}')
         else:
             logger.error('整理失败')
         inner_bar.close()
