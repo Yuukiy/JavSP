@@ -1,11 +1,16 @@
 import os
 import sys
+import logging
 import configparser
 from string import Template
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import is_url
 from web.proxyfree import get_proxy_free_url
+
+
+logger = logging.getLogger(__name__)
+logger.info('读取配置文件...')
 
 
 class DotDict(dict):
@@ -51,6 +56,24 @@ class Config(configparser.ConfigParser):
                 if key_norm_method in norm_methods:
                     func = getattr(self, key_norm_method)
                     self._sections[sec][key] = func(value)
+
+    def _norm_Priority(self):
+        """Priority: 按配置的抓取器顺序转换为内部的抓取器函数列表"""
+        sec = self['Priority']
+        unknown_mods = []
+        for typ, cfg_str in sec.items():
+            mods = cfg_str.split(',')
+            valid_mods = []
+            for name in mods:
+                try:
+                    mod = 'web.' + name
+                    __import__(mod)
+                    valid_mods.append(mod)
+                except ModuleNotFoundError:
+                    unknown_mods.append(name)
+            self._sections['Priority'][typ] = tuple(valid_mods)
+        if unknown_mods:
+            logger.warning('  无效的抓取器: ' + ', '.join(unknown_mods))
 
     def _norm_ProxyFree(self):
         """ProxyFree: 仅接受有效的URL"""
