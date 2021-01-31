@@ -2,7 +2,8 @@ import os
 import sys
 import time
 import logging
-from threading import Thread
+import requests
+import threading
 
 import colorama
 import pretty_errors
@@ -26,7 +27,7 @@ for i in logging.root.manager.loggerDict:
     logging.getLogger(i).disabled = True
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
+file_handler = logging.FileHandler(filename='JavSP.log', mode='w', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter(
     fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
@@ -46,21 +47,41 @@ from web.base import download
 
 
 # 爬虫是IO密集型任务，可以通过多线程提升效率
-def parallel_crawler(movie: MovieInfo, tqdm_bar=None):
+def parallel_crawler(movie: Movie, tqdm_bar=None):
     """使用多线程抓取不同网站的数据"""
+    def wrapper(parser, info: MovieInfo):
+        """对抓取器函数进行包装，便于更新提示信息和自动重试"""
+        crawler_name = threading.current_thread().name
+        task_info = f'Thread: {crawler_name}: {info.dvdid}'
+        retry = 0
+        while (retry < cfg.Network.retry):
+            retry += 1
+            try:
+                parser(info)
+                logger.debug(f'{task_info}: 抓取成功')
+                if isinstance(tqdm_bar, tqdm):
+                    tqdm_bar.set_description(f'{crawler_name}: 抓取完成')
+                break
+            except requests.exceptions.RequestException as e:
+                logger.debug(f'{task_info}: 网络错误，正在重试 ({retry}/{cfg.Network.retry}): \n{e}')
+                if isinstance(tqdm_bar, tqdm):
+                    tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
+            except Exception as e:
+                logger.exception(f'{task_info}: 未处理的异常: {e}')
+
     # 根据影片的数据源获取对应的抓取器
-    crawlers = cfg.Priority[movie.data_src]
-    all_info = {}
-    for i in crawlers:
-        parser = getattr(sys.modules[i], 'parse_data')
-        info = MovieInfo(movie.dvdid)
-        logger.debug(f'使用抓取器{i}抓取: {movie.dvdid}')
-        th = Thread(target=parser, name=i, args=(info, ))
+    crawler_mods = cfg.Priority[movie.data_src]
+    all_info = {i: MovieInfo(movie.dvdid) for i in crawler_mods}
+    thread_pool = []
+    for mod, info in all_info.items():
+        parser = getattr(sys.modules[mod], 'parse_data')
+        # 将all_info中的info实例传递给parser，parser抓取完成后，info实例的值已经完成更新
+        th = threading.Thread(target=wrapper, name=mod, args=(parser, info))
         th.start()
+        thread_pool.append(th)
+    # 等待所有线程结束
+    for th in thread_pool:
         th.join()
-        all_info[i] = info
-        if isinstance(tqdm_bar, tqdm):
-            tqdm_bar.set_description(f'{i}: 抓取完成')
     return all_info
 
 

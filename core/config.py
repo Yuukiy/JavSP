@@ -57,6 +57,10 @@ class Config(configparser.ConfigParser):
                     func = getattr(self, key_norm_method)
                     self._sections[sec][key] = func(value)
 
+    def _norm_Network(self):
+        """retry: 转换为数字"""
+        self.Network.retry = self.getint('Network', 'retry')
+
     def _norm_Priority(self):
         """Priority: 按配置的抓取器顺序转换为内部的抓取器函数列表"""
         sec = self['Priority']
