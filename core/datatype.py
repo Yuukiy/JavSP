@@ -82,6 +82,7 @@ class Movie:
         self.dvdid = dvdid              # DVD ID，即通常的番号
         self.cid = cid                  # DMM Content ID
         self.files = []                 # 关联到此番号的所有影片文件的列表（用于管理带有多个分片的影片）
+        self.data_src = 'normal'        # 数据源：不同的数据源将使用不同的爬虫
 
     def __repr__(self) -> str:
         return __class__.__name__ + f"('{self.dvdid}')"
