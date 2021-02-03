@@ -19,6 +19,7 @@ class MovieInfo:
         # 创建类的默认属性
         self.dvdid = dvdid          # DVD ID，即通常的番号
         self.cid = cid              # DMM Content ID
+        self.plot = None            # 故事情节
         self.cover = None           # 封面图片（URL）
         self.genre = None           # 影片分类的标签
         self.score = None           # 评分（10分制）

@@ -2,6 +2,10 @@
 import re
 import requests
 import lxml.html
+from lxml import etree
+
+
+__all__ = ['get_html', 'dump_xpath_node', 'is_url', 'is_connectable', 'download']
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
@@ -23,6 +27,15 @@ def get_html(url, encoding='utf-8'):
     text = get_html_text(url, encoding=encoding)
     html = lxml.html.fromstring(text)
     return html
+
+
+def dump_xpath_node(node, filename=None):
+    """将xpath节点dump到文件"""
+    if not filename:
+        filename = node.tag + '.html'
+    with open(filename, 'wt', encoding='utf-8') as f:
+        content = etree.tostring(node, pretty_print=True).decode('utf-8')
+        f.write(content)
 
 
 def is_url(url: str):
