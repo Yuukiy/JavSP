@@ -1,5 +1,6 @@
-"""定义数据类型"""
+"""定义数据类型和一些通用性的对数据类型的操作"""
 import os
+import re
 import json
 import logging
 from datetime import date
@@ -110,3 +111,19 @@ class ColoredFormatter(logging.Formatter):
         raw = super().format(record)
         color = self.COLOR_MAP.get(record.levelno, self.NO_STYLE)
         return color + raw + self.NO_STYLE
+
+
+class GenreMap(dict):
+    """genre的映射表"""
+    def __init__(self, file):
+        with open(file, 'rt', encoding='utf-8') as f:
+            text = f.read()
+        pure_text = re.sub(r'//.*$', '', text, flags=re.M)
+        d = json.loads(pure_text)
+        self.update(d)
+
+    def map(self, ls):
+        """将列表ls按照内置的映射进行替换：保留映射表中不存在的键，删除值为None的键"""
+        mapped = [self.get(i, i) for i in ls]
+        cleaned = [i for i in mapped if i]  # 删除配置为None的项
+        return cleaned
