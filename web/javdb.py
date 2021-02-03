@@ -6,6 +6,7 @@ from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
+from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
 
@@ -71,6 +72,7 @@ def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
     parse_data(movie)
     movie.genre = genre_map.map(movie.genre)
+    movie.title = remove_trail_actor_in_title(movie.title, movie.actress)
 
 
 if __name__ == "__main__":

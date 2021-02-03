@@ -56,6 +56,7 @@ class Config(configparser.ConfigParser):
                 if key_norm_method in norm_methods:
                     func = getattr(self, key_norm_method)
                     self._sections[sec][key] = func(value)
+        self.norm_boolean()
 
     def _norm_Network(self):
         """retry: 转换为数字"""
@@ -128,6 +129,11 @@ class Config(configparser.ConfigParser):
             # TODO: 待改进：写入时会丢失注释，而且部分字段的值需要先进行格式化（如元组）
             with open(cfg_file, 'wt', encoding='utf-8') as f:
                 self.write(f)
+
+    def norm_boolean(self):
+        """转换所有的布尔类型配置"""
+        for sec, key in [('Crawler', 'remove_actor_in_title')]:
+            self._sections[sec][key] = self.getboolean(sec, key)
 
 
 cfg = Config()
