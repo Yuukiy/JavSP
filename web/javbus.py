@@ -6,10 +6,11 @@ from datetime import date
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
 from core.config import cfg
-from core.datatype import MovieInfo
+from core.datatype import MovieInfo, GenreMap
 
 
 base_url = cfg.ProxyFree.javbus
+genre_map = GenreMap('data/genre_javbus_youma.jsonc')
 permanent_url = 'https://www.javbus.com'
 
 
@@ -49,7 +50,13 @@ def parse_data(movie: MovieInfo):
     movie.magnet = magnet
 
 
+def parse_clean_data(movie: MovieInfo):
+    """解析指定番号的影片数据并进行清洗"""
+    parse_data(movie)
+    movie.genre = genre_map.map(movie.genre)
+
+
 if __name__ == "__main__":
     movie = MovieInfo('IPX-177')
-    parse_data(movie)
+    parse_clean_data(movie)
     print(movie)
