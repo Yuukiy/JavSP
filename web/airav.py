@@ -1,6 +1,7 @@
 """从airav抓取数据"""
 import os
 import sys
+import logging
 from datetime import date
 
 
@@ -9,6 +10,7 @@ from web.base import *
 from core.datatype import MovieInfo
 
 
+logger = logging.getLogger(__name__)
 base_url = 'https://www.airav.wiki'
 
 
@@ -17,10 +19,14 @@ def parse_data(movie: MovieInfo):
     # airav也提供简体，但是部分影片的简介只在繁体界面下有，因此抓取繁体页面的数据
     html = get_html(f'{base_url}/video/{movie.dvdid}')
     # airav的部分网页样式是通过js脚本生成的，调试和解析xpath时要根据未经脚本修改的原始网页来筛选元素
+    if html.xpath("/html/head/title") == 'AIRAV-WIKI':
+        logger.debug(f"'{movie.dvdid}': airav无资源")
+        return
     container = html.xpath("//div[@class='min-h-500 row']")[0]
     cover = html.xpath("/html/head/meta[@property='og:image']/@content")[0]
     info = container.xpath("//div[@class='d-flex videoDataBlock']")[0]
     preview_pics = info.xpath("div[@class='mobileImgThumbnail']/a/@href")
+    # airav部分资源也有预览片，但是预览片似乎是通过js获取的blob链接，无法通过静态网页解析来获取
     title = info.xpath("h5/text()")[0]
     dvdid = info.xpath("h5/text()")[1]
     genre = info.xpath("//div[@class='tagBtnMargin']/a/text()")
