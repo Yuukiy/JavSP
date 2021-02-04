@@ -3,7 +3,6 @@ import os
 import sys
 import logging
 from datetime import date
-from urllib.parse import urljoin
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -30,7 +29,7 @@ def parse_data(movie: MovieInfo):
         for tag in video_tags:
             tag_dvdid = tag.xpath("div[@class='id']/text()")[0]
             if tag_dvdid == movie.dvdid:
-                new_url = urljoin(url, tag.xpath("@href")[0])
+                new_url = tag.xpath("@href")[0]
                 html = get_html(new_url)
                 container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
                 title_tag = container.xpath("div/h3/a/text()")

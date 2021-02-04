@@ -26,6 +26,8 @@ def get_html(url, encoding='utf-8'):
     """获取指定网页经lxml解析后的document"""
     text = get_html_text(url, encoding=encoding)
     html = lxml.html.fromstring(text)
+    html.make_links_absolute(url, resolve_base_href=True)
+    # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
     return html
 
 
