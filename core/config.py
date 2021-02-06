@@ -132,7 +132,10 @@ class Config(configparser.ConfigParser):
 
     def norm_boolean(self):
         """转换所有的布尔类型配置"""
-        for sec, key in [('Crawler', 'remove_actor_in_title')]:
+        for sec, key in [
+            ('Crawler', 'remove_actor_in_title'),
+            ('NFO', 'add_genre_to_tag')
+        ]:
             self._sections[sec][key] = self.getboolean(sec, key)
 
     def norm_int(self):

@@ -7,6 +7,7 @@ from lxml.builder import E
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.datatype import MovieInfo
+from core.config import cfg
 
 
 def write_nfo(info: MovieInfo, nfo_file):
@@ -26,11 +27,14 @@ def write_nfo(info: MovieInfo, nfo_file):
     # 目前没有合适的字段用于outline（一行简短的介绍），力求不在nfo中写入冗余的信息，因此不添加outline标签
     # 而且无论是Kodi还是Jellyfin中都没有找到实际显示outline的位置；tagline倒是都有发现
 
-    # TODO: plot：可以有多行的详细介绍，待完成arzon抓取功能以后再添加
+    if info.plot:
+        nfo.append(E.plot(info.plot))
 
     # 目前没有合适的字段用于tagline（一行简短的介绍）
 
-    nfo.append(E.runtime(info.duration))
+    # 并不是每个数据源都有影片的时长信息（例如airav）
+    if info.duration:
+        nfo.append(E.runtime(info.duration))
 
     # thumb字段可以用来为不同的aspect强制指定图片文件名
     # 例如可以将'NoPoster.jpg'指定给'ABC-123.mp4'，而不必按照poster文件名的常规命名规则来
@@ -44,12 +48,14 @@ def write_nfo(info: MovieInfo, nfo_file):
     if info.cid:
         nfo.append(E.uniqueid(info.cid, type='cid'))
 
-    # 写入genre分类。在Jellyfin上，只有genre可以直接跳转，tag不可以
+    # 写入genre分类：优先使用genre_norm。在Jellyfin上，只有genre可以直接跳转，tag不可以
     # 也同时写入tag。TODO: 还没有研究tag和genre在Kodi上的区别
-    for i in info.genre:
+    genre = info.genre_norm if info.genre_norm else info.genre
+    for i in genre:
         nfo.append(E.genre(i))
-    for i in info.genre:
-        nfo.append(E.tag(i))
+    if cfg.NFO.add_genre_to_tag:
+        for i in genre:
+            nfo.append(E.tag(i))
 
     # Kodi上的country字段没说必须使用国家的代码（比如JP），所以目前暂定直接使用国家名
     nfo.append(E.country('日本'))
