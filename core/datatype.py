@@ -28,6 +28,7 @@ class MovieInfo:
         self.genre_norm = None      # 统一后的影片分类的标签
         self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
+        self.ori_title = None       # 原始影片标题，仅在标题被处理过时才对此字段赋值
         self.magnet = None          # 磁力链接
         self.serial = None          # 系列
         self.actress = None         # 出演女优

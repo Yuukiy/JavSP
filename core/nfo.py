@@ -16,8 +16,9 @@ def write_nfo(info: MovieInfo, nfo_file):
     nfo = E.movie()
     nfo.append(E.title(info.dvdid + ' ' + info.title))
 
-    # TODO: 只有去除了标题中的重复女优名或者进行了翻译时需要使用原始标题
-    # nfo.append(E.originaltitle('原始标题'))
+    # 仅在标题被处理过时'ori_title'字段才会有值
+    if info.ori_title:
+        nfo.append(E.originaltitle(info.ori_title))
 
     # Kodi的文档中评分支持多个来源，但经测试，添加了多个评分时Kodi也只显示了第一个评分
     # 由于目前也只有一个评分来源（JavLibrary），因此只使用单个评分
