@@ -23,8 +23,11 @@ def get_proxy_free_url(site_name: str, prefer_url=None) -> str:
     get_funcs = [i for i in dir(sys.modules[__name__]) if i.startswith('_get_')]
     if func_name in get_funcs:
         get_urls = getattr(sys.modules[__name__], func_name)
-        urls = get_urls()
-        return _choose_one(urls)
+        try:
+            urls = get_urls()
+            return _choose_one(urls)
+        except:
+            return ''
     else:
         raise Exception("Dont't know how to get proxy-free url for " + site_name)
 
