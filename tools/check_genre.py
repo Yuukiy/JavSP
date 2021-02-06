@@ -21,51 +21,33 @@ from web.base import *
 from core.config import cfg
 
 
-def retrive_tag_data(genre_tags, record):
-    """从各个a标签中获取genre id, url, 文本"""
-    for tag in genre_tags:
-        url = tag.get('href')
-        id = url.split('/')[-1]
-        name = tag.text.strip()
-        if id in record:
-            record[id].append(name)
-        else:
-            record[id] = [url, name]
-
-
 def get_javbus_genre():
     """获取JavBus的genre各语言对照列表"""
     record = {}   # {id: [cn_url, zh_tw, ja, en]}
     base_url = cfg.ProxyFree.javbus
-    zh_tw = get_html(f'{base_url}/genre')
-    ja = get_html(f'{base_url}/ja/genre')
-    en = get_html(f'{base_url}/en/genre')
-    for html in [zh_tw, ja, en]:
-        genre_tags = html.xpath("//a[@class='col-lg-2 col-md-2 col-sm-3 col-xs-6 text-center']")
-        retrive_tag_data(genre_tags, record)
+    subsite_urls = {
+        'normal':     ['/genre', '/ja/genre', '/en/genre'],
+        'uncensored': ['/uncensored/genre', '/ja/uncensored/genre', '/en/uncensored/genre'],
+    }
+    for subsite, urls in subsite_urls.items():
+        id_prefix = 'uncensored-' if subsite == 'uncensored' else ''
+        zh_tw = get_html(base_url + urls[0])
+        ja = get_html(base_url + urls[1])
+        en = get_html(base_url + urls[2])
+        for html in [zh_tw, ja, en]:
+            genre_tags = html.xpath("//div[@class='row genre-box']/a")
+            # 提取各个genre的信息
+            for tag in genre_tags:
+                url = tag.get('href')
+                id = id_prefix + url.split('/')[-1]
+                name = tag.text.strip()
+                if id in record:
+                    record[id].append(name)
+                else:
+                    record[id] = [url, name]
     # 将相关数据进行结构化后返回
     data = {
         'site_name': 'javbus',
-        'header': ['id', 'url', 'zh_tw', 'ja', 'en'],
-        'record': record
-    }
-    return data
-
-
-def get_javbus_genre_uncensored():
-    """获取JavBus无码影片的genre各语言对照列表"""
-    # 由于JavBus有码和无码的genre id有重复（但是代表的分类不同），所以二者无法组合成一个数据文件
-    record = {}   # {id: [cn_url, zh_tw, ja, en]}
-    base_url = cfg.ProxyFree.javbus
-    zh_tw = get_html(f'{base_url}/uncensored/genre')
-    ja = get_html(f'{base_url}/ja/uncensored/genre')
-    en = get_html(f'{base_url}/en/uncensored/genre')
-    for html in [zh_tw, ja, en]:
-        genre_tags = html.xpath("//a[@class='col-lg-2 col-md-2 col-sm-3 col-xs-6 text-center']")
-        retrive_tag_data(genre_tags, record)
-    # 将相关数据进行结构化后返回
-    data = {
-        'site_name': 'javbus_uncensored',
         'header': ['id', 'url', 'zh_tw', 'ja', 'en'],
         'record': record
     }
@@ -88,7 +70,15 @@ def get_javdb_genre():
         en = get_html(base_url + urls[1])
         for html in [zh_tw, en]:
             genre_tags = html.xpath("//span[@class='tag_labels']/a")
-            retrive_tag_data(genre_tags, record)
+            # 提取各个genre的信息
+            for tag in genre_tags:
+                url = tag.get('href')
+                id = url.split('/')[-1]
+                name = tag.text.strip()
+                if id in record:
+                    record[id].append(name)
+                else:
+                    record[id] = [url, name]
     # 移除分类中的c9:'筛选', c10:'年份', c11:'时长'
     for id, _ in record.copy().items():
         catelog = id.split('?')[1].split('=')[0]   # e.g. tags?c11=2021
@@ -119,4 +109,4 @@ def write_csv(data):
 
 
 if __name__ == "__main__":
-    write_csv(get_javdb_genre())
+    write_csv(get_javbus_genre())
