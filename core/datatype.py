@@ -25,6 +25,7 @@ class MovieInfo:
         self.plot = None            # 故事情节
         self.cover = None           # 封面图片（URL）
         self.genre = None           # 影片分类的标签
+        self.genre_norm = None      # 统一后的影片分类的标签
         self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
         self.magnet = None          # 磁力链接
@@ -34,6 +35,7 @@ class MovieInfo:
         self.duration = None        # 影片时长
         self.producer = None        # 制作商
         self.publisher = None       # 发行商
+        self.uncensored = None      # 是否为无码影片
         self.publish_date = None    # 发布日期
         self.preview_pics = None    # 预览图片（URL）
         self.preview_video = None   # 预览视频（URL）

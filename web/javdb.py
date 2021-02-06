@@ -58,7 +58,15 @@ def parse_data(movie: MovieInfo):
         score_str = score_tag[0].tail
         score = re.search(r'([\d.]+)分', score_str).group(1)
         movie.score = "{:.2f}".format(float(score)*2)
-    genre = info.xpath("//strong[text()='類別:']/../span/a/text()")
+    genre_tags = info.xpath("//strong[text()='類別:']/../span/a")
+    genre, genre_id = [], []
+    for tag in genre_tags:
+        pre_id = tag.get('href').split('/')[-1]
+        genre.append(tag.text)
+        genre_id.append(pre_id)
+        # 判定影片有码/无码
+        subsite = pre_id.split('?')[0]
+        movie.uncensored = {'uncensored': True, 'tags':False}.get(subsite)
     actress = info.xpath("//strong[text()='演員:']/../span/a/text()")
     magnet = container.xpath("//td[@class='magnet-name']/a/@href")
 
@@ -70,6 +78,7 @@ def parse_data(movie: MovieInfo):
     movie.producer = producer
     movie.publisher = publisher
     movie.genre = genre
+    movie.genre_norm = genre_id  # 先将id存放到genre_norm字段，清洗数据后将会被替换为翻译后的genre
     movie.actress = actress
     movie.magnet = [i.replace('[javdb.com]','') for i in magnet]
 
@@ -77,7 +86,7 @@ def parse_data(movie: MovieInfo):
 def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
     parse_data(movie)
-    movie.genre = genre_map.map(movie.genre)
+    movie.genre_norm = genre_map.map(movie.genre_norm)
     movie.title = remove_trail_actor_in_title(movie.title, movie.actress)
 
 

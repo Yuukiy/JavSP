@@ -37,7 +37,17 @@ def parse_data(movie: MovieInfo):
     genre_tags = info.xpath("p[text()='類別:']")[0].getnext().xpath("span/a")
     actress = info.xpath("//div[@class='star-name']/a/@title")
     magnet = html.xpath("//table[@id='magnet-table']/tr/td[1]/a/@href")
-    genre = [i.text for i in genre_tags]
+    genre, genre_id = [], []
+    for tag in genre_tags:
+        tag_url = tag.get('href')
+        pre_id = tag_url.split('/')[-1]
+        genre.append(tag.text)
+        if 'uncensored' in tag_url:
+            movie.uncensored = True
+            genre_id.append('uncensored-' + pre_id)
+        else:
+            movie.uncensored = False
+            genre_id.append(pre_id)
     # 整理数据并更新movie的相应属性
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
@@ -47,6 +57,7 @@ def parse_data(movie: MovieInfo):
     movie.producer = producer
     movie.publisher = publisher
     movie.genre = genre
+    movie.genre_norm = genre_id  # 先将id存放到genre_norm字段，清洗数据后将会被替换为翻译后的genre
     movie.actress = actress
     movie.magnet = magnet
 
@@ -54,7 +65,7 @@ def parse_data(movie: MovieInfo):
 def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
     parse_data(movie)
-    movie.genre = genre_map.map(movie.genre)
+    movie.genre_norm = genre_map.map(movie.genre_norm)
     movie.title = remove_trail_actor_in_title(movie.title, movie.actress)
 
 
