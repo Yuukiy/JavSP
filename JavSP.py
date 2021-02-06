@@ -79,7 +79,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         thread_pool.append(th)
     # 等待所有线程结束
     for th in thread_pool:
-        th.join(timeout=5)
+        th.join(timeout=(cfg.Network.retry * cfg.Network.timeout))
     return all_info
 
 

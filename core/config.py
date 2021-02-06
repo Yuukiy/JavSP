@@ -30,16 +30,15 @@ class Config(configparser.ConfigParser):
             raise KeyError(name)
         return self._sections.get(name)
 
-    def read(self, filenames, encoding=None):
+    def read(self, filenames, encoding='utf-8'):
         # 覆盖原生的read方法，以自动处理不同的编码
-        # TODO: filenames参数实际上可以为多个文件的列表，因此可以直接支持此前设想的多配置文件功能
         try:
             super(Config, self).read(filenames, encoding)
         except UnicodeDecodeError:
             try:
-                super(Config, self).read(filenames, 'utf-8')
-            except:
                 super(Config, self).read(filenames, 'utf-8-sig')
+            except:
+                super(Config, self).read(filenames)
 
     def norm_config(self):
         """对配置中必要的项目进行格式转换，以便于其他模块直接使用"""
@@ -56,6 +55,7 @@ class Config(configparser.ConfigParser):
                 if key_norm_method in norm_methods:
                     func = getattr(self, key_norm_method)
                     self._sections[sec][key] = func(value)
+        self.norm_int()
         self.norm_boolean()
 
     def _norm_Network(self):
@@ -134,6 +134,11 @@ class Config(configparser.ConfigParser):
         """转换所有的布尔类型配置"""
         for sec, key in [('Crawler', 'remove_actor_in_title')]:
             self._sections[sec][key] = self.getboolean(sec, key)
+
+    def norm_int(self):
+        """转换所有的int类型配置"""
+        for sec, key in [('Network', 'timeout')]:
+            self._sections[sec][key] = self.getint(sec, key)
 
 
 cfg = Config()
