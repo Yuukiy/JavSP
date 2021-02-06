@@ -27,7 +27,7 @@ for i in logging.root.manager.loggerDict:
     logging.getLogger(i).disabled = True
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(filename='JavSP.log', mode='w', encoding='utf-8')
+file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter(
     fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
@@ -53,9 +53,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         """对抓取器函数进行包装，便于更新提示信息和自动重试"""
         crawler_name = threading.current_thread().name
         task_info = f'Crawler: {crawler_name}: {info.dvdid}'
-        retry = 0
-        while (retry < cfg.Network.retry):
-            retry += 1
+        for retry in range(cfg.Network.retry):
             try:
                 parser(info)
                 logger.debug(f'{task_info}: 抓取成功')
@@ -63,7 +61,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                     tqdm_bar.set_description(f'{crawler_name}: 抓取完成')
                 break
             except requests.exceptions.RequestException as e:
-                logger.debug(f'{task_info}: 网络错误，正在重试 ({retry}/{cfg.Network.retry}): \n{e}')
+                logger.debug(f'{task_info}: 网络错误，正在重试 ({retry+1}/{cfg.Network.retry}): \n{e}')
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
             except Exception as e:
@@ -157,12 +155,13 @@ if __name__ == "__main__":
     logger.info(f'    共找到{len(all_movies)}部影片')
     tqdm.write('')
 
-    outer_bar = tqdm(all_movies, ascii=True, leave=False)
+    outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     for movie in outer_bar:
-        outer_bar.set_description(f'正在整理影片: {movie.dvdid}')
+        filenames = [os.path.split(i)[1] for i in movie.files]
+        logger.info('正在整理: ' + ', '.join(filenames))
         inner_bar = tqdm(total=6, desc='步骤', ascii=True, leave=False)
         # 执行具体的抓取和整理任务
-        inner_bar.set_description(f'启动并行任务抓取数据')
+        inner_bar.set_description(f'启动并发任务')
         all_info = parallel_crawler(movie, inner_bar)
         inner_bar.update()
 
@@ -188,8 +187,7 @@ if __name__ == "__main__":
             write_nfo(movie.info, movie.nfo_file)
             inner_bar.update()
 
-            logger.info(f'整理完成: {movie.dvdid}')
-            logger.info(f'相关文件已保存到: {movie.save_dir}')
+            logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
         else:
-            logger.error('整理失败')
+            logger.error('整理失败\n')
         inner_bar.close()

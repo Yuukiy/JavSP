@@ -1,6 +1,7 @@
 """与文件相关的各类功能"""
 import os
 import sys
+from typing import List
 from tkinter import filedialog, Tk
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -18,7 +19,7 @@ def select_folder(default_dir=''):
         return os.path.normpath(path)
 
 
-def get_movies(root: str):
+def get_movies(root: str) -> List[Movie]:
     """获取文件夹内的所有影片的列表（自动探测分片，但要求分片在同一文件夹内）"""
     movies = []
     for dirpath, dirnames, filenames in os.walk(root):

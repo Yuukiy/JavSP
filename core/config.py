@@ -10,7 +10,7 @@ from web.proxyfree import get_proxy_free_url
 
 
 logger = logging.getLogger(__name__)
-logger.info('读取配置文件...')
+logger.info('读取配置...')
 
 
 class DotDict(dict):
