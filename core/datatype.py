@@ -31,6 +31,7 @@ class MovieInfo:
         self.magnet = None          # 磁力链接
         self.serial = None          # 系列
         self.actress = None         # 出演女优
+        self.actress_pics = None    # 出演女优的头像。单列一个字段，便于满足不同的使用需要
         self.director = None        # 导演
         self.duration = None        # 影片时长
         self.producer = None        # 制作商
