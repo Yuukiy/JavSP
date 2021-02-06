@@ -117,6 +117,30 @@ def get_avsox_genre():
     return data
 
 
+def get_javlib_genre():
+    """获取JavLibrary的genre各语言对照列表"""
+    record = {}
+    base_url = cfg.ProxyFree.javlib
+    languages = ['cn', 'tw', 'en', 'ja']
+    for lang in languages:
+        html = get_html(f'{base_url}/{lang}/genres.php')
+        genre_tags = html.xpath("//div[@class='genreitem']/a")
+        for tag in genre_tags:
+            url = tag.get('href')
+            id = url.split('=')[-1]
+            name = tag.text.strip()
+            if id in record:
+                record[id].append(name)
+            else:
+                record[id] = [url, name]
+    data = {
+        'site_name': 'javlib',
+        'header': ['id', 'url', 'zh_cn', 'zh_tw', 'en', 'ja'],
+        'record': record
+    }
+    return data
+
+
 def write_csv(data):
     """将genre按照中文翻译排序后写入csv文件"""
     # data格式: {'site_name': name, 'header': ['id', 'url', 'zh_tw'...], 'record': {id1: [ls1], id2: [ls2]...}}
@@ -133,4 +157,4 @@ def write_csv(data):
 
 
 if __name__ == "__main__":
-    write_csv(get_avsox_genre())
+    write_csv(get_javlib_genre())
