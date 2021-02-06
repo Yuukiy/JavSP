@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 from core.datatype import MovieInfo
 
 
-scrapers = ('javdb', 'javbus', 'javlib', 'avsox')
+scrapers = ('javdb', 'javbus', 'javlib', 'avsox', 'airav')
 pretty_errors.configure(display_link=True)
 
 
