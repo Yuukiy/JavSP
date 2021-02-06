@@ -9,6 +9,15 @@ from web.base import is_url
 from web.proxyfree import get_proxy_free_url
 
 
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter(
+    fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+root_logger.addHandler(file_handler)
+
+
 logger = logging.getLogger(__name__)
 logger.info('读取配置...')
 

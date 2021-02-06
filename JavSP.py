@@ -25,16 +25,11 @@ pretty_errors.configure(display_link=True)
 # 禁用导入的模块中的日志（仅对此时已执行导入模块的生效）
 for i in logging.root.manager.loggerDict:
     logging.getLogger(i).disabled = True
+# 配置 logging StreamHandler
 root_logger = logging.getLogger()
-root_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter(
-    fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 console_handler = logging.StreamHandler(stream=TqdmOut)
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(ColoredFormatter(fmt='%(message)s'))
-root_logger.addHandler(file_handler)
 root_logger.addHandler(console_handler)
 
 
