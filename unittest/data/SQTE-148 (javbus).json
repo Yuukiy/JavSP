@@ -11,7 +11,7 @@
     "美少女",
     "4小時以上作品"
   ],
-  "genre_norm": [
+  "genre_id": [
     "2",
     "g",
     "w",
@@ -19,6 +19,7 @@
     "30",
     "43"
   ],
+  "genre_norm": null,
   "score": null,
   "title": "S-Cute年間売上ランキング2016 Top30",
   "magnet": null,

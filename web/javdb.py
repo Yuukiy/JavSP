@@ -78,7 +78,7 @@ def parse_data(movie: MovieInfo):
     movie.producer = producer
     movie.publisher = publisher
     movie.genre = genre
-    movie.genre_norm = genre_id  # 先将id存放到genre_norm字段，清洗数据后将会被替换为翻译后的genre
+    movie.genre_id = genre_id
     movie.actress = actress
     movie.magnet = [i.replace('[javdb.com]','') for i in magnet]
 
@@ -86,7 +86,8 @@ def parse_data(movie: MovieInfo):
 def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
     parse_data(movie)
-    movie.genre_norm = genre_map.map(movie.genre_norm)
+    movie.genre_norm = genre_map.map(movie.genre_id)
+    movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（暗示已经完成转换）
     movie.title = remove_trail_actor_in_title(movie.title, movie.actress)
 
 

@@ -14,7 +14,7 @@ def write_nfo(info: MovieInfo, nfo_file):
     """将存储了影片信息的'info'写入到nfo文件中"""
     # NFO spec: https://kodi.wiki/view/NFO_files/Movies
     nfo = E.movie()
-    nfo.append(E.title(info.title))
+    nfo.append(E.title(info.dvdid + ' ' + info.title))
 
     # TODO: 只有去除了标题中的重复女优名或者进行了翻译时需要使用原始标题
     # nfo.append(E.originaltitle('原始标题'))
@@ -79,9 +79,12 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     # TODO: fileinfo 字段，看起来可以给定字幕语言和类型，留待开发
 
-    # 写入演员名。 TODO: Kodi支持用thumb显示演员头像，但是需要爬取数据时把演员头像地址也爬一下
+    # 写入演员名。Kodi支持用thumb显示演员头像，如果能获取到演员头像也一并写入
     for i in info.actress:
-        nfo.append(E.actor(E.name(i)))
+        if i in info.actress_pics:
+            nfo.append(E.actor(E.name(i), E.thumb(info.actress_pics[i])))
+        else:
+            nfo.append(E.actor(E.name(i)))
 
     with open(nfo_file, 'wt', encoding='utf-8') as f:
         f.write(tostring(nfo, encoding='unicode', pretty_print=True,

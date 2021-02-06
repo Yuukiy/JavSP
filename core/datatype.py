@@ -25,6 +25,7 @@ class MovieInfo:
         self.plot = None            # 故事情节
         self.cover = None           # 封面图片（URL）
         self.genre = None           # 影片分类的标签
+        self.genre_id = None        # 影片分类的标签的ID
         self.genre_norm = None      # 统一后的影片分类的标签
         self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
@@ -136,7 +137,7 @@ class GenreMap(dict):
         self.update(genres)
 
     def map(self, ls):
-        """将列表ls按照内置的映射进行替换：保留映射表中不存在的键，删除值为None的键"""
+        """将列表ls按照内置的映射进行替换：保留映射表中不存在的键，删除值为空的键"""
         mapped = [self.get(i, i) for i in ls]
         cleaned = [i for i in mapped if i]  # 译文为空表示此genre应当被删除
         return cleaned
