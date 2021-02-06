@@ -11,7 +11,7 @@ from core.datatype import MovieInfo, GenreMap
 
 
 base_url = cfg.ProxyFree.javbus
-genre_map = GenreMap('data/genre_javbus_youma.jsonc')
+genre_map = GenreMap('data/genre_javbus.csv')
 permanent_url = 'https://www.javbus.com'
 
 

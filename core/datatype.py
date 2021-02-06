@@ -1,9 +1,12 @@
 """定义数据类型和一些通用性的对数据类型的操作"""
 import os
-import re
+import csv
 import json
 import logging
 from datetime import date
+
+
+logger = logging.getLogger(__name__)
 
 
 class MovieInfo:
@@ -117,14 +120,20 @@ class ColoredFormatter(logging.Formatter):
 class GenreMap(dict):
     """genre的映射表"""
     def __init__(self, file):
-        with open(file, 'rt', encoding='utf-8') as f:
-            text = f.read()
-        pure_text = re.sub(r'//.*$', '', text, flags=re.M)
-        d = json.loads(pure_text)
-        self.update(d)
+        genres = {}
+        with open(file, newline='', encoding='utf-8-sig') as csvfile:
+            reader = csv.DictReader(csvfile)
+            try:
+                for row in reader:
+                    genres[row['id']] = row['translate']
+            except UnicodeDecodeError:
+                logger.error('CSV file must be saved as UTF-8-BOM to edit is in Excel')
+            except KeyError:
+                logger.error("The columns 'id' and 'translate' must exist in the csv file")
+        self.update(genres)
 
     def map(self, ls):
         """将列表ls按照内置的映射进行替换：保留映射表中不存在的键，删除值为None的键"""
         mapped = [self.get(i, i) for i in ls]
-        cleaned = [i for i in mapped if i]  # 删除配置为None的项
+        cleaned = [i for i in mapped if i]  # 译文为空表示此genre应当被删除
         return cleaned

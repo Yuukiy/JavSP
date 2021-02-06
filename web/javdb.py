@@ -14,7 +14,7 @@ from core.datatype import MovieInfo, GenreMap
 
 logger = logging.getLogger(__name__)
 base_url = cfg.ProxyFree.javdb
-genre_map = GenreMap('data/genre_javdb_youma.jsonc')
+genre_map = GenreMap('data/genre_javdb.csv')
 permanent_url = 'https://www.javdb.com'
 
 
