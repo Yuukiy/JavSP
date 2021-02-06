@@ -82,7 +82,7 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     # 写入演员名。Kodi支持用thumb显示演员头像，如果能获取到演员头像也一并写入
     for i in info.actress:
-        if i in info.actress_pics:
+        if (info.actress_pics) and (i in info.actress_pics):
             nfo.append(E.actor(E.name(i), E.thumb(info.actress_pics[i])))
         else:
             nfo.append(E.actor(E.name(i)))
