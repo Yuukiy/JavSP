@@ -1,7 +1,7 @@
 {
   "dvdid": "IPX-177",
   "cid": null,
-  "pid": null,
+  "plot": null,
   "cover": "https://pics.javcdn.pw/cover/6n54_b.jpg",
   "genre": [
     "單體作品",
@@ -12,6 +12,16 @@
     "美少女",
     "數位馬賽克",
     "高畫質"
+  ],
+  "genre_norm": [
+    "f",
+    "g",
+    "x",
+    "10",
+    "2x",
+    "30",
+    "31",
+    "4o"
   ],
   "score": null,
   "title": "生意気な妹にニーハイを履かせ僕だけの「絶対領域」を誕生させ僕好みに痴女らせた。 相沢みなみ",
@@ -24,6 +34,7 @@
   "duration": "170",
   "producer": "アイデアポケット",
   "publisher": "ティッシュ",
+  "uncensored": false,
   "publish_date": "2018-07-14",
   "preview_pics": [
     "https://pics.dmm.co.jp/digital/video/ipx00177/ipx00177jp-1.jpg",
