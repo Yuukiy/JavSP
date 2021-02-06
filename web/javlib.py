@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-from datetime import date
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -41,7 +40,7 @@ def parse_data(movie: MovieInfo):
     cover = container.xpath("//img[@id='video_jacket_img']/@src")[0]
     info = container.xpath("//div[@id='video_info']")[0]
     dvdid = info.xpath("div[@id='video_id']//td[@class='text']/text()")[0]
-    date_str = info.xpath("div[@id='video_date']//td[@class='text']/text()")[0]
+    publish_date = info.xpath("div[@id='video_date']//td[@class='text']/text()")[0]
     duration = info.xpath("div[@id='video_length']//span[@class='text']/text()")[0]
     director_tag = info.xpath("//span[@class='director']/a/text()")
     if director_tag:
@@ -58,7 +57,7 @@ def parse_data(movie: MovieInfo):
     if cover.startswith('//'):  # 补全URL中缺少的协议段
         cover = 'https:' + cover
     movie.cover = cover
-    movie.publish_date = date.fromisoformat(date_str)
+    movie.publish_date = publish_date
     movie.duration = duration
     movie.producer = producer
     movie.publisher = publisher

@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import logging
-from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
@@ -43,7 +42,7 @@ def parse_data(movie: MovieInfo):
             preview_video = 'https:' + preview_video
         movie.preview_video = preview_video
     dvdid = info.xpath("div/span")[0].text_content()
-    date_str = info.xpath("div/strong[text()='日期:']")[0].getnext().text
+    publish_date = info.xpath("div/strong[text()='日期:']")[0].getnext().text
     duration = info.xpath("div/strong[text()='時長:']")[0].getnext().text.replace('分鍾', '').strip()
     director_tag = info.xpath("div/strong[text()='導演:']")
     if director_tag:
@@ -73,7 +72,7 @@ def parse_data(movie: MovieInfo):
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.preview_pics = preview_pics
-    movie.publish_date = date.fromisoformat(date_str)
+    movie.publish_date = publish_date
     movie.duration = duration
     movie.producer = producer
     movie.publisher = publisher

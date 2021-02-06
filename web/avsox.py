@@ -1,7 +1,6 @@
 """从avsox抓取数据"""
 import os
 import sys
-from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
@@ -27,7 +26,7 @@ def parse_data(movie: MovieInfo):
     cover = container.xpath("//a[@class='bigImage']/@href")[0]
     info = container.xpath("div/div[@class='col-md-3 info']")[0]
     dvdid = info.xpath("p/span[@style]/text()")[0]
-    date_str = info.xpath("p/span[text()='发行时间:']")[0].tail.strip()
+    publish_date = info.xpath("p/span[text()='发行时间:']")[0].tail.strip()
     duration = info.xpath("p/span[text()='长度:']")[0].tail.replace('分钟', '').strip()
     producer_tag = info.xpath("p[text()='制作商: ']")[0].getnext().xpath("a")
     if producer_tag:
@@ -40,7 +39,7 @@ def parse_data(movie: MovieInfo):
 
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
-    movie.publish_date = date.fromisoformat(date_str)
+    movie.publish_date = publish_date
     movie.duration = duration
     movie.genre = genre
     movie.actress = actress

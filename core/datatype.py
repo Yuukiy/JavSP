@@ -3,7 +3,6 @@ import os
 import csv
 import json
 import logging
-from datetime import date
 
 
 logger = logging.getLogger(__name__)
@@ -50,8 +49,6 @@ class MovieInfo:
 
     def __str__(self) -> str:
         d = vars(self)
-        if type(d['publish_date']) is date:
-            d['publish_date'] = d['publish_date'].isoformat()
         return json.dumps(d, indent=2, ensure_ascii=False)
 
     def __repr__(self) -> str:
@@ -70,10 +67,6 @@ class MovieInfo:
     def load(self, filepath) -> None:
         with open(filepath, 'rt', encoding='utf-8') as f:
             d = json.load(f)
-        try:
-            d['publish_date'] = date.fromisoformat(d['publish_date'])
-        except:
-            d['publish_date'] = None
         # 更新对象属性
         attrs = vars(self).keys()
         for k, v in d.items():

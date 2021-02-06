@@ -1,7 +1,6 @@
 """从JavBus抓取数据"""
 import os
 import sys
-from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
@@ -24,7 +23,7 @@ def parse_data(movie: MovieInfo):
     preview_pics = container.xpath("//div[@id='sample-waterfall']/a/@href")
     info = container.xpath("//div[@class='col-md-3 info']")[0]
     dvdid = info.xpath("p/span[text()='識別碼:']")[0].getnext().text
-    date_str = info.xpath("p/span[text()='發行日期:']")[0].tail.strip()
+    publish_date = info.xpath("p/span[text()='發行日期:']")[0].tail.strip()
     duration = info.xpath("p/span[text()='長度:']")[0].tail.replace('分鐘', '').strip()
     director_tag = info.xpath("p/span[text()='導演:']")
     if director_tag:    # xpath没有匹配时将得到空列表
@@ -62,7 +61,7 @@ def parse_data(movie: MovieInfo):
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.preview_pics = preview_pics
-    movie.publish_date = date.fromisoformat(date_str)
+    movie.publish_date = publish_date
     movie.duration = duration
     movie.producer = producer
     movie.publisher = publisher

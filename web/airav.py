@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-from datetime import date
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -32,13 +31,13 @@ def parse_data(movie: MovieInfo):
     genre = info.xpath("//div[@class='tagBtnMargin']/a/text()")
     actress = info.xpath("//li[@class='videoAvstarListItem']/a/text()")
     producer = info.xpath("//li[text()='廠商']/a/text()")[0]
-    date_str = info.xpath("//li[text()='發片日期']/text()[last()]")[0]
+    publish_date = info.xpath("//li[text()='發片日期']/text()[last()]")[0]
     plot = info.xpath("//div[@class='synopsis']/p/text()")[0]
 
     movie.title = title
     movie.cover = cover
     movie.preview_pics = preview_pics
-    movie.publish_date = date.fromisoformat(date_str)
+    movie.publish_date = publish_date
     movie.producer = producer
     movie.genre = genre
     movie.actress = actress
