@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import logging
 from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -11,6 +12,7 @@ from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
 
 
+logger = logging.getLogger(__name__)
 base_url = cfg.ProxyFree.javdb
 genre_map = GenreMap('data/genre_javdb_youma.jsonc')
 permanent_url = 'https://www.javdb.com'
@@ -21,10 +23,14 @@ def parse_data(movie: MovieInfo):
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
     html = get_html(f'{base_url}/search?q={movie.dvdid}')
     ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
-    paths = html.xpath("//div[@id='videos']/div/div/a/@href")
-    path = paths[ids.index(movie.dvdid.lower())]
+    movie_urls = html.xpath("//div[@id='videos']/div/div/a/@href")
+    try:
+        new_url = movie_urls[ids.index(movie.dvdid.lower())]
+    except ValueError:
+        logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
+        return
 
-    html = get_html(f'{base_url}/{path}')
+    html = get_html(new_url)
     container = html.xpath("/html/body/section/div[@class='container']")[0]
     info = container.xpath("div/div/div/nav")[0]
     title = container.xpath("h2/strong/text()")[0]
