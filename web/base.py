@@ -13,15 +13,14 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 def request_get(url):
     """获取指定url的原始请求"""
-    r = requests.get(url)
+    r = requests.get(url, headers=headers)
     r.raise_for_status()
     return r
 
 
 def get_html_text(url, encoding=None):
     """获取指定网页的原始html文本"""
-    r = requests.get(url, headers=headers)
-    r.raise_for_status()
+    r = request_get(url)
     if encoding:
         r.encoding = encoding
     else:

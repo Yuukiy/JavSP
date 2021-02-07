@@ -77,7 +77,6 @@ def parse_data(movie: MovieInfo):
         if score:
             movie.score = f'{score:.2f}'
         # 预览视频是动态加载的，不在静态网页中
-        #TODO: 似乎还有些问题。这里获取到的url无法直接打开，但是浏览器中获取到的可以，可能是缺少某些cookies
         desc_frame_url = container.xpath("//section[@class='items_article_Contents']/iframe/@src")[0]
         key = desc_frame_url.split('-')[-1]
         url = f'{base_url}/api/v2/videos/{fc2_id}/sample?key={key}'
