@@ -5,6 +5,9 @@ import configparser
 from string import Template
 
 
+__all__ = ['cfg', 'is_url']
+
+
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
@@ -15,7 +18,6 @@ root_logger.addHandler(file_handler)
 
 
 logger = logging.getLogger(__name__)
-logger.info('读取配置...')
 
 
 def is_url(url: str):
@@ -149,10 +151,26 @@ class Config(configparser.ConfigParser):
             self._sections[sec][key] = self.getboolean(sec, key)
 
 
+def validate_proxy(cfg: Config):
+    """解析配置文件中的代理"""
+    proxies = {}
+    proxy = cfg.Network.proxy.lower()
+    if proxy:   # 如果配置了代理
+        match = re.match('^(socks5|http)://([-.a-z\d]+):(\d+)$', proxy)
+        if match:
+            proxies = {'http': proxy, 'https': proxy}
+        else:
+            logger.warning(f"配置的代理格式无效，请使用类似'http://127.0.0.1:1080'的格式")
+    cfg.Network.proxy = proxies
+
+
+logger.info('读取配置...')
+
 cfg = Config()
 cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
 cfg.read(cfg_file)
-cfg.norm_config()
+# cfg.norm_config()
+validate_proxy(cfg)
 
 
 if __name__ == "__main__":
