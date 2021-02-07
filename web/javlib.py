@@ -47,11 +47,11 @@ def parse_data(movie: MovieInfo):
                 new_url = no_blueray[0].get('href')
                 logger.debug(f"'{movie.dvdid}': 存在{match_count}个同番号搜索结果，为避免蓝光封面畸变，已自动选择: {new_url}")
             else:
-                logger.error(f"'{movie.dvdid}': 存在{match_count}个搜索结果但是均非蓝光版，未避免误处理，已全部忽略")
+                logger.error(f"'{movie.dvdid}': 存在{match_count}个搜索结果但是均非蓝光版，为避免误处理，已全部忽略")
                 return
         else:
             # 暂未发现有超过2个搜索结果的，保险起见还是进行检查
-            logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，未避免误处理，已全部忽略")
+            logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，为避免误处理，已全部忽略")
             return
         # 重新抓取网页
         html = get_html(new_url)
