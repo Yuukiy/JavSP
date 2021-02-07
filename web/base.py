@@ -11,6 +11,13 @@ __all__ = ['get_html', 'dump_xpath_node', 'is_url', 'is_connectable', 'download'
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
 
+def request_get(url):
+    """获取指定url的原始请求"""
+    r = requests.get(url)
+    r.raise_for_status()
+    return r
+
+
 def get_html_text(url, encoding=None):
     """获取指定网页的原始html文本"""
     r = requests.get(url, headers=headers)

@@ -5,7 +5,8 @@ import logging
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html
+from web.base import get_html, request_get
+from core.config import cfg
 from core.datatype import MovieInfo
 
 
@@ -33,6 +34,22 @@ def strftime_to_minutes(s):
     return minutes
 
 
+def get_movie_score(fc2_id):
+    """通过评论数据来计算FC2的影片评分（10分制），无法获得评分时返回None"""
+    html = get_html(f'{base_url}/article/{fc2_id}/review')
+    review_tags = html.xpath("//ul[@class='items_comment_headerReviewInArea']/li")
+    reviews = {}
+    for tag in review_tags:
+        score = int(tag.xpath("div/span/text()")[0])
+        vote = int(tag.xpath("span")[0].text_content())
+        reviews[score] = vote
+    total_votes = sum(reviews.values())
+    if (total_votes >= 2):   # 至少也该有两个人评价才有参考意义一点吧
+        summary = sum([k*v for k, v in reviews.items()])
+        final_score = summary / total_votes * 2   # 乘以2转换为10分制
+        return final_score
+
+
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # 去除番号中的'FC2'字样
@@ -47,9 +64,6 @@ def parse_data(movie: MovieInfo):
     thumb_tag = container.xpath("//div[@class='items_article_MainitemThumb']")[0]
     thumb_pic = thumb_tag.xpath("span/img/@src")[0]
     duration_str = thumb_tag.xpath("span/p[@class='items_article_info']/text()")[0]
-    # 获取影片评分。影片页面的评分只能粗略到星级，且没有分数，要通过类名来判断，如'items_article_Star5'表示5星
-    score_tag_attr = container.xpath("//a[@class='items_article_Stars']/p/span/@class")[0]
-    score = int(score_tag_attr[-1]) * 2
     # FC2没有制作商和发行商的区分，作为个人市场，影片页面的'by'更接近于制作商
     producer = container.xpath("//li[text()='by ']/a/text()")[0]
     genre = container.xpath("//a[@class='tag tagTag']/text()")
@@ -57,8 +71,25 @@ def parse_data(movie: MovieInfo):
     publish_date = date_str[-10:].replace('/', '-')  # '販売日 : 2017/11/30'
     preview_pics = container.xpath("//ul[@data-feed='sample-images']/li/a/@href")
 
+    if cfg.Crawler.hardworking_mode:
+        # 通过评论数据来计算准确的评分
+        score = get_movie_score(fc2_id)
+        if score:
+            movie.score = f'{score:.2f}'
+        # 预览视频是动态加载的，不在静态网页中
+        #TODO: 似乎还有些问题。这里获取到的url无法直接打开，但是浏览器中获取到的可以，可能是缺少某些cookies
+        desc_frame_url = container.xpath("//section[@class='items_article_Contents']/iframe/@src")[0]
+        key = desc_frame_url.split('-')[-1]
+        url = f'{base_url}/api/v2/videos/{fc2_id}/sample?key={key}'
+        r = request_get(url).json()
+        movie.preview_video = r['path']
+    else:
+        # 获取影片评分。影片页面的评分只能粗略到星级，且没有分数，要通过类名来判断，如'items_article_Star5'表示5星
+        score_tag_attr = container.xpath("//a[@class='items_article_Stars']/p/span/@class")[0]
+        score = int(score_tag_attr[-1]) * 2
+        movie.score = f'{score:.2f}'
+
     movie.title = title
-    movie.score = score
     movie.genre = genre
     movie.producer = producer
     movie.duration = strftime_to_minutes(duration_str)
