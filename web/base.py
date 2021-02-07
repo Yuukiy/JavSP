@@ -1,8 +1,13 @@
 """网络请求的统一接口"""
-import re
+import os
+import sys
 import requests
 import lxml.html
 from lxml import etree
+
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from core.config import cfg
 
 
 __all__ = ['get_html', 'dump_xpath_node', 'is_url', 'is_connectable', 'download']
@@ -44,19 +49,6 @@ def dump_xpath_node(node, filename=None):
     with open(filename, 'wt', encoding='utf-8') as f:
         content = etree.tostring(node, pretty_print=True).decode('utf-8')
         f.write(content)
-
-
-def is_url(url: str):
-    """判断给定的字符串是否是有效的带协议字段的URL"""
-    # https://stackoverflow.com/a/7160778/6415337
-    pattern = re.compile(
-        r'^(?:http)s?://' # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-        r'localhost|'     #localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-        r'(?::\d+)?'      # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    return re.match(pattern, url) is not None
 
 
 def is_connectable(url, timeout=3):
