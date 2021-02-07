@@ -80,6 +80,10 @@ class Config(configparser.ConfigParser):
             valid_mods = []
             for name in mods:
                 try:
+                    # 如果fc2fan本地镜像的路径无效，则跳过它
+                    if name == 'fc2fan' and (not os.path.isdir(self.Crawler.fc2fan_local_path)):
+                        logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
+                        continue
                     mod = 'web.' + name
                     __import__(mod)
                     valid_mods.append(mod)
