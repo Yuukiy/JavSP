@@ -35,13 +35,35 @@ root_logger.addHandler(console_handler)
 
 from core.nfo import write_nfo
 from core.file import select_folder, get_movies
-from core.config import cfg
+from core.config import Config, cfg
 from core.image import crop_poster
 from core.datatype import Movie, MovieInfo
 from web.base import download
 
 
 CLEAR_LINE = '\r\x1b[K'
+
+
+def import_crawlers(cfg: Config):
+    """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
+    unknown_mods = []
+    for typ, cfg_str in cfg.Priority.items():
+        mods = cfg_str.split(',')
+        valid_mods = []
+        for name in mods:
+            try:
+                # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
+                if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
+                    logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
+                    continue
+                import_name = 'web.' + name
+                __import__(import_name)
+                valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
+            except ModuleNotFoundError:
+                unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
+        cfg._sections['Priority'][typ] = tuple(valid_mods)
+    if unknown_mods:
+        logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
 
 
 # 爬虫是IO密集型任务，可以通过多线程提升效率
@@ -156,11 +178,18 @@ if __name__ == "__main__":
         os._exit(1)
     else:
         logger.info(f"{CLEAR_LINE}整理文件夹：'{root}'")
+    # 导入抓取器，必须在chdir之前
+    import_crawlers(cfg)
     os.chdir(root)
 
     tqdm.write(f'扫描影片文件...', end='')
     all_movies = get_movies(root)
-    logger.info(f'{CLEAR_LINE}扫描影片文件：共找到 {len(all_movies)} 部影片')
+    movie_count = len(all_movies)
+    if movie_count == 0:
+        logger.info('未找到影片文件，脚本退出')
+        os.system('pause')
+        os._exit(0)
+    logger.info(f'{CLEAR_LINE}扫描影片文件：共找到 {movie_count} 部影片')
     tqdm.write('')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)

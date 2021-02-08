@@ -55,7 +55,6 @@ class Config(configparser.ConfigParser):
         norm_tuples(self)
         norm_boolean(self)
         validate_proxy(self)
-        import_crawlers(self)
         convert_naming_rule(self)
         # 作为配置模块，始终检查免代理地址；由各个抓取器中根据代理情况选择是否启用免代理地址
         check_proxy_free_url(self)
@@ -115,32 +114,6 @@ def validate_proxy(cfg: Config):
         else:
             logger.warning(f"配置的代理格式无效，请使用类似'http://127.0.0.1:1080'的格式")
     cfg.Network.proxy = proxies
-
-
-def import_crawlers(cfg: Config):
-    """按配置的抓取器顺序转换为的抓取器函数列表"""
-    unknown_mods = []
-    for typ, cfg_str in cfg.Priority.items():
-        mods = cfg_str.split(',')
-        valid_mods = []
-        for name in mods:
-            try:
-                # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
-                if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
-                    logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
-                    continue
-                import_name = 'web.' + name
-                __import__(import_name)
-                valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
-            except ModuleNotFoundError:
-                unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
-        cfg._sections['Priority'][typ] = tuple(valid_mods)
-    if unknown_mods:
-        # 如果直接运行config.py，抓取器会导入失败，但是不影响config被作为模块导入时
-        if __name__ != "__main__":
-            logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
-        else:
-            print("直接运行'config.py'时无法导入抓取器，导入失败: " + ', '.join(unknown_mods))
 
 
 def convert_naming_rule(cfg: Config):
