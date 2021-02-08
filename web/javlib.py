@@ -11,8 +11,11 @@ from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_url = cfg.ProxyFree.javlib
 permanent_url = 'https://www.javlib.com'
+if cfg.Network.proxy:
+    base_url = permanent_url
+else:
+    base_url = cfg.ProxyFree.javlib
 
 
 def parse_data(movie: MovieInfo):

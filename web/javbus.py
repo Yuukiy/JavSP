@@ -9,9 +9,12 @@ from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
 
 
-base_url = cfg.ProxyFree.javbus
 genre_map = GenreMap('data/genre_javbus.csv')
 permanent_url = 'https://www.javbus.com'
+if cfg.Network.proxy:
+    base_url = permanent_url
+else:
+    base_url = cfg.ProxyFree.javbus
 
 
 def parse_data(movie: MovieInfo):

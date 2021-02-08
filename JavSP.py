@@ -41,6 +41,9 @@ from core.datatype import Movie, MovieInfo
 from web.base import download
 
 
+CLEAR_LINE = '\r\x1b[K'
+
+
 # 爬虫是IO密集型任务，可以通过多线程提升效率
 def parallel_crawler(movie: Movie, tqdm_bar=None):
     """使用多线程抓取不同网站的数据"""
@@ -138,16 +141,26 @@ def generate_names(movie: Movie):
 if __name__ == "__main__":
     colorama.init(autoreset=True)
     logger = logging.getLogger('main')
+    # 如果未配置有效代理，则显示相应提示
+    if not cfg.Network.proxy:
+        logger.warning('未配置有效代理，程序仍然会努力继续运行，但是部分功能可能受限：\n'
+                       ' - 将尝试自动获取部分站点的免代理地址，但没有免代理地址的站点抓取器将无法工作\n'
+                       ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
+    # 总的来说，不需要出现在日志里的显示信息，就直接使用tqdm.write；否则就使用logger.xxx
+    tqdm.write('请选择要整理的文件夹：', end='')
     root = select_folder()
     if not root:
-        logger.warning('未选择文件夹，脚本退出')
+        tqdm.write('')  # 换行显示下面的错误信息
+        logger.error('未选择文件夹，脚本退出')
         os.system('pause')
         os._exit(1)
+    else:
+        logger.info(f"{CLEAR_LINE}整理文件夹：'{root}'")
     os.chdir(root)
 
-    logger.info(f'扫描影片文件...')
+    tqdm.write(f'扫描影片文件...', end='')
     all_movies = get_movies(root)
-    logger.info(f'    共找到{len(all_movies)}部影片')
+    logger.info(f'{CLEAR_LINE}扫描影片文件：共找到 {len(all_movies)} 部影片')
     tqdm.write('')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
