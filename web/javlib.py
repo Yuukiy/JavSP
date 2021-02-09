@@ -11,7 +11,7 @@ from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-permanent_url = 'https://www.javlib.com'
+permanent_url = 'https://www.javlibrary.com'
 if cfg.Network.proxy:
     base_url = permanent_url
 else:
