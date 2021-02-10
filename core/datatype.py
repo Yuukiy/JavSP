@@ -23,6 +23,7 @@ class MovieInfo:
         self.cid = cid              # DMM Content ID
         self.plot = None            # 故事情节
         self.cover = None           # 封面图片（URL）
+        self.big_cover = None       # 高清封面图片（URL）
         self.genre = None           # 影片分类的标签
         self.genre_id = None        # 影片分类的标签的ID
         self.genre_norm = None      # 统一后的影片分类的标签
