@@ -36,19 +36,8 @@ def parse_data(movie: MovieInfo):
     serial_tag = info.xpath("p/span[text()='系列:']")
     if serial_tag:
         movie.serial = serial_tag[0].getnext().text
-    genre_tags = info.xpath("p[text()='類別:']")[0].getnext().xpath("span/a")
-    # JavBus的磁力链接是依赖js脚本加载的，在静态网页中没有，因此实际上并不能解析
-    # magnet = html.xpath("//table[@id='magnet-table']/tr/td[1]/a/@href")
-    # actress, actress_pics
-    actress, actress_pics = [], {}
-    actress_tags = html.xpath("//a[@class='avatar-box']/div/img")
-    for tag in actress_tags:
-        name = tag.get('title')
-        pic_url = tag.get('src')
-        actress.append(name)
-        if not pic_url.endswith('nowprinting.gif'):     # 略过默认的头像
-            actress_pics[name] = pic_url
     # genre, genre_norm
+    genre_tags = info.xpath("//span[@class='genre']/label/a")
     genre, genre_id = [], []
     for tag in genre_tags:
         tag_url = tag.get('href')
@@ -60,6 +49,16 @@ def parse_data(movie: MovieInfo):
         else:
             movie.uncensored = False
             genre_id.append(pre_id)
+    # JavBus的磁力链接是依赖js脚本加载的，无法通过静态网页来解析
+    # actress, actress_pics
+    actress, actress_pics = [], {}
+    actress_tags = html.xpath("//a[@class='avatar-box']/div/img")
+    for tag in actress_tags:
+        name = tag.get('title')
+        pic_url = tag.get('src')
+        actress.append(name)
+        if not pic_url.endswith('nowprinting.gif'):     # 略过默认的头像
+            actress_pics[name] = pic_url
     # 整理数据并更新movie的相应属性
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
