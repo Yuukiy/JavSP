@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from core.config import cfg
 
 
-__all__ = ['get_html', 'dump_xpath_node', 'is_url', 'is_connectable', 'download']
+__all__ = ['get_html', 'dump_xpath_node', 'is_connectable', 'download']
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
