@@ -23,6 +23,7 @@ def parse_data(movie: MovieInfo):
     container = html.xpath("//div[@class='section product_layout_01']")[0]
     title = container.xpath("div/h1")[0].text_content().strip()
     cover = container.xpath("div/p/a[@class='sample_image']/@href")[0]
+    # 这里使用following-sibling而不是getnext，因为getnext会获取到空格、tab等空文本
     actress = container.xpath("//dt[text()='出演：']/following-sibling::dd[1]/a/text()")
     # 移除女优名中的空格，使女优名与其他网站保持一致
     actress = [i.replace(' ', '') for i in actress]

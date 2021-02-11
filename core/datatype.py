@@ -25,7 +25,7 @@ class MovieInfo:
         self.cover = None           # 封面图片（URL）
         self.big_cover = None       # 高清封面图片（URL）
         self.genre = None           # 影片分类的标签
-        self.genre_id = None        # 影片分类的标签的ID
+        self.genre_id = None        # 影片分类的标签的ID，用于解决部分站点多个genre同名的问题，也便于管理多语言的genre
         self.genre_norm = None      # 统一后的影片分类的标签
         self.score = None           # 评分（10分制）
         self.title = None           # 影片标题（不含番号）
