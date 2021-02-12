@@ -22,17 +22,24 @@ for i in all_crawler:
     __import__(i)
 
 
-def compare(dvdid, scraper, file):
+def compare(avid, scraper, file):
     """从本地的数据文件生成Movie实例，并与在线抓取到的数据进行比较"""
     local = MovieInfo(from_file=file)
-    online = MovieInfo(dvdid)
+    if scraper != 'fanza':
+        online = MovieInfo(avid)
+    else:
+        online = MovieInfo(cid=avid)
     parse_data = getattr(sys.modules[f'web.{scraper}'], 'parse_data')
     parse_data(online)
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
     local_vars = vars(local)
     online_vars = vars(online)
     for k, v in online_vars.items():
-        assert v == local_vars.get(k, None)
+        if k == 'score':
+            # score字段可能随时间变化，因此只要这个字段不是一方有值一方无值就行
+            assert bool(v) == bool(local_vars.get(k, None))
+        else:
+            assert v == local_vars.get(k, None)
 
 
 def test_auto_compare():

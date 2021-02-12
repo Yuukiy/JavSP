@@ -17,7 +17,7 @@ if cfg.Network.proxy:
 else:
     base_url = cfg.ProxyFree.javlib
 
-
+# TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'

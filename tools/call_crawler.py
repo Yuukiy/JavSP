@@ -40,24 +40,27 @@ def call_crawlers(dvdid_list: list, crawlers=None):
     else:
         crawlers = all_crawler
     outer_bar = tqdm(dvdid_list, desc='抓取影片数据', leave=False)
-    for dvdid in outer_bar:
+    for avid in outer_bar:
         success, fail = [], []
-        outer_bar.set_description(f'抓取影片数据: {dvdid}')
+        outer_bar.set_description(f'抓取影片数据: {avid}')
         inner_bar = tqdm(crawlers, desc='抓取器', leave=False)
         for scrp in inner_bar:
             scrp_name = scrp.split('.')[1]
-            inner_bar.set_description(f'正在抓取{scrp_name}'.rjust(10+len(dvdid)))
+            inner_bar.set_description(f'正在抓取{scrp_name}'.rjust(10+len(avid)))
             # 每次都会创建一个全新的实例，所以不同抓取器的结果之间不会有影响
-            movie = MovieInfo(dvdid)
+            if scrp_name != 'fanza':
+                movie = MovieInfo(avid)
+            else:
+                movie = MovieInfo(cid=avid)
             parse_data = getattr(sys.modules[scrp], 'parse_data')
             try:
                 parse_data(movie)
-                path = f"{data_dir}{os.sep}{dvdid} ({scrp_name}).json"
+                path = f"{data_dir}{os.sep}{avid} ({scrp_name}).json"
                 movie.dump(path)
                 success.append(scrp_name)
             except:
                 fail.append(scrp_name)
-        out = "{} 抓取完成: 成功{}个 {}; 失败{}个 {}".format(dvdid, len(success), ' '.join(success), len(fail), ' '.join(fail))
+        out = "{} 抓取完成: 成功{}个 {}; 失败{}个 {}".format(avid, len(success), ' '.join(success), len(fail), ' '.join(fail))
         tqdm.write(out)
 
 
@@ -73,7 +76,8 @@ if __name__ == "__main__":
         user_in2 = input('\n请选择要使用的抓取器（回车表示全部使用）: ')
         if user_in2:
             used = []
-            for i in user_in2:
+            items = user_in2.split()
+            for i in items:
                 try:
                     index = int(i)-1
                     used.append(all_crawler[index])
