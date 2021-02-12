@@ -7,12 +7,13 @@ from urllib import parse
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html
+from web.base import get_html, request_get
+from core.config import cfg
 from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_url = 'https://www.mgstage.com/'
+base_url = 'https://www.mgstage.com'
 # 要求访问者携带已通过R18认证的cookies才能够获得完整数据，否则会被重定向到认证页面
 cookies = {'adc': '1'}
 
@@ -54,7 +55,19 @@ def parse_data(movie: MovieInfo):
         movie.score = f'{score:.2f}'
     plot = container.xpath("//p[@class='txt introduction']/text()")[0]
     preview_pics = container.xpath("//a[@class='sample_image']/@href")
-    # 预览视频是点击按钮后再加载的，不包含在静态网页中
+
+    if cfg.Crawler.hardworking_mode:
+        # 预览视频是点击按钮后再加载的，不在静态网页中
+        btn_url = container.xpath("//a[@class='button_sample']/@href")[0]
+        video_pid = btn_url.split('/')[-1]
+        req_url = f'{base_url}/sampleplayer/sampleRespons.php?pid={video_pid}'
+        resp = request_get(req_url, cookies=cookies).json()
+        url = resp.get('url')
+        if url:
+            # /sample/shirouto/siro/3093/SIRO-3093_sample.ism/request?uid=XXX&amp;pid=XXX
+            preview_video = url.split('.ism/')[0] + '.mp4'
+            movie.preview_video = preview_video
+
 
     movie.title = title
     movie.cover = cover

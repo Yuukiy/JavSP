@@ -6,6 +6,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
+from core.config import cfg
 from core.datatype import MovieInfo
 
 
@@ -33,6 +34,14 @@ def parse_data(movie: MovieInfo):
     producer = info.xpath("//li[text()='廠商']/a/text()")[0]
     publish_date = info.xpath("//li[text()='發片日期']/text()[last()]")[0]
     plot = info.xpath("//div[@class='synopsis']/p/text()")[0]
+
+    if cfg.Crawler.hardworking_mode:
+        video_url = f'{base_url}/api/video/getVideoMedia?barcode={movie.dvdid}'
+        resp = request_get(video_url).json()
+        # 如果失败，结果如 {'msg': 'fail', 'status': 'fail'}
+        if 'data' in resp:
+            # 此外还有url_cdn, url_hlx, url_hls_cdn字段，后两者为m3u8格式。目前将url作为预览视频的地址
+            movie.preview_video = resp['data'].get('url')
 
     movie.title = title
     movie.cover = cover

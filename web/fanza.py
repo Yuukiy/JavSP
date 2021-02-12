@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import json
 import logging
 
 
@@ -60,6 +61,23 @@ def parse_data(movie: MovieInfo):
     if match:
         score = float(match.group()) * 2
         movie.score = f'{score:.2f}'
+    
+    if cfg.Crawler.hardworking_mode:
+        # 预览视频是动态加载的，不在静态网页中
+        video_url = f'{base_url}/service/digitalapi/-/html5_player/=/cid={movie.cid}'
+        html2 = get_html(video_url, cookies=cookies)
+        # 目前用到js脚本的地方不多，所以不使用专门的js求值模块，先用正则提取文本然后用json解析数据
+        script = html2.xpath("//script[contains(text(),'params')]/text()")[0].strip()
+        match = re.search(r'\{.*\}', script)
+        # 主要是为了捕捉json.loads的异常，但是也借助try-except判断是否正则表达式是否匹配
+        try:
+            data = json.loads(match.group())
+            video_url = data.get('src')
+            if video_url and video_url.startswith('//'):
+                video_url = 'https:' + video_url
+            movie.preview_video = video_url
+        except:
+            pass
 
     movie.title = title
     movie.cover = cover
