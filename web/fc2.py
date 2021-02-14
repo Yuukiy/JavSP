@@ -55,7 +55,7 @@ def parse_data(movie: MovieInfo):
     # 去除番号中的'FC2'字样
     id_lc = movie.dvdid.lower()
     if not id_lc.startswith('fc2-'):
-        return
+        raise ValueError('Invalid FC2 number: ' + movie.dvdid)
     fc2_id = id_lc.replace('fc2-', '')
     # 抓取网页
     html = get_html(f'{base_url}/article/{fc2_id}/')

@@ -31,7 +31,7 @@ def parse_data(movie: MovieInfo):
         pic_url = tag.get('src')
         actress.append(name)
         # jav321的女优头像完全是应付了事：即使女优实际没有头像，也会有一个看起来像模像样的url，
-        # 因而无法通过url判断女优头像图片是否有效。最好不要使用jav321的女优头像数据
+        # 因而无法通过url判断女优头像图片是否有效。有其他选择时最好不要使用jav321的女优头像数据
         actress_pics[name] = pic_url
     # genre, genre_id
     genre_tags = info.xpath("a[contains(@href,'/genre/')]")
