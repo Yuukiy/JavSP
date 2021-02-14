@@ -78,7 +78,7 @@ def parse_data(movie: MovieInfo):
             movie.score = f'{score:.2f}'
         # 预览视频是动态加载的，不在静态网页中
         desc_frame_url = container.xpath("//section[@class='items_article_Contents']/iframe/@src")[0]
-        key = desc_frame_url.split('-')[-1]
+        key = desc_frame_url.split('=')[-1]     # /widget/article/718323/description?ac=60fc08fa...
         url = f'{base_url}/api/v2/videos/{fc2_id}/sample?key={key}'
         r = request_get(url).json()
         movie.preview_video = r['path']

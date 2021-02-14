@@ -36,7 +36,7 @@ def parse_data(movie: MovieInfo):
     serial_tag = info.xpath("p/span[text()='系列:']")
     if serial_tag:
         movie.serial = serial_tag[0].getnext().text
-    # genre, genre_norm
+    # genre, genre_id
     genre_tags = info.xpath("//span[@class='genre']/label/a")
     genre, genre_id = [], []
     for tag in genre_tags:

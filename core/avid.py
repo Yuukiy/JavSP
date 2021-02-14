@@ -34,7 +34,7 @@ def get_cid(filepath: str) -> str:
     basename = os.path.splitext(os.path.basename(filepath))[0]
     # 移除末尾可能带有的分段影片序号
     possible = re.sub(r'[-_]\w$', '', basename)
-    # cid只由数字、小写字母和下划线组成。如果是
+    # cid只由数字、小写字母和下划线组成
     match = re.match(r'^([a-z\d_]+)$', possible, re.A)
     if match:
         possible = match.group(1)

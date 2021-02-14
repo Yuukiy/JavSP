@@ -42,9 +42,9 @@ def parse_data(movie: MovieInfo):
     serial = container.xpath("//th[text()='シリーズ：']/following-sibling::td/a/text()")[0].strip()
     # label: 大意是某个系列策划用同样的番号，例如ABS打头的番号label是'ABSOLUTELY PERFECT'，暂时用不到
     # label = container.xpath("//th[text()='レーベル：']/following-sibling::td/text()")[0].strip()
-    genre_tag = container.xpath("//th[text()='ジャンル：']/following-sibling::td/a")
+    genre_tags = container.xpath("//th[text()='ジャンル：']/following-sibling::td/a")
     genre, genre_id = [], []
-    for tag in genre_tag:
+    for tag in genre_tags:
         genre.append(tag.text.strip())
         para = parse.parse_qs(parse.urlparse(tag.get('href')).query)
         genre_id.append(para.get('image_word_ids[]', [None])[0])    # parse_qs得到的值为列表的字典，因此get的默认值也设为列表

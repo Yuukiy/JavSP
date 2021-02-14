@@ -48,9 +48,9 @@ def parse_data(movie: MovieInfo):
     # label_tag = container.xpath("//td[text()='レーベル：']/following-sibling::td/a/text()")
     # if label_tag:
     #     label = label_tag[0].strip()
-    genre_tag = container.xpath("//td[text()='ジャンル：']/following-sibling::td/a")
+    genre_tags = container.xpath("//td[text()='ジャンル：']/following-sibling::td/a")
     genre, genre_id = [], []
-    for tag in genre_tag:
+    for tag in genre_tags:
         genre.append(tag.text.strip())
         genre_id.append(tag.get('href').split('=')[-1].strip('/'))
     cid = container.xpath("//td[text()='品番：']/following-sibling::td/text()")[0].strip()
