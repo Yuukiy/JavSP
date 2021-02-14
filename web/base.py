@@ -5,13 +5,14 @@ import requests
 import lxml.html
 from lxml import etree
 from lxml.html.clean import Cleaner
+from requests.models import Response
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.config import cfg
 
 
-__all__ = ['get_html', 'request_get', 'dump_xpath_node', 'is_connectable', 'download']
+__all__ = ['get_html', 'post_html', 'request_get', 'is_connectable', 'download']
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
@@ -27,22 +28,40 @@ def request_get(url, cookies={}):
     return r
 
 
-def get_html_text(url, encoding=None, cookies={}):
-    """获取指定网页的原始html文本"""
-    r = request_get(url, cookies=cookies)
+def request_post(url, data, cookies={}):
+    """向指定url发送post请求"""
+    r = requests.post(url, data=data, headers=headers, proxies=cfg.Network.proxy, cookies=cookies)
+    r.raise_for_status()
+    return r
+
+
+def get_resp_text(resp: Response, encoding=None):
+    """提取Response的文本"""
     if encoding:
-        r.encoding = encoding
+        resp.encoding = encoding
     else:
-        r.encoding = r.apparent_encoding
-    return r.text
+        resp.encoding = resp.apparent_encoding
+    return resp.text
 
 
 def get_html(url, encoding='utf-8', cookies={}):
-    """获取指定网页经lxml解析后的document"""
-    text = get_html_text(url, encoding=encoding, cookies=cookies)
+    """使用get方法访问指定网页并返回经lxml解析后的document"""
+    resp = request_get(url, cookies=cookies)
+    text = get_resp_text(resp, encoding=encoding)
     html = lxml.html.fromstring(text)
     html.make_links_absolute(url, resolve_base_href=True)
     # 清理功能仅应在需要的时候用来调试网页（如prestige），否则可能反过来影响调试（如JavBus）
+    # html = cleaner.clean_html(html)
+    # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
+    return html
+
+
+def post_html(url, data, encoding='utf-8', cookies={}):
+    """使用post方法访问指定网页并返回经lxml解析后的document"""
+    resp = request_post(url, data, cookies=cookies)
+    text = get_resp_text(resp, encoding=encoding)
+    html = lxml.html.fromstring(text)
+    html.make_links_absolute(url, resolve_base_href=True)
     # html = cleaner.clean_html(html)
     # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
     return html
