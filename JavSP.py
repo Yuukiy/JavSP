@@ -165,8 +165,8 @@ if __name__ == "__main__":
     logger = logging.getLogger('main')
     # 如果未配置有效代理，则显示相应提示
     if not cfg.Network.proxy:
-        logger.warning('未配置有效代理，程序仍然会努力继续运行，但是部分功能可能受限：\n'
-                       ' - 将尝试自动获取部分站点的免代理地址，但没有免代理地址的站点抓取器将无法工作\n'
+        logger.warning('未配置有效代理，程序会努力继续运行，但是部分功能可能受限：\n'
+                       ' - 将尝试自动获取部分站点的免代理地址，没有免代理地址的站点抓取器将无法工作\n'
                        ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
     # 总的来说，不需要出现在日志里的显示信息，就直接使用tqdm.write；否则就使用logger.xxx
     tqdm.write('请选择要整理的文件夹：', end='')
@@ -177,7 +177,8 @@ if __name__ == "__main__":
         os.system('pause')
         os._exit(1)
     else:
-        logger.info(f"{CLEAR_LINE}整理文件夹：'{root}'")
+        tqdm.write(CLEAR_LINE)
+        logger.info(f"整理文件夹：'{root}'")
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)
@@ -189,7 +190,8 @@ if __name__ == "__main__":
         logger.info('未找到影片文件，脚本退出')
         os.system('pause')
         os._exit(0)
-    logger.info(f'{CLEAR_LINE}扫描影片文件：共找到 {movie_count} 部影片')
+    tqdm.write(CLEAR_LINE)
+    logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     tqdm.write('')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
