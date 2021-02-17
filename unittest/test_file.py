@@ -120,6 +120,20 @@ def test_scan_movies__0x123(prepare_files):
     assert basenames[2] == 'ABC-123.03.mp4'
 
 
+# 无效：多个分片命名杂乱
+@pytest.mark.parametrize('files', [('ABC-123-1.mp4','ABC-123-第2部分.mp4','ABC-123-3.mp4')])
+def test_scan_movies__strange_names(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 0
+
+
+# 无效：同一影片的分片和非分片混合
+@pytest.mark.parametrize('files', [('ABC-123.mp4','ABC-123-1.mp4','ABC-123-2.mp4')])
+def test_scan_movies__mix_slices(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 0
+
+
 # 无效：多个分片位于不同文件夹
 @pytest.mark.parametrize('files', [('ABC-123.CD1.mp4','sub/ABC-123.CD2.mp4','ABC-123.CD3.mp4')])
 def test_scan_movies__wrong_structure(prepare_files):

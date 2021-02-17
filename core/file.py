@@ -62,25 +62,27 @@ def scan_movies(root: str) -> List[Movie]:
             non_slice_dup[dvdid] = files
             del dic[dvdid]
             continue
-        # 提取分片信息（经正则提取后只剩下单个小写字符）。相关变量都要使用同样的列表生成顺序
+        # 提取分片信息（如果正则替换成功，只会剩下单个小写字符）。相关变量都要使用同样的列表生成顺序
         basenames = [os.path.basename(i) for i in files]
         prefix = os.path.commonprefix(basenames)
         pattern = re.compile(prefix + r'\s*([a-z\d])\s*\.\w+$', flags=re.I)
-        remaing = [pattern.sub(r'\1', i).lower() for i in basenames]
-        # remaing为初步提取的分片信息，不允许有重复值
-        if len(remaing) != len(set(remaing)):
+        remaining = [pattern.sub(r'\1', i).lower() for i in basenames]
+        # 如果remaining中的项长度不为1，说明有文件名不符合正则表达式条件（没有发生替换或不带分片信息）
+        if (any([len(i) != 1 for i in remaining]) 
+            # remaining为初步提取的分片信息，不允许有重复值
+            or len(remaining) != len(set(remaining))):
             non_slice_dup[dvdid] = files
             del dic[dvdid]
             continue
         # 影片编号必须从 0/1/a 开始且编号连续
-        slices = sorted(remaing)
+        slices = sorted(remaining)
         first, last = slices[0], slices[-1]
         if (first not in ('0', '1', 'a')) or (ord(last) != (ord(first)+len(slices)-1)):
             non_slice_dup[dvdid] = files
             del dic[dvdid]
             continue
         # 生成最终的分片信息
-        mapped_files = [files[remaing.index(i)] for i in slices]
+        mapped_files = [files[remaining.index(i)] for i in slices]
         dic[dvdid] = mapped_files
 
     # 汇总输出错误提示信息
