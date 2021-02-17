@@ -4,10 +4,14 @@ import sys
 from typing import List
 from tkinter import filedialog, Tk
 
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.avid import get_id
 from core.config import cfg
 from core.datatype import Movie
+
+
+__all__ = ['select_folder', 'get_movies', 'get_fmt_size']
 
 
 def select_folder(default_dir=''):
@@ -36,5 +40,25 @@ def get_movies(root: str) -> List[Movie]:
     return movies
 
 
+def get_fmt_size(file_or_size) -> str:
+    """获取格式化后的文件大小
+
+    Args:
+        file_or_size (str or int): 文件路径或者文件大小
+
+    Returns:
+        str: e.g. 20.21 MiB
+    """
+    if isinstance(file_or_size, int):
+        size = file_or_size
+    else:
+        size = os.path.getsize(file_or_size)
+    for unit in ['','Ki','Mi','Gi','Ti']:
+        # 1023.995: to avoid rounding bug when format str, e.g. 1048571 -> 1024.0 KiB
+        if abs(size) < 1023.995:
+            return f"{size:3.2f} {unit}B"
+        size /= 1024.0
+
+
 if __name__ == "__main__":
-    get_movies(select_folder())
+    print(get_fmt_size(1048571))

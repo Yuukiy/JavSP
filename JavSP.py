@@ -34,9 +34,9 @@ root_logger.addHandler(console_handler)
 
 
 from core.nfo import write_nfo
-from core.file import select_folder, get_movies
 from core.config import Config, cfg
-from core.image import crop_poster
+from core.file import *
+from core.image import *
 from core.datatype import Movie, MovieInfo
 from web.base import download
 
@@ -213,7 +213,16 @@ if __name__ == "__main__":
             inner_bar.update()
 
             inner_bar.set_description('下载封面图片')
-            download(movie.info.cover, movie.fanart_file)
+            if cfg.Picture.use_big_cover and movie.info.big_cover:
+                try:
+                    download(movie.info.big_cover, movie.fanart_file)
+                    filesize = get_fmt_size(movie.fanart_file)
+                    width, height = get_pic_size(movie.fanart_file)
+                    logger.info(f"已下载高清封面: {width}x{height}, {filesize}")
+                except requests.exceptions.HTTPError:
+                    download(movie.info.cover, movie.fanart_file)
+            else:
+                download(movie.info.cover, movie.fanart_file)
             inner_bar.update()
 
             inner_bar.set_description('裁剪海报封面')

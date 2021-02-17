@@ -2,6 +2,9 @@
 from PIL import Image
 
 
+__all__ = ['crop_poster', 'get_pic_size']
+
+
 def crop_poster(fanart_file, poster_file):
     """将给定的fanart图片文件裁剪为适合poster尺寸的图片"""
     # 本项目根据KODI的文档来裁剪poster。对于其他的媒体服务器（如Jellyfin），
@@ -14,3 +17,9 @@ def crop_poster(fanart_file, poster_file):
     poster = fanart.crop(box)
     # quality: from doc, default is 75, values above 95 should be avoided
     poster.save(poster_file, quality=95)
+
+
+def get_pic_size(pic_file):
+    """获取图片文件的分辨率"""
+    pic = Image.open(pic_file)
+    return pic.size

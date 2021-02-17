@@ -88,7 +88,7 @@ def is_connectable(url, timeout=3):
 
 def download(url, file):
     """下载指定url的资源"""
-    r = requests.get(url, headers=headers)
+    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy)
     r.raise_for_status()
     with open(file, 'wb') as f:
         f.write(r.content)
