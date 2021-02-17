@@ -106,9 +106,10 @@ def norm_boolean(cfg: Config):
 def validate_proxy(cfg: Config):
     """解析配置文件中的代理"""
     proxies = {}
-    proxy = cfg.Network.proxy.lower()
-    if proxy:   # 如果配置了代理
-        match = re.match('^(socks5|http)://([-.a-z\d]+):(\d+)$', proxy)
+    use_proxy = cfg.getboolean('Network', 'use_proxy')
+    if use_proxy:
+        proxy = cfg.Network.proxy.lower()
+        match = re.match('^(socks5h?|http)://([-.a-z\d]+):(\d+)$', proxy)
         if match:
             proxies = {'http': proxy, 'https': proxy}
         else:
