@@ -29,9 +29,12 @@ def parse_data(movie: MovieInfo):
     # airav部分资源也有预览片，但是预览片似乎是通过js获取的blob链接，无法通过静态网页解析来获取
     title = info.xpath("h5/text()")[0]
     dvdid = info.xpath("h5/text()")[1]
+    # airav的genre是以搜索关键词的形式组织的，没有特定的genre_id
     genre = info.xpath("//div[@class='tagBtnMargin']/a/text()")
     actress = info.xpath("//li[@class='videoAvstarListItem']/a/text()")
-    producer = info.xpath("//li[text()='廠商']/a/text()")[0]
+    producer_tag = info.xpath("//li[text()='廠商']/a/text()")
+    if producer_tag:
+        movie.producer = producer_tag[0]
     publish_date = info.xpath("//li[text()='發片日期']/text()[last()]")[0]
     plot = info.xpath("//div[@class='synopsis']/p/text()")[0]
 
@@ -47,10 +50,14 @@ def parse_data(movie: MovieInfo):
     movie.cover = cover
     movie.preview_pics = preview_pics
     movie.publish_date = publish_date
-    movie.producer = producer
     movie.genre = genre
     movie.actress = actress
     movie.plot = plot
+    # airav上部分影片会被标记为'馬賽克破壞版'，这些影片的title、plot和genre都不再准确
+    if '馬賽克破壞版' in title or '馬賽克破壞版' in plot:
+        movie.title = None
+        movie.plot = None
+        movie.genre = None
 
 
 if __name__ == "__main__":
