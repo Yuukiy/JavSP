@@ -11,11 +11,13 @@ from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-permanent_url = 'https://www.javlibrary.com'
+# javlib的永久地址上套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
+# (无法用cloudscraper绕过: Cloudflare version 2 challenge is not available in the opensource version)
 if cfg.Network.proxy:
-    base_url = permanent_url
+    base_url = 'https://www.b49t.com'
 else:
     base_url = cfg.ProxyFree.javlib
+
 
 # TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
 def parse_data(movie: MovieInfo):
