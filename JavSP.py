@@ -10,6 +10,12 @@ import pretty_errors
 from tqdm import tqdm
 
 
+pretty_errors.configure(display_link=True)
+# 禁用导入的模块中的日志（仅对此时已执行导入模块的生效）
+for i in logging.root.manager.loggerDict:
+    logging.getLogger(i).disabled = True
+
+
 from core.datatype import ColoredFormatter
 
 
@@ -20,11 +26,6 @@ class TqdmOut:
         tqdm.write(s, file=file, end='', nolock=nolock)
 
 
-pretty_errors.configure(display_link=True)
-
-# 禁用导入的模块中的日志（仅对此时已执行导入模块的生效）
-for i in logging.root.manager.loggerDict:
-    logging.getLogger(i).disabled = True
 # 配置 logging StreamHandler
 root_logger = logging.getLogger()
 console_handler = logging.StreamHandler(stream=TqdmOut)
@@ -152,12 +153,11 @@ def generate_names(movie: Movie):
     # 生成相关文件的路径
     save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d))
     basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d))
-    new_filepath = os.path.join(save_dir, basename + os.path.splitext(movie.files[0])[1])
     movie.save_dir = save_dir
+    movie.basename = basename
     movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
     movie.fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
     movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
-    setattr(movie, 'new_filepath', new_filepath)
 
 
 def error_exit(msg):
@@ -219,7 +219,7 @@ if __name__ == "__main__":
             inner_bar.set_description('移动影片文件')
             generate_names(movie)
             os.makedirs(movie.save_dir)
-            os.rename(movie.files[0], movie.new_filepath)
+            movie.rename_files()
             inner_bar.update()
 
             inner_bar.set_description('下载封面图片')

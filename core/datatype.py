@@ -89,12 +89,35 @@ class Movie:
         self.data_src = 'normal'        # 数据源：不同的数据源将使用不同的爬虫
         self.info = None                # 抓取到的影片信息
         self.save_dir = None            # 存放影片、封面、NFO的文件夹路径
+        self.basename = None            # 按照命名模板生成的不包含路径和扩展名的basename
         self.nfo_file = None            # nfo文件的路径
         self.fanart_file = None         # fanart文件的路径
         self.poster_file = None         # poster文件的路径
 
     def __repr__(self) -> str:
         return __class__.__name__ + f"('{self.dvdid}')"
+
+    def rename_files(self):
+        """根据命名规则移动（重命名）影片文件"""
+        def move_file(src:str, dst:str):
+            """移动（重命名）文件并记录信息到日志"""
+            os.rename(src, dst)
+            src_rel = os.path.relpath(src)
+            dst_name = os.path.basename(dst)
+            logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+
+        if len(self.files) == 1:
+            fullpath = self.files[0]
+            ext = os.path.splitext(fullpath)[1]
+            newpath = os.path.join(self.save_dir, self.basename + ext)
+            move_file(fullpath, newpath)
+        else:
+            for i in range(len(self.files)):
+                fullpath = self.files[i]
+                ext = os.path.splitext(fullpath)[1]
+                cdx = f'-CD{i+1}'
+                newpath = os.path.join(self.save_dir, self.basename + cdx + ext)
+                move_file(fullpath, newpath)
 
 
 class ColoredFormatter(logging.Formatter):
