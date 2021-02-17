@@ -194,7 +194,7 @@ if __name__ == "__main__":
     os.chdir(root)
 
     tqdm.write(f'扫描影片文件...', end='')
-    all_movies = get_movies(root)
+    all_movies = scan_movies(root)
     movie_count = len(all_movies)
     tqdm.write(CLEAR_LINE)
     if movie_count == 0:
