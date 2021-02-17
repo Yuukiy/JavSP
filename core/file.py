@@ -27,7 +27,11 @@ def select_folder(default_dir=''):
 
 
 def scan_movies(root: str) -> List[Movie]:
-    """获取文件夹内的所有影片的列表（自动探测分片，但要求分片在同一文件夹内）"""
+    """获取文件夹内的所有影片的列表（自动探测同一文件夹内的分片）"""
+    # 由于实现的限制: 
+    # 1. 以数字编号最多支持10个分片，字母编号最多支持26个分片
+    # 2. 允许分片间的编号有公共的前导符（如编号01, 02, 03），因为求prefix时前导符也会算进去
+
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # dvdid: [abspath1, abspath2...]
     for dirpath, dirnames, filenames in os.walk(root):
