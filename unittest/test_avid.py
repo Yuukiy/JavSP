@@ -73,3 +73,8 @@ def test_by_folder_name1(prepare_files):
 @pytest.mark.parametrize('files', [('FC2-123456/Unknown.mp4',)])
 def test_by_folder_name2(prepare_files):
     assert 'FC2-123456' == get_id('FC2-123456/Unknown.mp4')
+
+
+@pytest.mark.parametrize('files', [('ABC-123/CDF-456.mp4',)])
+def test_by_folder_name2(prepare_files):
+    assert 'CDF-456' == get_id('ABC-123/CDF-456.mp4')
