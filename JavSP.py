@@ -160,6 +160,13 @@ def generate_names(movie: Movie):
     setattr(movie, 'new_filepath', new_filepath)
 
 
+def error_exit(msg):
+    """报错并退出程序"""
+    logger.error(msg)
+    os.system('pause')
+    sys.exit(1)
+
+
 if __name__ == "__main__":
     colorama.init(autoreset=True)
     logger = logging.getLogger('main')
@@ -169,16 +176,19 @@ if __name__ == "__main__":
                        ' - 将尝试自动获取部分站点的免代理地址，没有免代理地址的站点抓取器将无法工作\n'
                        ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
     # 总的来说，不需要出现在日志里的显示信息，就直接使用tqdm.write；否则就使用logger.xxx
-    tqdm.write('请选择要整理的文件夹：', end='')
-    root = select_folder()
-    if not root:
-        tqdm.write('')  # 换行显示下面的错误信息
-        logger.error('未选择文件夹，脚本退出')
-        os.system('pause')
-        os._exit(1)
+    root = cfg.File.scan_dir
+    if root:
+        if not os.path.isdir(root):
+            logger.error(f"配置的待整理文件夹无效：'{root}'")
     else:
-        tqdm.write(CLEAR_LINE)
-        logger.info(f"整理文件夹：'{root}'")
+        tqdm.write('请选择要整理的文件夹：', end='')
+        root = select_folder()
+        if not root:
+            tqdm.write('')  # 换行显示下面的错误信息
+            error_exit('未选择文件夹，脚本退出')
+        else:
+            tqdm.write(CLEAR_LINE)
+            logger.info(f"整理文件夹：'{root}'")
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)
@@ -186,11 +196,9 @@ if __name__ == "__main__":
     tqdm.write(f'扫描影片文件...', end='')
     all_movies = get_movies(root)
     movie_count = len(all_movies)
-    if movie_count == 0:
-        logger.info('未找到影片文件，脚本退出')
-        os.system('pause')
-        os._exit(0)
     tqdm.write(CLEAR_LINE)
+    if movie_count == 0:
+        error_exit('未找到影片文件，脚本退出')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     tqdm.write('')
 
