@@ -97,7 +97,8 @@ def norm_boolean(cfg: Config):
     """转换所有的布尔类型配置"""
     for sec, key in [
             ('Crawler', 'hardworking_mode'),
-            ('Crawler', 'remove_actor_in_title'),
+            ('Crawler', 'title__remove_actor'),
+            ('Crawler', 'title__chinese_first'),
             ('Picture', 'use_big_cover'),
             ('NFO', 'add_genre_to_tag')
         ]:

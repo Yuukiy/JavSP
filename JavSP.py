@@ -101,28 +101,40 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     # 等待所有线程结束
     for th in thread_pool:
         th.join(timeout=(cfg.Network.retry * cfg.Network.timeout))
+    # 删除all_info中键名中的'web.'
+    all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info
 
 
 def info_summary(movie: Movie, all_info):
     """汇总多个来源的在线数据生成最终数据"""
-    # 多线程下，all_info中的键值顺序不一定和爬虫的启动顺序一致，因此要重新获取优先级
-    crawlers = cfg.Priority[movie.data_src]
-    # 按照优先级取出各个爬虫获取到的信息
     final_info = MovieInfo(movie.dvdid)
+    ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
+    # genre
+    if 'javdb' in all_info:
+        final_info.genre = all_info['javdb'].genre
+
+    ########## 然后检查所有字段，如果某个字段还是默认值，则按照优先级选取数据 ##########
+    # parser直接更新了all_info中的项目，而初始all_info是按照优先级生成的，已经符合配置的优先级顺序了
+    # 按照优先级取出各个爬虫获取到的信息
     attrs = [i for i in dir(final_info) if not i.startswith('_')]
-    for c in crawlers:
+    for name, data in all_info.items():
         absorbed = []
-        crawlered_info = all_info[c]
         # 遍历所有属性，如果某一属性当前值为空而爬取的数据中含有该属性，则采用爬虫的属性
         for attr in attrs:
             current = getattr(final_info, attr)
-            incoming = getattr(crawlered_info, attr)
+            incoming = getattr(data, attr)
             if (not current) and (incoming):
                 setattr(final_info, attr, incoming)
                 absorbed.append(attr)
         if absorbed:
-            logger.debug(f"从'{c}'中获取了字段: " + ' '.join(absorbed))
+            logger.debug(f"从'{name}'中获取了字段: " + ' '.join(absorbed))
+    ########## 部分字段放在最后进行检查 ##########
+    # title
+    if cfg.Crawler.title__chinese_first and 'airav' in all_info:
+        if final_info.title != all_info['airav'].title:
+            final_info.ori_title = final_info.title
+            final_info.title = all_info['airav'].title
     # 检查是否所有必需的字段都已经获得了值
     for attr in cfg.Crawler.required_keys:
         if not getattr(final_info, attr, None):
