@@ -1,11 +1,12 @@
 import os
 import re
 import logging
+import argparse
 import configparser
 from string import Template
 
 
-__all__ = ['cfg', 'is_url']
+__all__ = ['cfg', 'args', 'is_url']
 
 
 root_logger = logging.getLogger()
@@ -138,10 +139,47 @@ def check_proxy_free_url(cfg: Config):
         sec[site] = url if is_url(url) else ''
 
 
+def parse_args():
+    """解析从命令行传入的参数并进行有效性验证"""
+    parser = argparse.ArgumentParser(prog='JavSP', description='汇总多站点数据的AV元数据刮削器')
+    parser.add_argument('-c', '--config', help='使用指定的配置文件')
+    parser.add_argument('-i', '--input', help='要扫描的文件夹')
+    parser.add_argument('-o', '--output', help='保存整理结果的文件夹')
+    parser.add_argument('-x', '--proxy', help='代理服务器地址')
+    parser.add_argument('-m', '--manual', action='store_true', help='手动模式：由用户输入每一部影片的番号')
+    parser.add_argument('-e', '--auto-exit', action='store_true', help='运行结束后自动退出')
+    parser.add_argument('-s', '--shutdown', action='store_true', help='整理完成后关机')
+    args = parser.parse_args()
+
+    # 验证相关参数的有效性
+    if args.config:
+        cfg_file = os.path.abspath(args.config)
+        if not os.path.exists(cfg_file):
+            logger.error(f"找不到指定的配置文件: '{cfg_file}'")
+        else:
+            logger.debug(f"读取指定的配置文件: '{cfg_file}'")
+    else:
+        cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+    args.config = cfg_file
+    return args
+
+
+def overwrite_cfg(cfg, args):
+    """根据配置args覆盖cfg中特定的配置项"""
+    if args.proxy:
+        cfg.Network.proxy = 'yes'
+        cfg.Network.proxy = args.proxy
+    if args.input:
+        cfg.File.scan_dir = args.input
+    if args.output:
+        cfg.NamingRule.output_folder = args.output
+
+
 cfg = Config()
-logger.info('读取配置...')
-cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
-cfg.read(cfg_file)
+args = parse_args()
+cfg.read(args.config)
+# 先覆盖配置，再进行配置有效性的验证
+overwrite_cfg(cfg, args)
 cfg.validate()
 
 
@@ -149,4 +187,4 @@ if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
 
-    print(cfg.File.media_ext)
+    print(cfg.NamingRule.output_folder)
