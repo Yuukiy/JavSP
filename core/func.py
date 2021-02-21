@@ -1,12 +1,14 @@
 """供其他模块使用（但是又不知道放哪里）的功能函数"""
+import os
 import re
+import time
 import logging
 
+__all__ = ['remove_trail_actor_in_title', 'shutdown', 'CLEAR_LINE']
 
+
+CLEAR_LINE = '\r\x1b[K'
 logger = logging.getLogger(__name__)
-
-
-__all__ = ['remove_trail_actor_in_title']
 
 
 def remove_trail_actor_in_title(title:str, actors:list) -> str:
@@ -21,3 +23,16 @@ def remove_trail_actor_in_title(title:str, actors:list) -> str:
         return match.group(1)
     else:
         return title
+
+
+def shutdown(timeout=120):
+    """关闭计算机"""
+    try:
+        for i in reversed(range(timeout)):
+            print(CLEAR_LINE + f"JavSP整理完成，将在 {i} 秒后关机。按'Ctrl+C'取消", end='')
+            time.sleep(1)
+        logger.info('整理完成，自动关机')
+        #TODO: 当前仅支持Windows平台
+        os.system('shutdown -s')
+    except KeyboardInterrupt:
+        return

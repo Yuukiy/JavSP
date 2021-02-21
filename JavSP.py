@@ -35,17 +35,15 @@ root_logger.addHandler(console_handler)
 
 
 from core.nfo import write_nfo
-from core.config import Config, cfg
+from core.config import cfg, args
 from core.file import *
+from core.func import *
 from core.image import *
 from core.datatype import Movie, MovieInfo
 from web.base import download
 
 
-CLEAR_LINE = '\r\x1b[K'
-
-
-def import_crawlers(cfg: Config):
+def import_crawlers(cfg):
     """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
     unknown_mods = []
     for typ, cfg_str in cfg.Priority.items():
@@ -175,7 +173,8 @@ def generate_names(movie: Movie):
 def error_exit(msg):
     """报错并退出程序"""
     logger.error(msg)
-    os.system('pause')
+    if not args.auto_exit:
+        os.system('pause')
     sys.exit(1)
 
 
@@ -259,3 +258,6 @@ if __name__ == "__main__":
         else:
             logger.error('整理失败\n')
         inner_bar.close()
+    # 整理完成后要执行的操作
+    if args.shutdown:
+        shutdown()
