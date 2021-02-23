@@ -112,7 +112,7 @@ def validate_proxy(cfg: Config):
     use_proxy = cfg.getboolean('Network', 'use_proxy')
     if use_proxy:
         proxy = cfg.Network.proxy.lower()
-        match = re.match('^(socks5h?|http)://([-.a-z\d]+):(\d+)$', proxy)
+        match = re.match(r'^(socks5h?|http)://([-.a-z\d]+):(\d+)$', proxy)
         if match:
             proxies = {'http': proxy, 'https': proxy}
         else:
@@ -149,7 +149,8 @@ def parse_args():
     parser.add_argument('-m', '--manual', action='store_true', help='手动模式：由用户输入每一部影片的番号')
     parser.add_argument('-e', '--auto-exit', action='store_true', help='运行结束后自动退出')
     parser.add_argument('-s', '--shutdown', action='store_true', help='整理完成后关机')
-    args = parser.parse_args()
+    # 忽略无法识别的参数，避免传入供pytest使用的参数时报错
+    args, unknown = parser.parse_known_args()
 
     # 验证相关参数的有效性
     if args.config:

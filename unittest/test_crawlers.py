@@ -42,7 +42,7 @@ def compare(avid, scraper, file):
             assert v == local_vars.get(k, None)
 
 
-def test_auto_compare():
+def test_auto_compare(crawler):
     """根据测试数据文件夹中的文件，爬取对应的在线数据进行比较"""
     data_files = glob(data_dir + os.sep + '*.json')
     print('')   # 打印空行，避免与pytest的输出同行显示
@@ -51,5 +51,7 @@ def test_auto_compare():
         match = re.match(r"([-\w]+) \((\w+)\)", basename, re.I)
         if match:
             avid, scraper = match.groups()
-            print(f'Comparing {avid} with {scraper} scraper...')
-            compare(avid, scraper, file)
+            # 仅当未指定抓取器或者指定的抓取器与当前抓取器相同时，才实际执行抓取和比较
+            if (not crawler) or scraper == crawler:
+                print(f'Comparing {avid} with {scraper} scraper...')
+                compare(avid, scraper, file)
