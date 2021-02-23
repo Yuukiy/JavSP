@@ -14,14 +14,51 @@ logger = logging.getLogger(__name__)
 base_url = 'https://www.airav.wiki'
 
 
+def search_movie(dvdid):
+    """通过搜索番号获取指定的影片的URL"""
+    # 部分影片的URL并不能直接通过番号得出（如012717-360），因此需要尝试通过搜索来寻找影片
+    page = 0
+    count = 1
+    result = []
+    while len(result) < count:
+        url = f'{base_url}/api/video/list?lang=zh-TW&lng=zh-TW&search={dvdid}&page={page}'
+        r = request_get(url).json()
+        # {"offset": 2460, "count": 12345, "result": [...], "status": "ok"}
+        if r['result']:
+            result.extend(r['result'])
+            count = r['count']
+            page += 1
+        else: # 结果为空，结束循环
+            break
+    # 如果什么都没搜索到，直接返回
+    if not result:
+        return
+    # 从所有搜索结果中选择最可能的番号，返回它的URL
+    target = dvdid.replace('-', '_')
+    for item in result:
+        # {'vid': '', 'slug': '', 'name': '', 'url': '', 'view': '', 'img_url': '', 'barcode': ''}
+        barcode = item['barcode'].replace('-', '_')
+        if target in barcode:
+            # 虽然有url字段但它是空的😂所以要通过barcode来生成链接
+            url = f"{base_url}/video/{item['barcode']}"
+            return url
+    return
+
+
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # airav也提供简体，但是部分影片的简介只在繁体界面下有，因此抓取繁体页面的数据
-    html = get_html(f'{base_url}/video/{movie.dvdid}')
-    # airav的部分网页样式是通过js脚本生成的，调试和解析xpath时要根据未经脚本修改的原始网页来筛选元素
-    if html.xpath("/html/head/title") == 'AIRAV-WIKI':
-        logger.debug(f"'{movie.dvdid}': airav无资源")
-        return
+    # 部分网页样式是通过js脚本生成的，调试和解析xpath时要根据未经脚本修改的原始网页来筛选元素
+    url = f'{base_url}/video/{movie.dvdid}'
+    html, resp = get_html(url, attach_raw=True)
+    # url不存在时会被重定向至主页。history非空时说明发生了重定向
+    if resp.history:
+        new_url = search_movie(movie.dvdid)
+        if new_url:
+            html = get_html(new_url)
+        else:
+            logger.debug(f"'{movie.dvdid}': airav无资源")
+            return
     container = html.xpath("//div[@class='min-h-500 row']")[0]
     cover = html.xpath("/html/head/meta[@property='og:image']/@content")[0]
     info = container.xpath("//div[@class='d-flex videoDataBlock']")[0]
@@ -61,6 +98,6 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('080719-976')
     parse_data(movie)
     print(movie)
