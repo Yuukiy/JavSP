@@ -10,7 +10,7 @@ __all__ = ['select_folder', 'scan_movies', 'get_fmt_size']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.avid import get_id
+from core.avid import *
 from core.config import cfg
 from core.datatype import Movie
 
@@ -33,7 +33,7 @@ def scan_movies(root: str) -> List[Movie]:
     # 2. 允许分片间的编号有公共的前导符（如编号01, 02, 03），因为求prefix时前导符也会算进去
 
     # 扫描所有影片文件并获取它们的番号
-    dic = {}    # dvdid: [abspath1, abspath2...]
+    dic = {}    # avid: [abspath1, abspath2...]
     for dirpath, dirnames, filenames in os.walk(root):
         for name in dirnames:
             if name.startswith('.') or name in cfg.File.ignore_folder:
@@ -43,24 +43,27 @@ def scan_movies(root: str) -> List[Movie]:
             if ext in cfg.File.media_ext:
                 fullpath = os.path.join(dirpath, file)
                 dvdid = get_id(fullpath)
-                if dvdid:
-                    if dvdid in dic:
-                        dic[dvdid].append(fullpath)
+                cid = get_cid(fullpath)
+                # 如果文件名能匹配到cid，那么将cid视为有效id，因为此时dvdid多半是错的
+                avid = cid if cid else dvdid
+                if avid:
+                    if avid in dic:
+                        dic[avid].append(fullpath)
                     else:
-                        dic[dvdid] = [fullpath]
+                        dic[avid] = [fullpath]
                 else:
                     logger.error(f"无法提取影片番号: '{fullpath}'")
     # 检查是否有多部影片对应同一个番号
-    non_slice_dup = {}  # dvdid: [abspath1, abspath2...]
-    for dvdid, files in dic.copy().items():
+    non_slice_dup = {}  # avid: [abspath1, abspath2...]
+    for avid, files in dic.copy().items():
         # 一一对应的直接略过
         if len(files) == 1:
             continue
         dirs = set([os.path.split(i)[0] for i in files])
         # 不同位置的多部影片有相同番号时，略过并报错
         if len(dirs) > 1:
-            non_slice_dup[dvdid] = files
-            del dic[dvdid]
+            non_slice_dup[avid] = files
+            del dic[avid]
             continue
         # 提取分片信息（如果正则替换成功，只会剩下单个小写字符）。相关变量都要使用同样的列表生成顺序
         basenames = [os.path.basename(i) for i in files]
@@ -71,33 +74,36 @@ def scan_movies(root: str) -> List[Movie]:
         if (any([len(i) != 1 for i in remaining]) 
             # remaining为初步提取的分片信息，不允许有重复值
             or len(remaining) != len(set(remaining))):
-            non_slice_dup[dvdid] = files
-            del dic[dvdid]
+            non_slice_dup[avid] = files
+            del dic[avid]
             continue
         # 影片编号必须从 0/1/a 开始且编号连续
         slices = sorted(remaining)
         first, last = slices[0], slices[-1]
         if (first not in ('0', '1', 'a')) or (ord(last) != (ord(first)+len(slices)-1)):
-            non_slice_dup[dvdid] = files
-            del dic[dvdid]
+            non_slice_dup[avid] = files
+            del dic[avid]
             continue
         # 生成最终的分片信息
         mapped_files = [files[remaining.index(i)] for i in slices]
-        dic[dvdid] = mapped_files
+        dic[avid] = mapped_files
 
     # 汇总输出错误提示信息
     msg = ''
-    for dvdid, files in non_slice_dup.items():
-        msg += f'{dvdid}: \n'
+    for avid, files in non_slice_dup.items():
+        msg += f'{avid}: \n'
         for f in files:
             msg += ('  ' + os.path.relpath(f, root) + '\n')
     if msg:
         logger.error("下列番号对应多部影片文件且不符合分片规则，已略过整理，请手动处理后重新运行脚本: \n" + msg)
     # 转换数据的组织格式
     movies = []
-    for dvdid, files in dic.items():
-        mov = Movie(dvdid)
+    for avid, files in dic.items():
+        mov = Movie(avid)
+        src = guess_av_type(avid)
         mov.files = files
+        mov.data_src = src
+        logger.debug(f'影片数据源类型: {avid}: {src}')
         movies.append(mov)
     return movies
 

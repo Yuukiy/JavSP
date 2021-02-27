@@ -3,6 +3,9 @@ import os
 import re
 
 
+__all__ = ['get_id', 'get_cid', 'guess_av_type']
+
+
 def get_id(filepath: str) -> str:
     """从给定的文件路径中提取番号（DVD ID）"""
     # 通常是接收文件的路径，当然如果是普通字符串也可以
@@ -54,6 +57,19 @@ def get_cid(filepath: str) -> str:
             if match:
                 return possible
     return ''
+
+
+def guess_av_type(avid: str) -> str:
+    """识别给定的番号所属的分类: normal, fc2, cid"""
+    match = re.match(r'^FC2-\d{5,7}$', avid)
+    if match:
+        return 'fc2'
+    # 如果传入的avid完全匹配cid的模式，则将影片归类为cid
+    cid = get_cid(avid)
+    if cid == avid:
+        return 'cid'
+    # 以上都不是: 默认归类为normal
+    return 'normal'
 
 
 if __name__ == "__main__":

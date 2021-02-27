@@ -46,7 +46,7 @@ from web.base import download
 def import_crawlers(cfg):
     """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
     unknown_mods = []
-    for typ, cfg_str in cfg.Priority.items():
+    for typ, cfg_str in cfg.CrawlerSelect.items():
         mods = cfg_str.split(',')
         valid_mods = []
         for name in mods:
@@ -60,7 +60,7 @@ def import_crawlers(cfg):
                 valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
             except ModuleNotFoundError:
                 unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
-        cfg._sections['Priority'][typ] = tuple(valid_mods)
+        cfg._sections['CrawlerSelect'][typ] = tuple(valid_mods)
     if unknown_mods:
         logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
 
@@ -87,7 +87,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                 logger.exception(f'{task_info}: 未处理的异常: {e}')
 
     # 根据影片的数据源获取对应的抓取器
-    crawler_mods = cfg.Priority[movie.data_src]
+    crawler_mods = cfg.CrawlerSelect[movie.data_src]
     all_info = {i: MovieInfo(movie.dvdid) for i in crawler_mods}
     thread_pool = []
     for mod, info in all_info.items():
