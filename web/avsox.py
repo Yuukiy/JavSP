@@ -18,7 +18,12 @@ def parse_data(movie: MovieInfo):
     ids = html.xpath("//a[@class='movie-box mcaribbeancom']/div[@class='photo-info']/span/date[1]/text()")
     urls = html.xpath("//a[@class='movie-box mcaribbeancom']/@href")
     ids_lower = list(map(str.lower, ids))
-    url = urls[ids_lower.index(movie.dvdid.lower())]
+    try:
+        url = urls[ids_lower.index(movie.dvdid.lower())]
+    except ValueError:
+        # ValueError 表明找不到这部影片，直接返回
+        return
+
     # 提取影片信息
     html = get_html(url)
     container = html.xpath("/html/body/div[@class='container']")[0]
