@@ -22,6 +22,10 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = f'{base_url}/digital/videoa/-/detail/=/cid={movie.cid}/'
     html = get_html(url, cookies=cookies)
+    if 'not available in your region' in html.text_content():
+        # 经测试确认FANZA必须要有日本IP才可以，更改浏览器'Accept-Language'为单一'ja'也无法绕开限制
+        logger.error('FANZA仅可在日本IP地址下使用')
+        return
     title = html.xpath("//h1[@id='title']/text()")[0]
     # 注意: 浏览器在渲染时会自动加上了'tbody'字段，但是原始html网页中并没有，因此xpath解析时还是要按原始网页的来
     container = html.xpath("//table[@class='mg-b12']/tr/td")[0]

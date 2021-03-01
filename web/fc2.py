@@ -91,7 +91,7 @@ def parse_data(movie: MovieInfo):
     movie.title = title
     movie.genre = genre
     movie.producer = producer
-    movie.duration = strftime_to_minutes(duration_str)
+    movie.duration = str(strftime_to_minutes(duration_str))
     movie.publish_date = publish_date
     movie.preview_pics = preview_pics
     # FC2的封面是220x220的，和正常封面尺寸、比例都差太多。如果有预览图片，则使用第一张预览图作为封面

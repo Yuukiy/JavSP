@@ -21,7 +21,11 @@ cookies = {'adc': '1'}
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = f'{base_url}/product/product_detail/{movie.dvdid}/'
-    html = get_html(url, cookies=cookies)
+    html, resp = get_html(url, cookies=cookies, attach_raw=True)
+    # url不存在时会被重定向至主页。history非空时说明发生了重定向
+    if resp.history:
+        logger.debug(f"'{movie.dvdid}': mgstage无资源")
+        return
     # mgstage的文本中含有大量的空白字符（'\n \t'），需要使用strip去除
     title = html.xpath("//div[@class='common_detail_cover']/h1/text()")[0].strip()
     container = html.xpath("//div[@class='detail_left']")[0]
