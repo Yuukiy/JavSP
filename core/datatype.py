@@ -18,9 +18,13 @@ class MovieInfo:
         arg_count = len([i for i in [dvdid, cid, from_file] if i])
         if arg_count != 1:
             raise TypeError(f'Require 1 parameter but {arg_count} given')
+        if isinstance(dvdid, Movie):
+            self.dvdid = dvdid.dvdid
+            self.cid = dvdid.cid
+        else:
+            self.dvdid = dvdid      # DVD ID，即通常的番号
+            self.cid = cid          # DMM Content ID
         # 创建类的默认属性
-        self.dvdid = dvdid          # DVD ID，即通常的番号
-        self.cid = cid              # DMM Content ID
         self.plot = None            # 故事情节
         self.cover = None           # 封面图片（URL）
         self.big_cover = None       # 高清封面图片（URL）
@@ -54,7 +58,11 @@ class MovieInfo:
         return json.dumps(d, indent=2, ensure_ascii=False)
 
     def __repr__(self) -> str:
-        return __class__.__name__ + f"('{self.dvdid}')"
+        if self.dvdid:
+            expression = f"('{self.dvdid}')"
+        else:
+            expression = f"('cid={self.cid}')"
+        return __class__.__name__ + expression
 
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):

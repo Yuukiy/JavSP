@@ -88,7 +88,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
 
     # 根据影片的数据源获取对应的抓取器
     crawler_mods = cfg.CrawlerSelect[movie.data_src]
-    all_info = {i: MovieInfo(movie.dvdid) for i in crawler_mods}
+    all_info = {i: MovieInfo(movie) for i in crawler_mods}
     thread_pool = []
     for mod, info in all_info.items():
         parser = getattr(sys.modules[mod], 'parse_data')
@@ -106,7 +106,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
 
 def info_summary(movie: Movie, all_info):
     """汇总多个来源的在线数据生成最终数据"""
-    final_info = MovieInfo(movie.dvdid)
+    final_info = MovieInfo(movie)
     ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
     # genre
     if 'javdb' in all_info:
@@ -130,7 +130,7 @@ def info_summary(movie: Movie, all_info):
     ########## 部分字段放在最后进行检查 ##########
     # title
     if cfg.Crawler.title__chinese_first and 'airav' in all_info:
-        if final_info.title != all_info['airav'].title:
+        if all_info['airav'].title and final_info.title != all_info['airav'].title:
             final_info.ori_title = final_info.title
             final_info.title = all_info['airav'].title
     # 检查是否所有必需的字段都已经获得了值
@@ -147,7 +147,10 @@ def generate_names(movie: Movie):
     """按照模板生成相关文件的文件名"""
     info = movie.info
     # 准备用来填充命名模板的字典
-    d = {'num': info.dvdid}
+    if info.dvdid:
+        d = {'num': info.dvdid}
+    else:
+        d = {'num': info.cid}
     d['title'] = info.title if info.title else cfg.NamingRule.null_for_title
     if info.actress:
         d['actor'] = ','.join(info.actress)

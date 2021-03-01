@@ -99,8 +99,11 @@ def scan_movies(root: str) -> List[Movie]:
     # 转换数据的组织格式
     movies = []
     for avid, files in dic.items():
-        mov = Movie(avid)
         src = guess_av_type(avid)
+        if src != 'cid':
+            mov = Movie(avid)
+        else:
+            mov = Movie(cid=avid)
         mov.files = files
         mov.data_src = src
         logger.debug(f'影片数据源类型: {avid}: {src}')
