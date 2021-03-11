@@ -15,8 +15,8 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # avsox无法直接跳转到影片的网页，因此先搜索再从搜索结果中寻找目标网页
     html = get_html(f'{base_url}/cn/search/{movie.dvdid}')
-    ids = html.xpath("//a[@class='movie-box mcaribbeancom']/div[@class='photo-info']/span/date[1]/text()")
-    urls = html.xpath("//a[@class='movie-box mcaribbeancom']/@href")
+    ids = html.xpath("//div[@class='photo-info']/span/date[1]/text()")
+    urls = html.xpath("//a[contains(@class, 'movie-box')]/@href")
     ids_lower = list(map(str.lower, ids))
     try:
         url = urls[ids_lower.index(movie.dvdid.lower())]
@@ -36,9 +36,9 @@ def parse_data(movie: MovieInfo):
     producer_tag = info.xpath("p[text()='制作商: ']")[0].getnext().xpath("a")
     if producer_tag:
         movie.producer = producer_tag[0].text_content()
-    serial_tag = info.xpath("p[text()='系列:']")[0].getnext().xpath("a/text()")
+    serial_tag = info.xpath("p[text()='系列:']")
     if serial_tag:
-        movie.serial = serial_tag[0]
+        movie.serial = serial_tag[0].getnext().xpath("a/text()")[0]
     genre = info.xpath("p/span[@class='genre']/a/text()")
     actress = container.xpath("//a[@class='avatar-box']/span/text()")
 
@@ -51,6 +51,6 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    movie = MovieInfo('082713-417')
+    movie = MovieInfo('130614-KEIKO')
     parse_data(movie)
     print(movie)
