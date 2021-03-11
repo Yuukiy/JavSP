@@ -51,7 +51,9 @@ def parse_data(movie: MovieInfo):
     if director_tag:
         movie.director = director_tag[0].getnext().text_content().strip()
     producer = info.xpath("div/strong[text()='片商:']")[0].getnext().text_content().strip()
-    publisher = info.xpath("div/strong[text()='發行:']")[0].getnext().text_content().strip()
+    publisher_tag = info.xpath("div/strong[text()='發行:']")
+    if publisher_tag:
+        movie.publisher = publisher_tag[0].getnext().text_content().strip()
     serial_tag = info.xpath("div/strong[text()='系列:']")
     if serial_tag:
         movie.serial = serial_tag[0].getnext().text
@@ -78,7 +80,6 @@ def parse_data(movie: MovieInfo):
     movie.publish_date = publish_date
     movie.duration = duration
     movie.producer = producer
-    movie.publisher = publisher
     movie.genre = genre
     movie.genre_id = genre_id
     movie.actress = actress
@@ -99,6 +100,6 @@ def parse_clean_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('130614-KEIKO')
     parse_clean_data(movie)
     print(movie)

@@ -32,7 +32,9 @@ def parse_data(movie: MovieInfo):
     if director_tag:    # xpath没有匹配时将得到空列表
         movie.director = director_tag[0].getnext().text.strip()
     producer = info.xpath("p/span[text()='製作商:']")[0].getnext().text.strip()
-    publisher = info.xpath("p/span[text()='發行商:']")[0].getnext().text.strip()
+    publisher_tag = info.xpath("p/span[text()='發行商:']")
+    if publisher_tag:
+        movie.publisher = publisher_tag[0].getnext().text.strip()
     serial_tag = info.xpath("p/span[text()='系列:']")
     if serial_tag:
         movie.serial = serial_tag[0].getnext().text
@@ -66,7 +68,6 @@ def parse_data(movie: MovieInfo):
     movie.publish_date = publish_date
     movie.duration = duration
     movie.producer = producer
-    movie.publisher = publisher
     movie.genre = genre
     movie.genre_id = genre_id
     movie.actress = actress
@@ -87,6 +88,6 @@ def parse_clean_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('130614-KEIKO')
     parse_clean_data(movie)
     print(movie)
