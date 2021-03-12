@@ -1,0 +1,15 @@
+altgraph==0.17
+certifi==2020.12.5
+chardet==4.0.0
+colorama==0.4.4
+future==0.18.2
+idna==2.10
+lxml==4.6.2
+pefile==2019.4.18
+Pillow==8.1.2
+pretty-errors==1.2.19
+PySocks==1.7.1
+pywin32-ctypes==0.2.0
+requests==2.25.1
+tqdm==4.59.0
+urllib3==1.26.3
