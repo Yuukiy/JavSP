@@ -1,15 +1,24 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+from glob import glob
 
 block_cipher = None
 
+# search and add data files to the bundle
+data_dir = './data'
+data_files = [
+    ("../core/config.ini", ".")
+]
+for f in glob(data_dir + '/*.*'):
+    pair = (os.path.abspath(f), 'data')
+    data_files.append(pair)
 
-# path is relative to the .spec file
+
+# pyinstaller locates path relative to the .spec file
 a = Analysis(['../JavSP.py'],
              pathex=['build'],
              binaries=[],
-             datas=[
-                 ("../core/config.ini", ".")
-             ],
+             datas=data_files,
              hiddenimports=[
                  'core/config.py'
              ],

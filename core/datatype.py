@@ -1,11 +1,19 @@
 """定义数据类型和一些通用性的对数据类型的操作"""
 import os
 import csv
+import sys
 import json
 import logging
 
 
 logger = logging.getLogger(__name__)
+
+
+def mei_path(path):
+    if getattr(sys, 'frozen', False):
+        return os.path.join(sys._MEIPASS, path)
+    else:
+        return path
 
 
 class MovieInfo:
@@ -151,7 +159,7 @@ class GenreMap(dict):
     """genre的映射表"""
     def __init__(self, file):
         genres = {}
-        with open(file, newline='', encoding='utf-8-sig') as csvfile:
+        with open(mei_path(file), newline='', encoding='utf-8-sig') as csvfile:
             reader = csv.DictReader(csvfile)
             try:
                 for row in reader:
