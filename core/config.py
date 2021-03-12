@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import logging
 import argparse
 import configparser
@@ -160,9 +161,26 @@ def parse_args():
         else:
             logger.debug(f"读取指定的配置文件: '{cfg_file}'")
     else:
-        cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+        # 未指定配置文件时，使用默认配置文件
+        if getattr(sys, 'frozen', False):
+            cfg_file = os.path.join(os.path.split(sys.executable)[0], 'config.ini')
+            if not os.path.exists(cfg_file):
+                logger.warning(f"已创建默认配置文件: '{cfg_file}'")
+                dump_config(cfg_file)
+        else:
+            cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
     args.config = cfg_file
     return args
+
+
+def dump_config(out_file):
+    """将内置的配置文件输出到指定路径"""
+    # 使用文件读写来创建配置文件，使得创建的配置文件具有与平台相适应的换行符
+    internal_config = os.path.join(sys._MEIPASS, 'config.ini')
+    with open(internal_config, 'rt', encoding='utf-8') as f:
+        content = f.read()
+    with open(out_file, 'wt', encoding='utf-8') as f:
+        f.write(content)
 
 
 def overwrite_cfg(cfg, args):
