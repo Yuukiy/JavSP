@@ -4,6 +4,7 @@ import re
 import sys
 import time
 import logging
+from datetime import datetime
 from packaging import version
 from colorama import Fore, Style
 
@@ -43,6 +44,17 @@ def shutdown(timeout=120):
         os.system('shutdown -s')
     except KeyboardInterrupt:
         return
+
+
+def utc2local(utc_str):
+    """将UTC时间转换为本地时间"""
+    # python不支持 ISO-8601 中的Z后缀
+    now = time.time()
+    offset = datetime.fromtimestamp(now) - datetime.utcfromtimestamp(now)
+    utc_str = utc_str.replace('Z', '+00:00')
+    utc_time = datetime.fromisoformat(utc_str)
+    local_time = utc_time + offset
+    return local_time
 
 
 def get_actual_width(mix_str: str) -> int:
@@ -94,6 +106,8 @@ def check_update(allow_check=True, print=print):
         try:
             data = request_get(api_url, timeout=3).json()
             latest_version = data['tag_name']
+            release_time = utc2local(data['published_at'])
+            release_date = release_time.isoformat().split('T')[0]
             if version.parse(local_version) < version.parse(latest_version):
                 update_status = 'new_version'
             else:
@@ -112,7 +126,7 @@ def check_update(allow_check=True, print=print):
         print_header([title])
     elif update_status == 'fail_to_check':
         titles = [f'Jav Scraper Package: {local_version}']
-        info = ['检查更新失败，请前往以下地址查看是否有新版本:', '  '+release_url]
+        info = ['检查更新失败，请前往以下地址查看最新版本:', '  '+release_url]
         print_header(titles, info)
     elif update_status == 'new_version':
         titles = [f'Jav Scraper Package: {local_version}']
@@ -121,7 +135,7 @@ def check_update(allow_check=True, print=print):
         # 提取changelog消息
         try:
             lines = data['body'].split('\r\n')
-            changelog = []
+            changelog = [f'更新时间: {release_date}']
             for line in lines:
                 if line.startswith('## '):
                     changelog.append(Style.BRIGHT + line[3:] + Style.RESET_ALL)
@@ -133,4 +147,5 @@ def check_update(allow_check=True, print=print):
 
 
 if __name__ == "__main__":
+    setattr(sys, 'javsp_version', 'v0')
     check_update()
