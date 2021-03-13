@@ -147,23 +147,22 @@ def generate_names(movie: Movie):
     """按照模板生成相关文件的文件名"""
     info = movie.info
     # 准备用来填充命名模板的字典
-    if info.dvdid:
-        d = {'num': info.dvdid}
-    else:
-        d = {'num': info.cid}
-    d['title'] = info.title if info.title else cfg.NamingRule.null_for_title
-    if info.actress:
-        d['actor'] = ','.join(info.actress)
-    else:
-        d['actor'] = cfg.NamingRule.null_for_actor
-    remaining_keys = ['socre', 'serial', 'director', 'producer', 'publisher', 'publish_date']
-    for i in remaining_keys:
-        value = getattr(info, i, None)
-        if value:
-            d[i] = value
-        else:
-            d[i] = cfg.NamingRule.null_for_others
-    # 生成相关文件的路径
+    d = {}
+    d['num'] = info.dvdid or info.cid
+    d['title'] = info.title or cfg.NamingRule.null_for_title
+    d['actress'] = ','.join(info.actress) if info.actress else cfg.NamingRule.null_for_actress
+    d['score'] = info.score or '0'
+    d['serial'] = info.serial or cfg.NamingRule.null_for_serial
+    d['director'] = info.director or cfg.NamingRule.null_for_director
+    d['producer'] = info.producer or cfg.NamingRule.null_for_producer
+    d['publisher'] = info.publisher or cfg.NamingRule.null_for_publisher
+    d['date'] = info.publish_date or '0000-00-00'
+    d['year'] = d['date'].split('-')[0]
+    # cid中不会出现'-'，可以直接从d['num']拆分出label
+    num_items = d['num'].split('-')
+    d['label'] = num_items[0] if len(num_items) > 1 else '---'
+
+    # 使用字典填充模板，生成相关文件的路径
     save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d))
     basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d))
     movie.save_dir = save_dir
