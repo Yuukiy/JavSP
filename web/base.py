@@ -21,16 +21,16 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 cleaner = Cleaner(kill_tags=['script', 'noscript'])
 
 
-def request_get(url, cookies={}):
+def request_get(url, cookies={}, timeout=cfg.Network.timeout):
     """获取指定url的原始请求"""
-    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies)
+    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
     r.raise_for_status()
     return r
 
 
-def request_post(url, data, cookies={}):
+def request_post(url, data, cookies={}, timeout=cfg.Network.timeout):
     """向指定url发送post请求"""
-    r = requests.post(url, data=data, headers=headers, proxies=cfg.Network.proxy, cookies=cookies)
+    r = requests.post(url, data=data, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
     r.raise_for_status()
     return r
 

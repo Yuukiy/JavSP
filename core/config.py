@@ -102,7 +102,8 @@ def norm_boolean(cfg: Config):
             ('Crawler', 'title__remove_actor'),
             ('Crawler', 'title__chinese_first'),
             ('Picture', 'use_big_cover'),
-            ('NFO', 'add_genre_to_tag')
+            ('NFO', 'add_genre_to_tag'),
+            ('Other', 'check_update')
         ]:
         cfg._sections[sec][key] = cfg.getboolean(sec, key)
 

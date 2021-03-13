@@ -183,6 +183,9 @@ def error_exit(msg):
 if __name__ == "__main__":
     colorama.init(autoreset=True)
     logger = logging.getLogger('main')
+    # 检查更新
+    if cfg.Other.check_update:
+        check_update(print=tqdm.write)
     # 如果未配置有效代理，则显示相应提示
     if not cfg.Network.proxy:
         logger.warning('未配置有效代理，程序会努力继续运行，但是部分功能可能受限：\n'
