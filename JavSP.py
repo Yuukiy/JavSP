@@ -236,16 +236,28 @@ if __name__ == "__main__":
             inner_bar.update()
 
             inner_bar.set_description('下载封面图片')
-            if cfg.Picture.use_big_cover and movie.info.big_cover:
-                try:
-                    download(movie.info.big_cover, movie.fanart_file)
-                    filesize = get_fmt_size(movie.fanart_file)
-                    width, height = get_pic_size(movie.fanart_file)
-                    logger.info(f"已下载高清封面: {width}x{height}, {filesize}")
-                except requests.exceptions.HTTPError:
+            for _ in range(cfg.Network.retry):
+                # 下载图片
+                cover_url = movie.info.cover
+                if cfg.Picture.use_big_cover and movie.info.big_cover:
+                    try:
+                        download(movie.info.big_cover, movie.fanart_file)
+                        cover_url = movie.info.big_cover
+                    except requests.exceptions.HTTPError:
+                        download(movie.info.cover, movie.fanart_file)
+                else:
                     download(movie.info.cover, movie.fanart_file)
+                # 检查图片是否完整
+                if valid_pic(movie.fanart_file):
+                    if cover_url == movie.info.big_cover:
+                        filesize = get_fmt_size(movie.fanart_file)
+                        width, height = get_pic_size(movie.fanart_file)
+                        logger.info(f"已下载高清封面: {width}x{height}, {filesize}")
+                    break
             else:
-                download(movie.info.cover, movie.fanart_file)
+                logger.error(f"下载封面图片失败: '{cover_url}'")
+                continue    # 继续整理后续影片
+
             inner_bar.update()
 
             inner_bar.set_description('裁剪海报封面')

@@ -2,7 +2,17 @@
 from PIL import Image
 
 
-__all__ = ['crop_poster', 'get_pic_size']
+__all__ = ['valid_pic', 'crop_poster', 'get_pic_size']
+
+
+def valid_pic(pic_path):
+    """检查图片文件是否完整"""
+    try:
+        img = Image.open(pic_path)
+        img.load()
+        return True
+    except (FileNotFoundError, OSError):
+        return False
 
 
 def crop_poster(fanart_file, poster_file):
