@@ -15,7 +15,7 @@ a = Analysis(['../JavSP.py'],
                  'core/config.py'
              ],
              hookspath=[],
-             runtime_hooks=[],
+             runtime_hooks=['ver_hook.py'],
              excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,

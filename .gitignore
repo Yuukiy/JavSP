@@ -126,3 +126,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# hook script generated for pyinstaller
+ver_hook.py
