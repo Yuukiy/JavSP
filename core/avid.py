@@ -31,6 +31,10 @@ def get_id(filepath: str) -> str:
             match = re.search(r'([a-z]{2,})(\d{2,5})', filename, re.I)
             if match:
                 return match.group(1) + '-' + match.group(2)
+    # 尝试匹配纯数字番号（无码影片）
+    match = re.search(r'(\d{6}[-_]\d{3})', filename)
+    if match:
+        return match.group(1)
     # 如果还是匹配不了，尝试将')('替换为'-'后再试，少部分影片的番号是由')('分隔的
     if ')(' in filepath:
         avid = get_id(filepath.replace(')(', '-'))

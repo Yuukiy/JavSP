@@ -4,7 +4,8 @@ import uuid
 import pytest
 from shutil import rmtree
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+file_dir = os.path.dirname(__file__)
+sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 from core.avid import *
 
 
@@ -53,6 +54,26 @@ def test_cid_valid():
     assert '1234wvr00001rp' == get_cid('1234wvr00001rp.mp4')
     assert '402abc_hello000089' == get_cid('402abc_hello000089.mp4')
 
+
+def test_from_file():
+    # 用来控制是否将转换结果覆盖原文件（便于检查所有失败的条目）
+    write_back = False
+    rewrite_lines = []
+
+    datafile = os.path.join(file_dir, 'testdata_avid.txt')
+    with open(datafile, 'rt', encoding='utf-8') as f:
+        lines = f.readlines()
+        for line in lines:
+            filename, avid = line.strip('\r\n').split('\t')
+            guess_id = get_id(filename)
+            if not write_back:
+                assert guess_id == avid
+            else:
+                rewrite_lines.append(f'{filename}\t{guess_id}\n')
+    if write_back:
+        with open(datafile, 'wt', encoding='utf-8') as f:
+            f.writelines(rewrite_lines)
+            
 
 def test_cid_invalid():
     assert '' == get_cid('hasUpperletter.mp4')
