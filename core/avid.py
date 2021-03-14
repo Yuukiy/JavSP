@@ -1,15 +1,21 @@
 """获取和转换影片的各类番号（DVD ID, DMM cid, DMM pid）"""
 import os
 import re
+import sys
 
 
 __all__ = ['get_id', 'get_cid', 'guess_av_type']
+
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from core.config import cfg
 
 
 def get_id(filepath: str) -> str:
     """从给定的文件路径中提取番号（DVD ID）"""
     # 通常是接收文件的路径，当然如果是普通字符串也可以
     filename = os.path.basename(filepath)
+    filename = cfg.MovieID.ignore_pattern.sub('', filename)
     filename_lc = filename.lower()
     if 'fc2' in filename_lc:
         # 根据FC2 Club的影片数据，FC2编号为5-7个数字
@@ -25,6 +31,11 @@ def get_id(filepath: str) -> str:
             match = re.search(r'([a-z]{2,})(\d{2,5})', filename, re.I)
             if match:
                 return match.group(1) + '-' + match.group(2)
+    # 如果还是匹配不了，尝试将')('替换为'-'后再试，少部分影片的番号是由')('分隔的
+    if ')(' in filepath:
+        avid = get_id(filepath.replace(')(', '-'))
+        if avid:
+            return avid
     # 如果最后仍然匹配不了番号，则尝试使用文件所在文件夹的名字去匹配
     if os.path.isfile(filepath):
         norm = os.path.normpath(filepath)

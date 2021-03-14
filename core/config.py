@@ -57,6 +57,7 @@ class Config(configparser.ConfigParser):
         norm_tuples(self)
         norm_boolean(self)
         validate_proxy(self)
+        norm_ignore_pattern(self)
         convert_naming_rule(self)
         # 作为配置模块，始终检查免代理地址；由各个抓取器中根据代理情况选择是否启用免代理地址
         check_proxy_free_url(self)
@@ -106,6 +107,17 @@ def norm_boolean(cfg: Config):
             ('Other', 'check_update')
         ]:
         cfg._sections[sec][key] = cfg.getboolean(sec, key)
+
+
+def norm_ignore_pattern(cfg: Config):
+    """将配置文件中推测番号时的忽略列表转换为正则表达式"""
+    words = cfg.MovieID.ignore_whole_word.replace(' ','').split(';')
+    regexes = cfg.MovieID.ignore_regex.split(';')
+    words_pattern = R'\b({})\b'.format('|'.join(words))
+    regex_patterns = '|'.join([f'({i})' for i in regexes])
+    pattern_str = f'({words_pattern})|{regex_patterns}'
+    ignore_pattern = re.compile(pattern_str, flags=re.I | re.A)
+    cfg.MovieID.ignore_pattern = ignore_pattern
 
 
 def validate_proxy(cfg: Config):
