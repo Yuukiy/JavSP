@@ -208,10 +208,9 @@ if __name__ == "__main__":
     import_crawlers(cfg)
     os.chdir(root)
 
-    tqdm.write(f'扫描影片文件...', end='')
+    tqdm.write(f'扫描影片文件...')
     all_movies = scan_movies(root)
     movie_count = len(all_movies)
-    tqdm.write(CLEAR_LINE)
     if movie_count == 0:
         error_exit('未找到影片文件，脚本退出')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')

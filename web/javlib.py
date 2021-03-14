@@ -37,7 +37,7 @@ def parse_data(movie: MovieInfo):
                 pre_choose.append(tag)
         match_count = len(pre_choose)
         if match_count == 0:
-            logger.error(f"'{movie.dvdid}': 无法获取到影片结果")
+            logger.debug(f"'{movie.dvdid}': 无法获取到影片结果")
             return
         elif match_count == 1:
             new_url = pre_choose[0].get('href')

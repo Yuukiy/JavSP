@@ -19,6 +19,9 @@ def parse_data(movie: MovieInfo):
     html = post_html(f'{base_url}/search', data={'sn': movie.dvdid})
     page_url = html.xpath("//ul[@class='dropdown-menu']/li/a/@href")[0]
     cid = page_url.split('/')[-1]   # /video/ipx00177
+    # 如果从URL匹配到的cid是'search'，说明还停留在搜索页面，找不到这部影片
+    if cid == 'search':
+        return
     title = html.xpath("//div[@class='panel-heading']/h3/text()")[0]
     info = html.xpath("//div[@class='col-md-9']")[0]
     # jav321的不同信息字段间没有明显分隔，只能通过url来匹配目标标签
@@ -53,7 +56,10 @@ def parse_data(movie: MovieInfo):
     serial_tag = info.xpath("a[contains(@href,'/series/')]/text()")
     if serial_tag:
         movie.serial = serial_tag[0]
-    preview_video = info.xpath("//video/source/@src")[0]
+    preview_video_tag = info.xpath("//video/source/@src")
+    if preview_video_tag:
+        movie.preview_video = preview_video_tag[0]
+
     plot = info.xpath("//div[@class='panel-body']/div[@class='row']/div[@class='col-md-12']/text()")[0]
     preview_pics = html.xpath("//div[@class='col-xs-12 col-md-12']/p/a/img[@class='img-responsive']/@src")
     # 磁力和ed2k链接是依赖js脚本加载的，无法通过静态网页来解析
@@ -69,7 +75,6 @@ def parse_data(movie: MovieInfo):
     # preview_pics的第一张图始终是封面，剩下的才是预览图
     movie.cover = preview_pics[0]
     movie.preview_pics = preview_pics[1:]
-    movie.preview_video = preview_video
     movie.plot = plot
 
 
