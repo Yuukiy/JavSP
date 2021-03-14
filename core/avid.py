@@ -27,10 +27,14 @@ def get_id(filepath: str) -> str:
         match = re.search(r'([a-z]{2,10})[-_](\d{2,5})', filename, re.I)
         if match:
             return match.group(1) + '-' + match.group(2)
-        else:
-            match = re.search(r'([a-z]{2,})(\d{2,5})', filename, re.I)
-            if match:
-                return match.group(1) + '-' + match.group(2)
+        # 普通番号，运行到这里时表明无法匹配到带分隔符的番号
+        match = re.search(r'([a-z]{2,})(\d{2,5})', filename, re.I)
+        if match:
+            return match.group(1) + '-' + match.group(2)
+    # 尝试匹配TMA制作的影片（如'T28-557'，他家的番号很乱）
+    match = re.search(r'(T28[-_]\d{3})', filename)
+    if match:
+        return match.group(1)
     # 尝试匹配纯数字番号（无码影片）
     match = re.search(r'(\d{6}[-_]\d{3})', filename)
     if match:
