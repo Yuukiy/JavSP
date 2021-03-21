@@ -58,8 +58,13 @@ def parse_data(movie: MovieInfo):
         raise ValueError('Invalid FC2 number: ' + movie.dvdid)
     fc2_id = id_lc.replace('fc2-', '')
     # 抓取网页
-    html = get_html(f'{base_url}/article/{fc2_id}/')
-    container = html.xpath("//div[@class='items_article_left']")[0]
+    url = f'{base_url}/article/{fc2_id}/'
+    html = get_html(url)
+    try:
+        container = html.xpath("//div[@class='items_article_left']")[0]
+    except IndexError:
+        logger.debug('无影片: ' + movie.dvdid)
+        return
     title = container.xpath("//div[@class='items_article_headerInfo']/h3/text()")[0]
     thumb_tag = container.xpath("//div[@class='items_article_MainitemThumb']")[0]
     thumb_pic = thumb_tag.xpath("span/img/@src")[0]
@@ -102,6 +107,7 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
     movie = MovieInfo('FC2-718323')
     parse_data(movie)
     print(movie)
