@@ -68,11 +68,11 @@ def import_crawlers(cfg):
 # 爬虫是IO密集型任务，可以通过多线程提升效率
 def parallel_crawler(movie: Movie, tqdm_bar=None):
     """使用多线程抓取不同网站的数据"""
-    def wrapper(parser, info: MovieInfo):
+    def wrapper(parser, info: MovieInfo, retry):
         """对抓取器函数进行包装，便于更新提示信息和自动重试"""
         crawler_name = threading.current_thread().name
         task_info = f'Crawler: {crawler_name}: {info.dvdid}'
-        for retry in range(cfg.Network.retry):
+        for cnt in range(retry):
             try:
                 parser(info)
                 logger.debug(f'{task_info}: 抓取成功')
@@ -80,11 +80,12 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                     tqdm_bar.set_description(f'{crawler_name}: 抓取完成')
                 break
             except requests.exceptions.RequestException as e:
-                logger.debug(f'{task_info}: 网络错误，正在重试 ({retry+1}/{cfg.Network.retry}): \n{e}')
+                logger.debug(f'{task_info}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{e}')
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
             except Exception as e:
                 logger.exception(f'{task_info}: 未处理的异常: {e}')
+                break
 
     # 根据影片的数据源获取对应的抓取器
     crawler_mods = cfg.CrawlerSelect[movie.data_src]
@@ -93,7 +94,11 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     for mod, info in all_info.items():
         parser = getattr(sys.modules[mod], 'parse_data')
         # 将all_info中的info实例传递给parser，parser抓取完成后，info实例的值已经完成更新
-        th = threading.Thread(target=wrapper, name=mod, args=(parser, info))
+        # TODO: 抓取器如果带有parse_data_raw，说明它已经自行进行了重试处理，此时将重试次数设置为1
+        if hasattr(sys.modules[mod], 'parse_data_raw'):
+            th = threading.Thread(target=wrapper, name=mod, args=(parser, info, 1))
+        else:
+            th = threading.Thread(target=wrapper, name=mod, args=(parser, info, cfg.Network.retry))
         th.start()
         thread_pool.append(th)
     # 等待所有线程结束

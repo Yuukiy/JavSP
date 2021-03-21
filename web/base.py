@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from core.config import cfg
 
 
-__all__ = ['get_html', 'post_html', 'request_get', 'is_connectable', 'download']
+__all__ = ['get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable', 'download']
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
@@ -58,6 +58,16 @@ def get_html(url, encoding='utf-8', cookies={}, attach_raw=False):
         return html, resp
     else:
         return html
+
+
+def resp2html(resp, encoding='utf-8'):
+    """将request返回的response转换为经lxml解析后的document"""
+    text = get_resp_text(resp, encoding=encoding)
+    html = lxml.html.fromstring(text)
+    html.make_links_absolute(resp.url, resolve_base_href=True)
+    # html = cleaner.clean_html(html)
+    # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
+    return html
 
 
 def post_html(url, data, encoding='utf-8', cookies={}):

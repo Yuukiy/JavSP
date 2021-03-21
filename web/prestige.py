@@ -3,10 +3,12 @@ import os
 import re
 import sys
 import logging
+import requests
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html
+from web.base import * 
+from core.config import cfg
 from core.datatype import MovieInfo
 
 
@@ -18,8 +20,39 @@ cookies = {'age_auth': '1'}
 
 
 def parse_data(movie: MovieInfo):
+    """从网页抓取并解析指定番号的数据
+
+    Args:
+        movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
+
+    Returns:
+        bool: True 表示解析成功，movie中携带有效数据；否则为 False
+    """
+    url = f'{base_url}/goods/goods_detail.php?sku={movie.dvdid}'
+    html = None
+    for _ in range(cfg.Network.retry):
+        try:
+            resp = request_get(url, cookies=cookies)
+            html = resp2html(resp)
+            break
+        except Exception as e:
+            # 500错误表明prestige没有这部影片的数据，不是网络问题，因此不再重试
+            if isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 500:
+                logger.debug('无影片: ' + movie.dvdid)
+                break
+            else:
+                logger.debug(e)
+    if html is not None:
+        try:
+            parse_data_raw(movie, html)
+            return True
+        except Exception as e:
+            logger.error('解析网页数据时出现异常: ' + e)
+    return False
+
+
+def parse_data_raw(movie: MovieInfo, html):
     """解析指定番号的影片数据"""
-    html = get_html(f'{base_url}/goods/goods_detail.php?sku={movie.dvdid}', cookies=cookies)
     container = html.xpath("//div[@class='section product_layout_01']")[0]
     title = container.xpath("div/h1")[0].text_content().strip()
     cover = container.xpath("div/p/a[@class='sample_image']/@href")[0]
@@ -65,6 +98,9 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
     movie = MovieInfo('ABP-647')
-    parse_data(movie)
-    print(movie)
+    if parse_data(movie):
+        print(movie)
+    else:
+        print('解析出错: ' + repr(movie))
