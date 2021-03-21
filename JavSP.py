@@ -102,8 +102,9 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         th.start()
         thread_pool.append(th)
     # 等待所有线程结束
+    timeout = cfg.Network.retry * cfg.Network.timeout
     for th in thread_pool:
-        th.join(timeout=(cfg.Network.retry * cfg.Network.timeout))
+        th.join(timeout=timeout)
     # 删除all_info中键名中的'web.'
     all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info

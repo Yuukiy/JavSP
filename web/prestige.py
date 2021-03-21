@@ -48,7 +48,7 @@ def parse_data(movie: MovieInfo):
             movie.url = url
             return True
         except Exception as e:
-            logger.error('解析网页数据时出现异常: ' + e)
+            logger.error('解析网页数据时出现异常: ' + str(e))
     return False
 
 
