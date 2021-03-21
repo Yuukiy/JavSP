@@ -66,13 +66,13 @@ def parse_data(movie: MovieInfo):
         video_pid = btn_url.split('/')[-1]
         req_url = f'{base_url}/sampleplayer/sampleRespons.php?pid={video_pid}'
         resp = request_get(req_url, cookies=cookies).json()
-        url = resp.get('url')
-        if url:
+        video_url = resp.get('url')
+        if video_url:
             # /sample/shirouto/siro/3093/SIRO-3093_sample.ism/request?uid=XXX&amp;pid=XXX
-            preview_video = url.split('.ism/')[0] + '.mp4'
+            preview_video = video_url.split('.ism/')[0] + '.mp4'
             movie.preview_video = preview_video
 
-
+    movie.url = url
     movie.title = title
     movie.cover = cover
     movie.actress = actress

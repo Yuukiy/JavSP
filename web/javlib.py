@@ -11,6 +11,7 @@ from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
+permanent_url = 'https://www.javlibrary.com'
 # javlib的永久地址上套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
 # (无法用cloudscraper绕过: Cloudflare version 2 challenge is not available in the opensource version)
 if cfg.Network.proxy:
@@ -22,12 +23,11 @@ else:
 # TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
-    url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
-    html = get_html(url)
-    container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
-    title_tag = container.xpath("div/h3/a/text()")
-    if not title_tag:
-        # 在有多个结果时，JavLibrary不会自动跳转（此时无法获取到标题），需要进一步处理
+    url = new_url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
+    html, resp = get_html(url, attach_raw=True)
+    if resp.history:    # 如果仅有一个搜搜结果，JavLibrary会自动跳转
+        new_url = resp.url
+    else:               # 如果有多个搜索结果则不会自动跳转，此时需要程序介入选择搜索结果
         video_tags = html.xpath("//div[@class='video'][@id]/a")
         # 通常第一部影片就是我们要找的，但是以免万一还是遍历所有搜索结果
         pre_choose = []
@@ -50,7 +50,7 @@ def parse_data(movie: MovieInfo):
             no_blueray_count = len(no_blueray)
             if no_blueray_count == 1:
                 new_url = no_blueray[0].get('href')
-                logger.debug(f"'{movie.dvdid}': 存在{match_count}个同番号搜索结果，为避免蓝光封面畸变，已自动选择: {new_url}")
+                logger.debug(f"'{movie.dvdid}': 存在{match_count}个同番号搜索结果，已自动选择封面比例正确的一个: {new_url}")
             else:
                 logger.error(f"'{movie.dvdid}': 存在{match_count}个搜索结果但是均非蓝光版，为避免误处理，已全部忽略")
                 return
@@ -60,8 +60,8 @@ def parse_data(movie: MovieInfo):
             return
         # 重新抓取网页
         html = get_html(new_url)
-        container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
-        title_tag = container.xpath("div/h3/a/text()")
+    container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
+    title_tag = container.xpath("div/h3/a/text()")
     title = title_tag[0]
     cover = container.xpath("//img[@id='video_jacket_img']/@src")[0]
     info = container.xpath("//div[@id='video_info']")[0]
@@ -79,6 +79,7 @@ def parse_data(movie: MovieInfo):
     genre = info.xpath("//span[@class='genre']/a/text()")
     actress = info.xpath("//span[@class='star']/a/text()")
 
+    movie.url = new_url.replace(base_url, permanent_url)
     movie.title = title.replace(dvdid, '').strip()
     if cover.startswith('//'):  # 补全URL中缺少的协议段
         cover = 'https:' + cover

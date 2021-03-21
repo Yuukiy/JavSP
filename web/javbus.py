@@ -47,6 +47,8 @@ def parse_data(movie: MovieInfo):
     if html is not None:
         try:
             parse_data_raw(movie, html)
+            # 生成url时始终使用永久域名，因为免代理域名可能会失效
+            movie.url = f'{permanent_url}/{movie.dvdid}'
             return True
         except Exception as e:
             logger.error('解析网页数据时出现异常: ' + e)

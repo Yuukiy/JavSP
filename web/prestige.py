@@ -45,6 +45,7 @@ def parse_data(movie: MovieInfo):
     if html is not None:
         try:
             parse_data_raw(movie, html)
+            movie.url = url
             return True
         except Exception as e:
             logger.error('解析网页数据时出现异常: ' + e)

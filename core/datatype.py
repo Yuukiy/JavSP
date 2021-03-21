@@ -33,6 +33,7 @@ class MovieInfo:
             self.dvdid = dvdid      # DVD ID，即通常的番号
             self.cid = cid          # DMM Content ID
         # 创建类的默认属性
+        self.url = None             # 影片页面的URL
         self.plot = None            # 故事情节
         self.cover = None           # 封面图片（URL）
         self.big_cover = None       # 高清封面图片（URL）

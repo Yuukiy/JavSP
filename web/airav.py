@@ -49,7 +49,7 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # airav也提供简体，但是部分影片的简介只在繁体界面下有，因此抓取繁体页面的数据
     # 部分网页样式是通过js脚本生成的，调试和解析xpath时要根据未经脚本修改的原始网页来筛选元素
-    url = f'{base_url}/video/{movie.dvdid}'
+    url = new_url = f'{base_url}/video/{movie.dvdid}'
     html, resp = get_html(url, attach_raw=True)
     # url不存在时会被重定向至主页。history非空时说明发生了重定向
     if resp.history:
@@ -83,6 +83,7 @@ def parse_data(movie: MovieInfo):
             # 此外还有url_cdn, url_hlx, url_hls_cdn字段，后两者为m3u8格式。目前将url作为预览视频的地址
             movie.preview_video = resp['data'].get('url')
 
+    movie.url = new_url
     movie.title = title
     movie.cover = cover
     movie.preview_pics = preview_pics
@@ -98,6 +99,7 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
     movie = MovieInfo('080719-976')
     parse_data(movie)
     print(movie)

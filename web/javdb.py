@@ -74,6 +74,7 @@ def parse_data(movie: MovieInfo):
     actress = info.xpath("//strong[text()='演員:']/../span/a/text()")
     magnet = container.xpath("//td[@class='magnet-name']/a/@href")
 
+    movie.url = new_url.replace(base_url, permanent_url)
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.preview_pics = preview_pics

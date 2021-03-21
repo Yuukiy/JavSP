@@ -42,6 +42,7 @@ def parse_data(movie: MovieInfo):
     genre = info.xpath("p/span[@class='genre']/a/text()")
     actress = container.xpath("//a[@class='avatar-box']/span/text()")
 
+    movie.url = url
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.publish_date = publish_date

@@ -64,6 +64,7 @@ def parse_data(movie: MovieInfo):
     preview_pics = html.xpath("//div[@class='col-xs-12 col-md-12']/p/a/img[@class='img-responsive']/@src")
     # 磁力和ed2k链接是依赖js脚本加载的，无法通过静态网页来解析
 
+    movie.url = page_url
     movie.cid = cid
     movie.title = title
     movie.actress = actress

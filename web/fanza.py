@@ -83,6 +83,7 @@ def parse_data(movie: MovieInfo):
         except:
             pass
 
+    movie.url = url
     movie.title = title
     movie.cover = cover
     movie.publish_date = publish_date
