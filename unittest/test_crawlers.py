@@ -22,6 +22,12 @@ for i in all_crawler:
     __import__(i)
 
 
+
+def test_prepare_compare(crawler_params):
+    """包装函数，便于通过参数判断测试用例生成，以及负责将参数解包后进行实际调用"""
+    compare(*crawler_params)
+
+
 def compare(avid, scraper, file):
     """从本地的数据文件生成Movie实例，并与在线抓取到的数据进行比较"""
     local = MovieInfo(from_file=file)
@@ -31,27 +37,15 @@ def compare(avid, scraper, file):
         online = MovieInfo(cid=avid)
     parse_data = getattr(sys.modules[f'web.{scraper}'], 'parse_data')
     parse_data(online)
+    ## 取消下面两行注释可以用来更新已有的测试数据
+    # online.dump(file)
+    # return
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
     local_vars = vars(local)
     online_vars = vars(online)
     for k, v in online_vars.items():
-        if k == 'score':
-            # score字段可能随时间变化，因此只要这个字段不是一方有值一方无值就行
+        # 部分字段可能随时间变化，因此只要这些字段不是一方有值一方无值就行
+        if k in ['score', 'magnet'] or (scraper == 'airav' and k == 'preview_video'):
             assert bool(v) == bool(local_vars.get(k, None))
         else:
             assert v == local_vars.get(k, None)
-
-
-def test_auto_compare(crawler):
-    """根据测试数据文件夹中的文件，爬取对应的在线数据进行比较"""
-    data_files = glob(data_dir + os.sep + '*.json')
-    print('')   # 打印空行，避免与pytest的输出同行显示
-    for file in data_files:
-        basename = os.path.basename(file)
-        match = re.match(r"([-\w]+) \((\w+)\)", basename, re.I)
-        if match:
-            avid, scraper = match.groups()
-            # 仅当未指定抓取器或者指定的抓取器与当前抓取器相同时，才实际执行抓取和比较
-            if (not crawler) or scraper == crawler:
-                print(f'Comparing {avid} with {scraper} scraper...')
-                compare(avid, scraper, file)
