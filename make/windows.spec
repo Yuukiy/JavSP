@@ -37,4 +37,4 @@ exe = EXE(pyz,
           upx_exclude=[],
           runtime_tmpdir=None,
           console=True,
-          icon='../make/JavSP.ico')
+          icon='./JavSP.ico')

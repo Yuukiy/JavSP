@@ -1,4 +1,5 @@
 import sys
+import platform
 import subprocess
 
 run = subprocess.run(['git', 'describe', '--tags'], capture_output=True, encoding='utf-8')
@@ -13,6 +14,13 @@ else:
     auto_ver = "v0.unknown"
 
 print('JavSP version: ' + auto_ver)
+
+# Generate powershell script to create zip file
+if platform.system() == 'Windows':
+    with open('make\\archive.ps1', 'wt', encoding='utf-8') as f:
+        zip_file = 'dist\\JavSP-' + auto_ver + '-Windows-amd64.zip'
+        command = 'Compress-Archive -Path dist\\JavSP.exe -DestinationPath ' + zip_file
+        f.write(command)
 
 hook_file = sys.argv[1]
 with open(hook_file, 'wt') as f:
