@@ -59,6 +59,7 @@ class Config(configparser.ConfigParser):
         validate_proxy(self)
         norm_ignore_pattern(self)
         convert_naming_rule(self)
+        validate_translation(self)
         # 作为配置模块，始终检查免代理地址；由各个抓取器中根据代理情况选择是否启用免代理地址
         check_proxy_free_url(self)
 
@@ -118,6 +119,39 @@ def norm_ignore_pattern(cfg: Config):
     pattern_str = f'({words_pattern})|{regex_patterns}'
     ignore_pattern = re.compile(pattern_str, flags=re.I | re.A)
     cfg.MovieID.ignore_pattern = ignore_pattern
+
+
+def validate_translation(cfg: Config):
+    """从环境变量和配置文件解析并初步验证翻译设置"""
+    engine_name = cfg.Translate.engine
+    # 默认为禁用翻译状态，仅当相关配置有效时才启用
+    cfg.Translate.engine = None
+    if engine_name == '':
+        return
+    engine = engine_name.lower()
+    # 获取翻译引擎的密钥
+    if engine == 'baidu':
+        baidu_appid = os.getenv('JAVSP_BAIDU_APPID', cfg.Translate.baidu_appid)
+        baidu_key = os.getenv('JAVSP_BAIDU_KEY', cfg.Translate.baidu_key)
+        if baidu_appid and baidu_key:
+            cfg.Translate.engine = engine
+            cfg.Translate.baidu_appid = baidu_appid
+            cfg.Translate.baidu_key = baidu_key
+        else:
+            logger.error('使用百度翻译时，appid和key均不能留空')
+    elif engine == 'bing':
+        bing_key = os.getenv('JAVSP_BING_KEY', cfg.Translate.bing_key)
+        bing_region = os.getenv('JAVSP_BING_REGION', cfg.Translate.bing_region)
+        if bing_key:
+            cfg.Translate.engine = engine
+            cfg.Translate.bing_key = bing_key
+            cfg.Translate.bing_region = bing_region
+        else:
+            logger.error('使用必应翻译时，key不能留空')
+    elif engine == 'google':
+        cfg.Translate.engine = engine
+    else:
+        logger.error('无效的翻译引擎: ' + engine)
 
 
 def validate_proxy(cfg: Config):
