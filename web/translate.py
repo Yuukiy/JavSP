@@ -17,7 +17,7 @@ def bing_translate(texts, to='zh-Hans'):
     params = {'api-version': '3.0', 'to': to}
     headers = {
         'Ocp-Apim-Subscription-Key': cfg.Translate.bing_key,
-        'Ocp-Apim-Subscription-Region': cfg.Translate.bing_region,
+        'Ocp-Apim-Subscription-Region': 'global',
         'Content-type': 'application/json',
         'X-ClientTraceId': str(uuid.uuid4())
     }

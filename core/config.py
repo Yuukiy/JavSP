@@ -123,35 +123,30 @@ def norm_ignore_pattern(cfg: Config):
 
 def validate_translation(cfg: Config):
     """从环境变量和配置文件解析并初步验证翻译设置"""
-    engine_name = cfg.Translate.engine
-    # 默认为禁用翻译状态，仅当相关配置有效时才启用
-    cfg.Translate.engine = None
-    if engine_name == '':
+    trans = cfg.Translate
+    if trans.engine == '':
         return
-    engine = engine_name.lower()
-    # 获取翻译引擎的密钥
-    if engine == 'baidu':
-        baidu_appid = os.getenv('JAVSP_BAIDU_APPID', cfg.Translate.baidu_appid)
-        baidu_key = os.getenv('JAVSP_BAIDU_KEY', cfg.Translate.baidu_key)
-        if baidu_appid and baidu_key:
-            cfg.Translate.engine = engine
-            cfg.Translate.baidu_appid = baidu_appid
-            cfg.Translate.baidu_key = baidu_key
+    # 尝试从环境变量获取相关的访问凭据
+    trans.baidu_appid = os.getenv('JAVSP_BAIDU_APPID', trans.baidu_appid)
+    trans.baidu_key = os.getenv('JAVSP_BAIDU_KEY', trans.baidu_key)
+    trans.bing_key = os.getenv('JAVSP_BING_KEY', trans.bing_key)
+    # 判断不同翻译引擎所需的凭据是否齐全（默认为禁用翻译状态，仅当相关配置有效时才启用引擎）
+    engine_name = trans.engine.lower()
+    trans.engine = None
+    if engine_name == 'baidu':
+        if trans.baidu_appid and trans.baidu_key:
+            cfg.Translate.engine = engine_name
         else:
             logger.error('使用百度翻译时，appid和key均不能留空')
-    elif engine == 'bing':
-        bing_key = os.getenv('JAVSP_BING_KEY', cfg.Translate.bing_key)
-        bing_region = os.getenv('JAVSP_BING_REGION', cfg.Translate.bing_region)
-        if bing_key:
-            cfg.Translate.engine = engine
-            cfg.Translate.bing_key = bing_key
-            cfg.Translate.bing_region = bing_region
+    elif engine_name == 'bing':
+        if trans.bing_key:
+            cfg.Translate.engine = engine_name
         else:
             logger.error('使用必应翻译时，key不能留空')
-    elif engine == 'google':
-        cfg.Translate.engine = engine
+    elif engine_name == 'google':
+        cfg.Translate.engine = engine_name
     else:
-        logger.error('无效的翻译引擎: ' + engine)
+        logger.error('无效的翻译引擎: ' + engine_name)
 
 
 def validate_proxy(cfg: Config):
