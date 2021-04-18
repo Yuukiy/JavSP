@@ -44,5 +44,15 @@ def baidu_translate(texts, to='zh'):
     return result
 
 
+def google_trans(texts, to='zh_CN'):
+    """使用Google翻译文本（默认翻译为简体中文）"""
+    # API: https://www.jianshu.com/p/ce35d89c25c3
+    # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
+    url = f"http://translate.google.cn/translate_a/single?client=at&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q=" + texts
+    r = requests.get(url)
+    result = r.json()
+    return result
+
+
 if __name__ == "__main__":
-    print(baidu_translate('Hello world~'))
+    print(google_trans('Hello world~'))
