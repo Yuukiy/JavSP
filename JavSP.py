@@ -41,6 +41,7 @@ from core.func import *
 from core.image import *
 from core.datatype import Movie, MovieInfo
 from web.base import download
+from web.translate import translate_movie_info
 
 
 def import_crawlers(cfg):
@@ -236,6 +237,11 @@ if __name__ == "__main__":
         has_required_keys = info_summary(movie, all_info)
         inner_bar.update()
         if has_required_keys:
+            if cfg.Translate.engine:
+                inner_bar.set_description('翻译影片信息')
+                success = translate_movie_info(movie.info)
+                if not success:
+                    continue
             inner_bar.set_description('移动影片文件')
             generate_names(movie)
             os.makedirs(movie.save_dir)

@@ -4,20 +4,61 @@ import os
 import sys
 import uuid
 import random
+import logging
 import requests
 from hashlib import md5
 
 
-__all__ = ['translate']
+__all__ = ['translate', 'translate_movie_info']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.config import cfg
+from core.datatype import MovieInfo
+
+
+logger = logging.getLogger(__name__)
+
+
+def translate_movie_info(info: MovieInfo):
+    """根据配置翻译影片信息"""
+    # 由于百度对请求频率限制很严，连续翻译标题和简介会超限，只好把它们合成为一次请求来翻译
+    if cfg.Translate.engine == 'baidu':
+        if info.title and cfg.Translate.translate_title and info.plot and cfg.Translate.translate_plot:
+            orig_texts = info.title + '\n\n\n' + info.plot
+            result = translate(orig_texts, cfg.Translate.engine)
+            if 'trans' in result:
+                trans_groups = result['trans'].split('\n\n\n')
+                info.ori_title = info.title
+                info.title = trans_groups[0]
+                info.plot = trans_groups[1]
+                return True
+            else:
+                logger.error('翻译标题和简介时出错: ' + result['error'])
+                return False
+    # 其他情况下正常翻译
+    if info.title and cfg.Translate.translate_title:
+        result = translate(info.title, cfg.Translate.engine)
+        if 'trans' in result:
+            info.ori_title = info.title
+            info.title = result['trans']
+        else:
+            logger.error('翻译标题时出错: ' + result['error'])
+            return False
+    if info.plot and cfg.Translate.translate_plot:
+        result = translate(info.plot, cfg.Translate.engine)
+        if 'trans' in result:
+            # 只有翻译过plot的影片才可能需要ori_plot属性，因此在运行时动态添加，而不添加到类型定义里
+            setattr(info, 'ori_plot', info.plot)
+            info.plot = result['trans']
+        else:
+            logger.error('翻译简介时出错: ' + result['error'])
+            return False
+    return True
 
 
 # 不同的翻译引擎支持的功能不同。Bing额外支持断句和动态词典功能，前者可以用于识别句子位置，在需要截短标题时使用；
 # 后者可以用来保护原文中的女优名等字段，防止翻译后认不出来
-
 def translate(texts, engine='baidu'):
     """
     翻译入口：对错误进行处理并且统一返回格式
