@@ -157,6 +157,7 @@ def generate_names(movie: Movie):
     d = {}
     d['num'] = info.dvdid or info.cid
     d['title'] = info.title or cfg.NamingRule.null_for_title
+    d['rawtitle'] = info.ori_title or d['title']
     d['actress'] = ','.join(info.actress) if info.actress else cfg.NamingRule.null_for_actress
     d['score'] = info.score or '0'
     d['serial'] = info.serial or cfg.NamingRule.null_for_serial
