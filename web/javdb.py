@@ -5,7 +5,7 @@ import sys
 import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html
+from web.base import *
 from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
@@ -13,23 +13,22 @@ from core.datatype import MovieInfo, GenreMap
 
 logger = logging.getLogger(__name__)
 genre_map = GenreMap('data/genre_javdb.csv')
-permanent_url = 'https://www.javdb.com'
-if cfg.Network.proxy:
-    base_url = permanent_url
-else:
-    base_url = cfg.ProxyFree.javdb
+permanent_url = 'https://javdb.com'
+# javdb的永久地址上也套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
+base_url = cfg.ProxyFree.javdb
 
 
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
-    html = get_html(f'{base_url}/search?q={movie.dvdid}')
-    ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
-    movie_urls = html.xpath("//div[@id='videos']/div/div/a/@href")
+    url = f'{base_url}/videos/search_autocomplete.json?q={movie.dvdid}'
+    r = request_get(url).json()
+    num_list = [i['number'].lower() for i in r]
     try:
-        new_url = movie_urls[ids.index(movie.dvdid.lower())]
+        uid = r[num_list.index(movie.dvdid.lower())]['uid']
+        new_url = f'{base_url}/v/{uid}'
     except ValueError:
-        logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
+        logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(num_list))
         return
 
     html = get_html(new_url)
