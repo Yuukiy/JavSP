@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import logging
-from urllib import parse
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -47,11 +46,7 @@ def parse_data(movie: MovieInfo):
     # label: 大意是某个系列策划用同样的番号，例如ABS打头的番号label是'ABSOLUTELY PERFECT'，暂时用不到
     # label = container.xpath("//th[text()='レーベル：']/following-sibling::td/text()")[0].strip()
     genre_tags = container.xpath("//th[text()='ジャンル：']/following-sibling::td/a")
-    genre, genre_id = [], []
-    for tag in genre_tags:
-        genre.append(tag.text.strip())
-        para = parse.parse_qs(parse.urlparse(tag.get('href')).query)
-        genre_id.append(para.get('image_word_ids[]', [None])[0])    # parse_qs得到的值为列表的字典，因此get的默认值也设为列表
+    genre = [i.text.strip() for i in genre_tags]
     score_str = container.xpath("//td[@class='review']/span")[0].tail.strip()
     match = re.search(r'^[\.\d]+', score_str)
     if match:
@@ -80,7 +75,6 @@ def parse_data(movie: MovieInfo):
     movie.publish_date = publish_date
     movie.serial = serial
     movie.genre = genre
-    movie.genre_id = genre_id
     movie.plot = plot
     movie.preview_pics = preview_pics
     movie.uncensored = False    # 服务器在日本且面向日本国内公开发售，只会包含无码片
