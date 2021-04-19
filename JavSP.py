@@ -178,6 +178,9 @@ def generate_names(movie: Movie):
     movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
     movie.fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
     movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
+    # 生成nfo文件中的影片标题
+    nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
+    setattr(info, 'nfo_title', nfo_title)
 
 
 def error_exit(msg):

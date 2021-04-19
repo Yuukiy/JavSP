@@ -14,17 +14,16 @@ def write_nfo(info: MovieInfo, nfo_file):
     """将存储了影片信息的'info'写入到nfo文件中"""
     # NFO spec: https://kodi.wiki/view/NFO_files/Movies
     nfo = E.movie()
-    if info.dvdid:
-        nfo.append(E.title(info.dvdid + ' ' + info.title))
+    if info.nfo_title:
+        nfo.append(E.title(info.nfo_title))
     else:
-        nfo.append(E.title(info.cid + ' ' + info.title))
+        nfo.append(E.title(info.title))
 
     # 仅在标题被处理过时'ori_title'字段才会有值
     if info.ori_title:
         nfo.append(E.originaltitle(info.ori_title))
 
     # Kodi的文档中评分支持多个来源，但经测试，添加了多个评分时Kodi也只显示了第一个评分
-    # 由于目前也只有一个评分来源（JavLibrary），因此只使用单个评分
     if info.score:
         nfo.append(E.rating(info.score))
 

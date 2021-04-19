@@ -166,10 +166,9 @@ def validate_proxy(cfg: Config):
 def convert_naming_rule(cfg: Config):
     """NamingRule: 转换为字符串Template"""
     combine = cfg.NamingRule.output_folder + os.sep + cfg.NamingRule.save_dir
-    path_t = Template(combine)
-    file_t = Template(cfg.NamingRule.filename)
-    cfg.NamingRule.save_dir = path_t
-    cfg.NamingRule.filename = file_t
+    cfg.NamingRule.save_dir = Template(combine)
+    cfg.NamingRule.filename = Template(cfg.NamingRule.filename)
+    cfg.NamingRule.nfo_title = Template(cfg.NamingRule.nfo_title)
 
 
 def check_proxy_free_url(cfg: Config):
