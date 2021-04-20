@@ -6,6 +6,10 @@
 
 提取影片文件名中的番号信息，自动抓取并汇总多个站点数据的 AV 元数据，按照指定的规则分类整理影片文件，并创建供 Emby、Jellyfin、Kodi 等软件使用的元数据文件
 
+![License](https://img.shields.io/github/license/Yuukiy/JavSP)
+![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg)
+![Latest release](https://img.shields.io/github/v/release/Yuukiy/JavSP)
+
 ## 功能特点
 
 下面这些是一开始就决定要做的主要功能，在逐渐实现和完善，如果想到新的功能点也会加进来。

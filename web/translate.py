@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
-    # 由于百度对请求频率限制很严，连续翻译标题和简介会超限，只好把它们合成为一次请求来翻译
+    # 由于百度标准版限制QPS为1，连续翻译标题和简介会超限，只好把它们合成为一次请求来翻译
     if cfg.Translate.engine == 'baidu':
         if info.title and cfg.Translate.translate_title and info.plot and cfg.Translate.translate_plot:
             orig_texts = info.title + '\n\n\n' + info.plot
