@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def mei_path(path):
+    """获取一个随代码打包的文件在解压后的路径"""
     if getattr(sys, 'frozen', False):
         return os.path.join(sys._MEIPASS, path)
     else:

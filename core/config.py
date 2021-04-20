@@ -10,9 +10,22 @@ from string import Template
 __all__ = ['cfg', 'args', 'is_url']
 
 
+def rel_path_from_exe(path):
+    """将一个相对于exe文件的路径转换为绝对路径"""
+    if getattr(sys, 'frozen', False):
+        # 打包后相对于exe定位
+        rel_start = os.path.split(sys.executable)[0]
+    else:
+        # 打包前相对于config.py文件的上一层文件夹定位
+        rel_start = os.path.dirname(os.path.dirname(__file__))
+    # 确保返回的是绝对路径（__file__可能引入相对路径）
+    abs_path = os.path.abspath(os.path.join(rel_start, path))
+    return abs_path
+
+
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(filename='JavSP.log', mode='a', encoding='utf-8')
+file_handler = logging.FileHandler(filename=rel_path_from_exe('JavSP.log'), mode='a', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(logging.Formatter(
     fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
