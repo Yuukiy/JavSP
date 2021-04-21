@@ -11,9 +11,6 @@ from tqdm import tqdm
 
 
 pretty_errors.configure(display_link=True)
-# 禁用导入的模块中的日志（仅对此时已执行导入模块的生效）
-for i in logging.root.manager.loggerDict:
-    logging.getLogger(i).disabled = True
 
 
 from core.datatype import ColoredFormatter

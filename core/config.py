@@ -23,10 +23,20 @@ def rel_path_from_exe(path):
     return abs_path
 
 
+def log_filter(record):
+    """只接受JavSP自身的日志，排除所依赖的库的日志"""
+    rname = record.name
+    if rname in ['main', '__main__'] or rname.startswith(('core.', 'web.')):
+        return True
+    else:
+        return False
+
+
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler(filename=rel_path_from_exe('JavSP.log'), mode='a', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
+file_handler.addFilter(filter=log_filter)
 file_handler.setFormatter(logging.Formatter(
     fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 root_logger.addHandler(file_handler)
