@@ -41,7 +41,7 @@ class MovieInfo:
         self.genre = None           # 影片分类的标签
         self.genre_id = None        # 影片分类的标签的ID，用于解决部分站点多个genre同名的问题，也便于管理多语言的genre
         self.genre_norm = None      # 统一后的影片分类的标签
-        self.score = None           # 评分（10分制）
+        self.score = None           # 评分（10分制，为方便提取写入和保持统一，应以字符串类型表示）
         self.title = None           # 影片标题（不含番号）
         self.ori_title = None       # 原始影片标题，仅在标题被处理过时才对此字段赋值
         self.magnet = None          # 磁力链接

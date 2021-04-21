@@ -52,7 +52,7 @@ def parse_data(movie: MovieInfo):
     score_tag = info.xpath("//b[text()='平均評価']/following-sibling::img/@data-original")
     if score_tag:
         score = int(score_tag[0][5:7])/5   # /10*2
-        movie.score = score
+        movie.score = str(score)
     serial_tag = info.xpath("a[contains(@href,'/series/')]/text()")
     if serial_tag:
         movie.serial = serial_tag[0]
