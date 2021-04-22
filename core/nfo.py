@@ -71,7 +71,8 @@ def write_nfo(info: MovieInfo, nfo_file):
         nfo.append(E.directr(info.director))
 
     # 发行日期。文档中关于'year'字段的说明: Do not use. Use <premiered> instead
-    nfo.append(E.premiered(info.publish_date))
+    if info.publish_date:
+        nfo.append(E.premiered(info.publish_date))
 
     # 原文是 Production studio: 因此这里写入的是影片制作商
     nfo.append(E.studio(info.producer))

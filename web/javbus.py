@@ -102,7 +102,8 @@ def parse_data_raw(movie: MovieInfo, html):
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.preview_pics = preview_pics
-    movie.publish_date = publish_date
+    if publish_date != '0000-00-00':    # 丢弃无效的发布日期
+        movie.publish_date = publish_date
     movie.duration = duration
     movie.producer = producer
     movie.genre = genre
