@@ -13,14 +13,8 @@ from tqdm import tqdm
 pretty_errors.configure(display_link=True)
 
 
+from core.print import TqdmOut
 from core.datatype import ColoredFormatter
-
-
-class TqdmOut:
-    """用于将logging的stream输出重定向到tqdm"""
-    @classmethod
-    def write(cls, s, file=None, nolock=False):
-        tqdm.write(s, file=file, end='', nolock=nolock)
 
 
 # 配置 logging StreamHandler
