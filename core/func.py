@@ -1,4 +1,6 @@
-"""供其他模块使用（但是又不知道放哪里）的功能函数"""
+"""业务逻辑所需的或有一定通用性的函数"""
+# 为了降低耦合度，也避免功能复杂后可能出现的循环导入的问题，这里尽量不导入项目内部的模块
+# 如果需要获得配置信息，也应当由外部模块将配置项的值以参数的形式传入
 import os
 import re
 import sys
@@ -6,17 +8,47 @@ import time
 import logging
 from datetime import datetime
 from packaging import version
+from tkinter import filedialog, Tk
 from colorama import Fore, Style
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
 
 
-__all__ = ['remove_trail_actor_in_title', 'shutdown', 'CLEAR_LINE', 'check_update']
+__all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
+           'shutdown', 'CLEAR_LINE', 'check_update']
 
 
 CLEAR_LINE = '\r\x1b[K'
 logger = logging.getLogger(__name__)
+
+
+def select_folder(default_dir=''):
+    """使用文件对话框提示用户选择一个文件夹"""
+    directory_root = Tk()
+    directory_root.withdraw()
+    path = filedialog.askdirectory(initialdir=default_dir)
+    if path != '':
+        return os.path.normpath(path)
+
+
+def get_scan_dir(cfg_scan_dir):
+    """综合命令参数、配置文件等信息，返回要扫描影片的文件夹"""
+    # 目前config模块负责处理来自命令行和来自文件的配置，cfg_dir已经是综合了这两处后得到的结果
+    if cfg_scan_dir:
+        if os.path.isdir(cfg_scan_dir):
+            return cfg_scan_dir
+        else:
+            logger.error(f"配置的待整理文件夹无效：'{cfg_scan_dir}'")
+    else:
+        print('请选择要整理的文件夹：', end='')
+        root = select_folder()
+        if not root:
+            print('')  # 换行显示下面的错误信息
+            logger.error('未选择文件夹，脚本退出')
+        else:
+            print(CLEAR_LINE)
+            return root
 
 
 def remove_trail_actor_in_title(title:str, actors:list) -> str:
@@ -74,7 +106,7 @@ def align_center(mix_str: str, total_width: int) -> str:
     return aligned_str
 
 
-def check_update(allow_check=True, print=print):
+def check_update(allow_check=True):
     """检查版本更新"""
 
     def print_header(title, info=[]):

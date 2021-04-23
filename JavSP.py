@@ -174,6 +174,14 @@ def generate_names(movie: Movie):
     setattr(info, 'nfo_title', nfo_title)
 
 
+def check_step(result):
+    """检查业务逻辑是否成功完成，如果失败则停止后续步骤"""
+    if result:
+        return result
+    else:
+        error_exit('业务出错')
+
+
 def error_exit(msg):
     """报错并退出程序"""
     logger.error(msg)
@@ -186,26 +194,14 @@ if __name__ == "__main__":
     colorama.init(autoreset=True)
     logger = logging.getLogger('main')
     # 检查更新
-    check_update(allow_check=cfg.Other.check_update, print=tqdm.write)
+    check_update(allow_check=cfg.Other.check_update)
     # 如果未配置有效代理，则显示相应提示
     if not cfg.Network.proxy:
         logger.warning('未配置有效代理，程序会努力继续运行，但是部分功能可能受限：\n'
                        ' - 将尝试自动获取部分站点的免代理地址，没有免代理地址的站点抓取器将无法工作\n'
                        ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
     # 总的来说，不需要出现在日志里的显示信息，就直接使用tqdm.write；否则就使用logger.xxx
-    root = cfg.File.scan_dir
-    if root:
-        if not os.path.isdir(root):
-            logger.error(f"配置的待整理文件夹无效：'{root}'")
-    else:
-        tqdm.write('请选择要整理的文件夹：', end='')
-        root = select_folder()
-        if not root:
-            tqdm.write('')  # 换行显示下面的错误信息
-            error_exit('未选择文件夹，脚本退出')
-        else:
-            tqdm.write(CLEAR_LINE)
-            logger.info(f"整理文件夹：'{root}'")
+    root = check_step(get_scan_dir(cfg.File.scan_dir))
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)

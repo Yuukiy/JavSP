@@ -4,9 +4,8 @@ import re
 import sys
 import logging
 from typing import List
-from tkinter import filedialog, Tk
 
-__all__ = ['select_folder', 'scan_movies', 'get_fmt_size']
+__all__ = ['scan_movies', 'get_fmt_size']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -16,14 +15,6 @@ from core.datatype import Movie
 
 logger = logging.getLogger(__name__)
 
-
-def select_folder(default_dir=''):
-    """使用文件对话框提示用户选择一个文件夹"""
-    directory_root = Tk()
-    directory_root.withdraw()
-    path = filedialog.askdirectory(initialdir=default_dir)
-    if path != '':
-        return os.path.normpath(path)
 
 
 def scan_movies(root: str) -> List[Movie]:
