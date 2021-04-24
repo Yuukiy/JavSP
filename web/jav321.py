@@ -59,8 +59,9 @@ def parse_data(movie: MovieInfo):
     preview_video_tag = info.xpath("//video/source/@src")
     if preview_video_tag:
         movie.preview_video = preview_video_tag[0]
-
-    plot = info.xpath("//div[@class='panel-body']/div[@class='row']/div[@class='col-md-12']/text()")[0]
+    plot_tag = info.xpath("//div[@class='panel-body']/div[@class='row']/div[@class='col-md-12']/text()")
+    if plot_tag:
+        movie.plot = plot_tag
     preview_pics = html.xpath("//div[@class='col-xs-12 col-md-12']/p/a/img[@class='img-responsive']/@src")
     # 磁力和ed2k链接是依赖js脚本加载的，无法通过静态网页来解析
 
@@ -76,7 +77,6 @@ def parse_data(movie: MovieInfo):
     # preview_pics的第一张图始终是封面，剩下的才是预览图
     movie.cover = preview_pics[0]
     movie.preview_pics = preview_pics[1:]
-    movie.plot = plot
 
 
 if __name__ == "__main__":
