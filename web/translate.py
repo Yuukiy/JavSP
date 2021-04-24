@@ -25,10 +25,10 @@ def translate_movie_info(info: MovieInfo):
     # 由于百度标准版限制QPS为1，连续翻译标题和简介会超限，只好把它们合成为一次请求来翻译
     if cfg.Translate.engine == 'baidu':
         if info.title and cfg.Translate.translate_title and info.plot and cfg.Translate.translate_plot:
-            orig_texts = info.title + '\n\n\n' + info.plot
+            orig_texts = info.title + '\n' + info.plot
             result = translate(orig_texts, cfg.Translate.engine)
             if 'trans' in result:
-                trans_groups = result['trans'].split('\n\n\n')
+                trans_groups = result['trans'].split('\n')
                 info.ori_title = info.title
                 info.title = trans_groups[0]
                 info.plot = trans_groups[1]
