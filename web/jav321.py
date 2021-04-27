@@ -18,6 +18,7 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     html = post_html(f'{base_url}/search', data={'sn': movie.dvdid})
     page_url = html.xpath("//ul[@class='dropdown-menu']/li/a/@href")[0]
+    #TODO: 注意cid是dmm的概念。如果影片来自MGSTAGE，这里的cid很可能是jav321自己添加的，例如 345SIMM-542
     cid = page_url.split('/')[-1]   # /video/ipx00177
     # 如果从URL匹配到的cid是'search'，说明还停留在搜索页面，找不到这部影片
     if cid == 'search':
@@ -61,7 +62,7 @@ def parse_data(movie: MovieInfo):
         movie.preview_video = preview_video_tag[0]
     plot_tag = info.xpath("//div[@class='panel-body']/div[@class='row']/div[@class='col-md-12']/text()")
     if plot_tag:
-        movie.plot = plot_tag
+        movie.plot = plot_tag[0]
     preview_pics = html.xpath("//div[@class='col-xs-12 col-md-12']/p/a/img[@class='img-responsive']/@src")
     # 磁力和ed2k链接是依赖js脚本加载的，无法通过静态网页来解析
 
