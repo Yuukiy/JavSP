@@ -147,12 +147,13 @@ def norm_ignore_pattern(cfg: Config):
 def validate_translation(cfg: Config):
     """从环境变量和配置文件解析并初步验证翻译设置"""
     trans = cfg.Translate
-    if trans.engine == '':
-        return
     # 尝试从环境变量获取相关的访问凭据
     trans.baidu_appid = os.getenv('JAVSP_BAIDU_APPID', trans.baidu_appid)
     trans.baidu_key = os.getenv('JAVSP_BAIDU_KEY', trans.baidu_key)
     trans.bing_key = os.getenv('JAVSP_BING_KEY', trans.bing_key)
+    # 先获取访问凭据再判断翻译引擎，这样的话即使配置文件中未启用翻译也可以调试翻译功能
+    if trans.engine == '':
+        return
     # 判断不同翻译引擎所需的凭据是否齐全（默认为禁用翻译状态，仅当相关配置有效时才启用引擎）
     engine_name = trans.engine.lower()
     trans.engine = None

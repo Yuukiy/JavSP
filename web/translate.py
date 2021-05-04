@@ -36,7 +36,7 @@ def translate_movie_info(info: MovieInfo):
             else:
                 logger.error('翻译标题和简介时出错: ' + result['error'])
                 return False
-    # 其他情况下正常翻译
+    # 其他情况下分两次翻译标题和简介
     if info.title and cfg.Translate.translate_title:
         result = translate(info.title, cfg.Translate.engine)
         if 'trans' in result:
@@ -64,7 +64,7 @@ def translate(texts, engine='baidu'):
     翻译入口：对错误进行处理并且统一返回格式
 
     Returns:
-        dict: 翻译正常: {'trans': '译文', 'sentences': ['子句1', ...]}, 仅在能判断分句时有sentences字段，子句末尾可能包含空格或者换行符
+        dict: 翻译正常: {'trans': '译文', 'sentences': ['子句1', ...]}, 仅在能判断分句时有sentences字段，子句末尾可能有换行符
               翻译出错: {'error': 'baidu: 54000: PARAM_FROM_TO_OR_Q_EMPTY'}
     """
     err_msg = ''
@@ -83,10 +83,12 @@ def translate(texts, engine='baidu'):
             trans = result[0]['translations'][0]['text']
             sentences = []
             remaining = trans
+            # 根据断句结果（各句子的长度）生成各子句
             for i in result[0]['translations'][0]['sentLen']['transSentLen']:
-                sentences.append(remaining[:i])
+                # Bing会在每个句子末尾添加一个空格，但这并不符合中文的标点习惯，所以去掉这个空格
+                sentences.append(remaining[:i].rstrip(' '))
                 remaining = remaining[i:]
-            rtn = {'trans': trans, 'sentences': sentences}
+            rtn = {'trans': ''.join(sentences), 'sentences': sentences}
         else:
             err_msg = "{}: {}: {}".format(engine, result['error']['code'], result['error']['message'])
     elif engine == 'google':
