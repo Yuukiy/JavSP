@@ -2,6 +2,7 @@
 # 由于翻译服务不走代理，而且需要自己的错误处理机制，因此不通过base.py来管理网络请求
 import os
 import sys
+import time
 import uuid
 import random
 import logging
@@ -22,21 +23,7 @@ logger = logging.getLogger(__name__)
 
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
-    # 由于百度标准版限制QPS为1，连续翻译标题和简介会超限，只好把它们合成为一次请求来翻译
-    if cfg.Translate.engine == 'baidu':
-        if info.title and cfg.Translate.translate_title and info.plot and cfg.Translate.translate_plot:
-            orig_texts = info.title + '\n' + info.plot
-            result = translate(orig_texts, cfg.Translate.engine)
-            if 'trans' in result:
-                trans_groups = result['trans'].split('\n')
-                info.ori_title = info.title
-                info.title = trans_groups[0]
-                info.plot = trans_groups[1]
-                return True
-            else:
-                logger.error('翻译标题和简介时出错: ' + result['error'])
-                return False
-    # 其他情况下分两次翻译标题和简介
+    # 翻译标题
     if info.title and cfg.Translate.translate_title:
         result = translate(info.title, cfg.Translate.engine)
         if 'trans' in result:
@@ -45,6 +32,7 @@ def translate_movie_info(info: MovieInfo):
         else:
             logger.error('翻译标题时出错: ' + result['error'])
             return False
+    # 翻译简介
     if info.plot and cfg.Translate.translate_plot:
         result = translate(info.plot, cfg.Translate.engine)
         if 'trans' in result:
@@ -138,8 +126,15 @@ def baidu_translate(texts, to='zh'):
     sign_input = appid + texts + str(salt) + appkey
     sign = md5(sign_input.encode('utf-8')).hexdigest()
     payload = {'appid': appid, 'q': texts, 'from': 'auto', 'to': to, 'salt': salt, 'sign': sign}
+    # 由于百度标准版限制QPS为1，连续翻译标题和简介会超限，因此需要添加延时
+    now = time.perf_counter()
+    last_access = getattr(baidu_translate, '_last_access', -1)
+    wait = 1.0 - (now - last_access)
+    if wait > 0:
+        time.sleep(wait)
     r = requests.post(api_url, params=payload, headers=headers)
     result = r.json()
+    baidu_translate._last_access = time.perf_counter()
     return result
 
 
