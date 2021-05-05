@@ -47,19 +47,20 @@ def translate_movie_info(info: MovieInfo):
 
 # 不同的翻译引擎支持的功能不同。Bing额外支持断句和动态词典功能，前者可以用于识别句子位置，在需要截短标题时使用；
 # 后者可以用来保护原文中的女优名等字段，防止翻译后认不出来
-def translate(texts, engine='baidu'):
+def translate(texts, engine='google'):
     """
     翻译入口：对错误进行处理并且统一返回格式
 
     Returns:
-        dict: 翻译正常: {'trans': '译文', 'sentences': ['子句1', ...]}, 仅在能判断分句时有sentences字段，子句末尾可能有换行符
+        dict: 翻译正常: {'trans': '译文', 'orig_break':['原句1', ...], 'trans_break': ['译句1', ...]}
+              仅在能判断分句时有breaks字段，子句末尾可能有换行符\n
               翻译出错: {'error': 'baidu: 54000: PARAM_FROM_TO_OR_Q_EMPTY'}
     """
     err_msg = ''
     if engine == 'baidu':
         result = baidu_translate(texts)
         if 'error_code' not in result:
-            # 百度翻译的结果中的组表示的是不同段落，而非不同句子
+            # 百度翻译的结果中的组表示的是按换行符分隔的不同段落，而不是句子
             paragraphs = [i['dst'] for i in result['trans_result']]
             rtn = {'trans': '\n'.join(paragraphs)}
         else:
@@ -68,15 +69,21 @@ def translate(texts, engine='baidu'):
         # https://docs.microsoft.com/zh-cn/azure/cognitive-services/translator/reference/v3-0-reference#errors
         result = bing_translate(texts)
         if 'error' not in result:
-            trans = result[0]['translations'][0]['text']
-            sentences = []
-            remaining = trans
-            # 根据断句结果（各句子的长度）生成各子句
-            for i in result[0]['translations'][0]['sentLen']['transSentLen']:
-                # Bing会在每个句子末尾添加一个空格，但这并不符合中文的标点习惯，所以去掉这个空格
-                sentences.append(remaining[:i].rstrip(' '))
+            sentLen = result[0]['translations'][0]['sentLen']
+            orig_break, trans_break = [], []
+            # 对原文进行断句
+            remaining = texts
+            for i in sentLen['srcSentLen']:
+                orig_break.append(remaining[:i])
                 remaining = remaining[i:]
-            rtn = {'trans': ''.join(sentences), 'sentences': sentences}
+            # 对译文进行断句
+            remaining = result[0]['translations'][0]['text']
+            for i in sentLen['transSentLen']:
+                # Bing会在译文的每个句尾添加一个空格，这并不符合中文的标点习惯，所以去掉这个空格
+                trans_break.append(remaining[:i].rstrip(' '))
+                remaining = remaining[i:]
+            trans = ''.join(trans_break)
+            rtn = {'trans': trans, 'orig_break': orig_break, 'trans_break': trans_break}
         else:
             err_msg = "{}: {}: {}".format(engine, result['error']['code'], result['error']['message'])
     elif engine == 'google':
@@ -85,9 +92,10 @@ def translate(texts, engine='baidu'):
             # 经测试，翻译成功时会带有'sentences'字段；失败时不带，也没有故障码
             if 'sentences' in result:
                 # Google会对句子分组，完整的译文需要自行拼接
-                sentences = [i['trans'] for i in result['sentences']]
-                trans = ''.join(sentences)
-                rtn = {'trans': trans, 'sentences': sentences}
+                orig_break = [i['orig'] for i in result['sentences']]
+                trans_break = [i['trans'] for i in result['sentences']]
+                trans = ''.join(trans_break)
+                rtn = {'trans': trans, 'orig_break': orig_break, 'trans_break': trans_break}
             else:
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
@@ -152,7 +160,11 @@ def google_trans(texts, to='zh_CN'):
 
 
 if __name__ == "__main__":
-    orig = 'Hello World!'
-    print(translate(orig, 'bing'))
-    print(translate(orig, 'baidu'))
-    print(translate(orig, 'google'))
+    import json
+    orig = "Hello World! World Hello!"
+    res = translate(orig, 'bing')
+    print(json.dumps(res, indent=2, ensure_ascii=False))
+    res = translate(orig, 'baidu')
+    print(json.dumps(res, indent=2, ensure_ascii=False))
+    res = translate(orig, 'google')
+    print(json.dumps(res, indent=2, ensure_ascii=False))
