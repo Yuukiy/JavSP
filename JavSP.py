@@ -161,6 +161,10 @@ def generate_names(movie: Movie):
     num_items = d['num'].split('-')
     d['label'] = num_items[0] if len(num_items) > 1 else '---'
 
+    # 替换各字段中不能作为文件名的字符
+    for k, v in d.items():
+        d[k] = replace_illegal_chars(v)
+
     # 使用字典填充模板，生成相关文件的路径
     save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d))
     basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d))

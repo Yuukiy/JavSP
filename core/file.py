@@ -3,9 +3,10 @@ import os
 import re
 import sys
 import logging
+from sys import platform
 from typing import List
 
-__all__ = ['scan_movies', 'get_fmt_size']
+__all__ = ['scan_movies', 'get_fmt_size', 'replace_illegal_chars']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -100,6 +101,29 @@ def scan_movies(root: str) -> List[Movie]:
         logger.debug(f'影片数据源类型: {avid}: {src}')
         movies.append(mov)
     return movies
+
+
+def replace_illegal_chars(name):
+    """将不能用于文件名的字符替换为形近的字符"""
+    # 非法字符列表 https://stackoverflow.com/a/31976060/6415337
+    if platform == 'win32': 
+        # http://www.unicode.org/Public/security/latest/confusables.txt
+        charmap = {'<': '❮',
+                   '>': '❯',
+                   ':': '：',
+                   '"': '″',
+                   '/': '／',
+                   '\\': '＼',
+                   '|': '｜',
+                   '?': '？',
+                   '*': '꘎'}
+        for c, rep in charmap.items():
+            name = name.replace(c, rep)
+    elif platform == "darwin":  # MAC OS X
+        name = name.replace(':', '：')
+    else:   # 其余都当做Linux处理
+        name = name.replace('/', '／')
+    return name
 
 
 def get_fmt_size(file_or_size) -> str:
