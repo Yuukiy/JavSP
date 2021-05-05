@@ -174,12 +174,12 @@ def generate_names(movie: Movie):
     setattr(info, 'nfo_title', nfo_title)
 
 
-def check_step(result):
+def check_step(result, err_info):
     """检查业务逻辑是否成功完成，如果失败则停止后续步骤"""
     if result:
         return result
     else:
-        error_exit('业务出错')
+        error_exit(err_info)
 
 
 def error_exit(msg):
@@ -200,19 +200,18 @@ if __name__ == "__main__":
         logger.warning('未配置有效代理，程序会努力继续运行，但是部分功能可能受限：\n'
                        ' - 将尝试自动获取部分站点的免代理地址，没有免代理地址的站点抓取器将无法工作\n'
                        ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
-    # 总的来说，不需要出现在日志里的显示信息，就直接使用tqdm.write；否则就使用logger.xxx
-    root = check_step(get_scan_dir(cfg.File.scan_dir))
+    root = check_step(get_scan_dir(cfg.File.scan_dir), '无法获取要扫描的目录')
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)
 
-    tqdm.write(f'扫描影片文件...')
+    print(f'扫描影片文件...')
     all_movies = scan_movies(root)
     movie_count = len(all_movies)
     if movie_count == 0:
         error_exit('未找到影片文件，脚本退出')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    tqdm.write('')
+    print('')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     for movie in outer_bar:
