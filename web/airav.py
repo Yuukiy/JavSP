@@ -73,7 +73,9 @@ def parse_data(movie: MovieInfo):
     if producer_tag:
         movie.producer = producer_tag[0]
     publish_date = info.xpath("//li[text()='發片日期']/text()[last()]")[0]
-    plot = info.xpath("//div[@class='synopsis']/p/text()")[0]
+    plot_tag = info.xpath("//div[@class='synopsis']/p/text()")
+    if plot_tag:
+        movie.plot = plot_tag[0]
 
     if cfg.Crawler.hardworking_mode:
         video_url = f'{base_url}/api/video/getVideoMedia?barcode={movie.dvdid}'
@@ -90,9 +92,8 @@ def parse_data(movie: MovieInfo):
     movie.publish_date = publish_date
     movie.genre = genre
     movie.actress = actress
-    movie.plot = plot
     # airav上部分影片会被标记为'馬賽克破壞版'，这些影片的title、plot和genre都不再准确
-    if '馬賽克破壞版' in title or '馬賽克破壞版' in plot:
+    if '馬賽克破壞版' in title or (movie.plot and '馬賽克破壞版' in movie.plot):
         movie.title = None
         movie.plot = None
         movie.genre = None
@@ -100,6 +101,6 @@ def parse_data(movie: MovieInfo):
 
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('080719-976')
+    movie = MovieInfo('SKYHD-012')
     parse_data(movie)
     print(movie)
