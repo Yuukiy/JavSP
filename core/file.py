@@ -6,7 +6,7 @@ import logging
 from sys import platform
 from typing import List
 
-__all__ = ['scan_movies', 'get_fmt_size', 'replace_illegal_chars']
+__all__ = ['scan_movies', 'get_fmt_size', 'check_path_len', 'replace_illegal_chars']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -126,6 +126,15 @@ def replace_illegal_chars(name):
     return name
 
 
+def check_path_len(path):
+    """检查给定的路径是否在操作系统允许的长度内"""
+    #TODO: 支持不同的操作系统
+    fullpath = os.path.abspath(os.path.normpath(path))
+    if len(fullpath) <= 260:
+        return True
+    return False
+
+
 def get_fmt_size(file_or_size) -> str:
     """获取格式化后的文件大小
 
@@ -147,4 +156,5 @@ def get_fmt_size(file_or_size) -> str:
 
 
 if __name__ == "__main__":
-    print(scan_movies(select_folder()))
+    p = "C:/Windows\\System32//PerceptionSimulation\\..\\Assets\\/ClosedHand.png"
+    print(check_path_len(p))

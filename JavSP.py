@@ -161,18 +161,35 @@ def generate_names(movie: Movie):
     num_items = d['num'].split('-')
     d['label'] = num_items[0] if len(num_items) > 1 else '---'
 
-    # 替换各字段中不能作为文件名的字符
+    # 处理字段：替换不能作为文件名的字符，移除首尾的空字符
     for k, v in d.items():
-        d[k] = replace_illegal_chars(v)
+        d[k] = replace_illegal_chars(v.strip())
 
     # 使用字典填充模板，生成相关文件的路径
-    save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d))
-    basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d))
-    movie.save_dir = save_dir
-    movie.basename = basename
-    movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
-    movie.fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
-    movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
+    if hasattr(info, 'title_break'):
+        copyd = d.copy()
+        title_break = info.title_break
+        for end in range(len(title_break), 0, -1):
+            copyd['title'] = ''.join(title_break[:end])
+            save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**copyd)).strip()
+            basename = os.path.normpath(cfg.NamingRule.filename.substitute(**copyd)).strip()
+            fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
+            if check_path_len(fanart_file):
+                movie.save_dir = save_dir
+                movie.basename = basename
+                movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
+                movie.fanart_file = fanart_file
+                movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
+                logger.info(f"自动截短标题为:\n{copyd['title']}")
+                break
+    else:
+        save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d)).strip()
+        basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d)).strip()
+        movie.save_dir = save_dir
+        movie.basename = basename
+        movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
+        movie.fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
+        movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
     # 生成nfo文件中的影片标题
     nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
     setattr(info, 'nfo_title', nfo_title)

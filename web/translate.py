@@ -29,6 +29,11 @@ def translate_movie_info(info: MovieInfo):
         if 'trans' in result:
             info.ori_title = info.title
             info.title = result['trans']
+            # 如果有的话，附加断句信息
+            if 'orig_break' in result:
+                setattr(info, 'ori_title_break', result['orig_break'])
+            if 'trans_break' in result:
+                setattr(info, 'title_break', result['trans_break'])
         else:
             logger.error('翻译标题时出错: ' + result['error'])
             return False
