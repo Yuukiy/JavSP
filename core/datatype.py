@@ -7,6 +7,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+filemove_logger = logging.getLogger('filemove')
 
 
 def mei_path(path):
@@ -119,10 +120,13 @@ class Movie:
         """根据命名规则移动（重命名）影片文件"""
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
-            os.rename(src, dst)
+            abs_dst = os.path.abspath(dst)
+            os.rename(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
             logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+            # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
+            filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
 
         if len(self.files) == 1:
             fullpath = self.files[0]

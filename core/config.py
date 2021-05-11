@@ -41,6 +41,11 @@ file_handler.setFormatter(logging.Formatter(
     fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 root_logger.addHandler(file_handler)
 
+filemove_logger = logging.getLogger('filemove')
+file_handler2 = logging.FileHandler(filename=rel_path_from_exe('FileMove.log'), mode='a', encoding='utf-8')
+file_handler2.addFilter(filter=lambda r:r.name == 'filemove')
+file_handler2.setFormatter(logging.Formatter(fmt='%(asctime)s\t%(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+filemove_logger.addHandler(file_handler2)
 
 logger = logging.getLogger(__name__)
 
