@@ -25,7 +25,7 @@ def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
     # 翻译标题
     if info.title and cfg.Translate.translate_title:
-        result = translate(info.title, cfg.Translate.engine)
+        result = translate(info.title, cfg.Translate.engine, info.actress)
         if 'trans' in result:
             info.ori_title = info.title
             info.title = result['trans']
@@ -39,7 +39,7 @@ def translate_movie_info(info: MovieInfo):
             return False
     # 翻译简介
     if info.plot and cfg.Translate.translate_plot:
-        result = translate(info.plot, cfg.Translate.engine)
+        result = translate(info.plot, cfg.Translate.engine, info.actress)
         if 'trans' in result:
             # 只有翻译过plot的影片才可能需要ori_plot属性，因此在运行时动态添加，而不添加到类型定义里
             setattr(info, 'ori_plot', info.plot)
@@ -50,9 +50,7 @@ def translate_movie_info(info: MovieInfo):
     return True
 
 
-# 不同的翻译引擎支持的功能不同。Bing额外支持断句和动态词典功能，前者可以用于识别句子位置，在需要截短标题时使用；
-# 后者可以用来保护原文中的女优名等字段，防止翻译后认不出来
-def translate(texts, engine='google'):
+def translate(texts, engine='google', actress=[]):
     """
     翻译入口：对错误进行处理并且统一返回格式
 
@@ -71,7 +69,9 @@ def translate(texts, engine='google'):
         else:
             err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
     elif engine == 'bing':
-        # https://docs.microsoft.com/zh-cn/azure/cognitive-services/translator/reference/v3-0-reference#errors
+        # 使用动态词典保护原文中的女优名，防止翻译后认不出来
+        for i in actress:
+            texts = texts.replace(i, f'<mstrans:dictionary translation="{i}">{i}</mstrans:dictionary>')
         result = bing_translate(texts)
         if 'error' not in result:
             sentLen = result[0]['translations'][0]['sentLen']
