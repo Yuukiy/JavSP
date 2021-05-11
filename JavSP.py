@@ -195,6 +195,90 @@ def generate_names(movie: Movie):
     setattr(info, 'nfo_title', nfo_title)
 
 
+def RunNormalMode(all_movies):
+    """普通整理模式"""
+    def check_step(result):
+        """检查一个整理步骤的结果，并负责更新tqdm的进度"""
+        if result:
+            inner_bar.update()
+        else:
+            raise Exception('步骤错误')
+
+    outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
+    total_step = 7 if cfg.Translate.engine else 6
+    for movie in outer_bar:
+        try:
+            # 初始化本次循环要整理影片任务
+            filenames = [os.path.split(i)[1] for i in movie.files]
+            logger.info('正在整理: ' + ', '.join(filenames))
+            inner_bar = tqdm(total=total_step, desc='步骤', ascii=True, leave=False)
+            # 依次执行各个步骤
+            inner_bar.set_description(f'启动并发任务')
+            all_info = parallel_crawler(movie, inner_bar)
+            check_step(all_info)
+
+            inner_bar.set_description('汇总数据')
+            has_required_keys = info_summary(movie, all_info)
+            check_step(has_required_keys)
+
+            if cfg.Translate.engine:
+                inner_bar.set_description('翻译影片信息')
+                success = translate_movie_info(movie.info)
+                check_step(success)
+            
+            inner_bar.set_description('移动影片文件')
+            generate_names(movie)
+            os.makedirs(movie.save_dir)
+            movie.rename_files()
+            check_step(True)
+
+            inner_bar.set_description('下载封面图片')
+            success = download_cover(movie.info.cover, movie.fanart_file, movie.info.big_cover)
+            check_step(success)
+
+            inner_bar.set_description('裁剪海报封面')
+            crop_poster(movie.fanart_file, movie.poster_file)
+            check_step(True)
+
+            inner_bar.set_description('写入NFO')
+            write_nfo(movie.info, movie.nfo_file)
+            check_step(True)
+
+            logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+        except:
+            logger.error('整理失败\n')
+        finally:
+            inner_bar.close()
+
+
+def download_cover(cover_url, fanart_path, big_cover_url=None):
+    """下载封面图片"""
+    used_url = cover_url
+    for _ in range(cfg.Network.retry):
+        if big_cover_url:
+            try:
+                download(big_cover_url, fanart_path)
+                used_url = big_cover_url
+            except requests.exceptions.HTTPError:
+                download(cover_url, fanart_path)
+        else:
+            download(cover_url, fanart_path)
+        # 检查图片是否完整
+        if valid_pic(fanart_path):
+            if used_url == big_cover_url:
+                filesize = get_fmt_size(fanart_path)
+                width, height = get_pic_size(fanart_path)
+                logger.info(f"已下载高清封面: {width}x{height}, {filesize}")
+            # 图片完整时直接返回
+            return True
+        else:
+            logger.debug(f"图片不完整，尝试重新下载: '{cover_url}'")
+    else:
+        logger.error(f"下载封面图片失败: '{cover_url}'")
+
+    return False
+
+
 def check_step(result, err_info):
     """检查业务逻辑是否成功完成，如果失败则停止后续步骤"""
     if result:
@@ -234,68 +318,7 @@ if __name__ == "__main__":
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     print('')
 
-    outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    for movie in outer_bar:
-        filenames = [os.path.split(i)[1] for i in movie.files]
-        logger.info('正在整理: ' + ', '.join(filenames))
-        inner_bar = tqdm(total=6, desc='步骤', ascii=True, leave=False)
-        # 执行具体的抓取和整理任务
-        inner_bar.set_description(f'启动并发任务')
-        all_info = parallel_crawler(movie, inner_bar)
-        inner_bar.update()
-
-        inner_bar.set_description('汇总数据')
-        has_required_keys = info_summary(movie, all_info)
-        inner_bar.update()
-        if has_required_keys:
-            if cfg.Translate.engine:
-                inner_bar.set_description('翻译影片信息')
-                success = translate_movie_info(movie.info)
-                if not success:
-                    continue
-            inner_bar.set_description('移动影片文件')
-            generate_names(movie)
-            os.makedirs(movie.save_dir)
-            movie.rename_files()
-            inner_bar.update()
-
-            inner_bar.set_description('下载封面图片')
-            for _ in range(cfg.Network.retry):
-                # 下载图片
-                cover_url = movie.info.cover
-                if cfg.Picture.use_big_cover and movie.info.big_cover:
-                    try:
-                        download(movie.info.big_cover, movie.fanart_file)
-                        cover_url = movie.info.big_cover
-                    except requests.exceptions.HTTPError:
-                        download(movie.info.cover, movie.fanart_file)
-                else:
-                    download(movie.info.cover, movie.fanart_file)
-                # 检查图片是否完整
-                if valid_pic(movie.fanart_file):
-                    if cover_url == movie.info.big_cover:
-                        filesize = get_fmt_size(movie.fanart_file)
-                        width, height = get_pic_size(movie.fanart_file)
-                        logger.info(f"已下载高清封面: {width}x{height}, {filesize}")
-                    break
-            else:
-                logger.error(f"下载封面图片失败: '{cover_url}'")
-                continue    # 继续整理后续影片
-
-            inner_bar.update()
-
-            inner_bar.set_description('裁剪海报封面')
-            crop_poster(movie.fanart_file, movie.poster_file)
-            inner_bar.update()
-
-            inner_bar.set_description('写入NFO')
-            write_nfo(movie.info, movie.nfo_file)
-            inner_bar.update()
-
-            logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
-        else:
-            logger.error('整理失败\n')
-        inner_bar.close()
+    RunNormalMode(all_movies)
     # 整理完成后要执行的操作
     if args.shutdown:
         shutdown()
