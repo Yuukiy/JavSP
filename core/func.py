@@ -34,7 +34,7 @@ def select_folder(default_dir=''):
 
 def get_scan_dir(cfg_scan_dir):
     """综合命令参数、配置文件等信息，返回要扫描影片的文件夹"""
-    # 目前config模块负责处理来自命令行和来自文件的配置，cfg_dir已经是综合了这两处后得到的结果
+    # 目前config模块负责处理来自命令行和来自文件的配置，cfg_scan_dir已经是综合了这两处后得到的结果
     if cfg_scan_dir:
         if os.path.isdir(cfg_scan_dir):
             return cfg_scan_dir
@@ -43,12 +43,8 @@ def get_scan_dir(cfg_scan_dir):
     else:
         print('请选择要整理的文件夹：', end='')
         root = select_folder()
-        if not root:
-            print('')  # 换行显示下面的错误信息
-            logger.error('未选择文件夹，脚本退出')
-        else:
-            print(CLEAR_LINE)
-            return root
+        print(root)
+        return root
 
 
 def remove_trail_actor_in_title(title:str, actors:list) -> str:

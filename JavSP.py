@@ -24,6 +24,8 @@ console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(ColoredFormatter(fmt='%(message)s'))
 root_logger.addHandler(console_handler)
 
+logger = logging.getLogger('main')
+
 
 from core.nfo import write_nfo
 from core.config import cfg, args
@@ -279,25 +281,25 @@ def download_cover(cover_url, fanart_path, big_cover_url=None):
     return False
 
 
-def check_step(result, err_info):
-    """检查业务逻辑是否成功完成，如果失败则停止后续步骤"""
-    if result:
-        return result
-    else:
-        error_exit(err_info)
+def error_exit(success, err_info):
+    """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
+    if not success:
+        logger.error(err_info)
+        sys_exit(1)
 
 
-def error_exit(msg):
-    """报错并退出程序"""
-    logger.error(msg)
-    if not args.auto_exit:
+def sys_exit(code):
+    # 脚本退出机制：检查是否需要关机 → 若不需要，检查是否需要保持当前窗口
+    if args.shutdown:
+        shutdown()
+    elif not args.auto_exit:
         os.system('pause')
-    sys.exit(1)
+    # 最后传退出码退出
+    sys.exit(code)
 
 
 if __name__ == "__main__":
     colorama.init(autoreset=True)
-    logger = logging.getLogger('main')
     # 检查更新
     check_update(allow_check=cfg.Other.check_update)
     # 如果未配置有效代理，则显示相应提示
@@ -305,7 +307,8 @@ if __name__ == "__main__":
         logger.warning('未配置有效代理，程序会努力继续运行，但是部分功能可能受限：\n'
                        ' - 将尝试自动获取部分站点的免代理地址，没有免代理地址的站点抓取器将无法工作\n'
                        ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
-    root = check_step(get_scan_dir(cfg.File.scan_dir), '无法获取要扫描的目录')
+    root = get_scan_dir(cfg.File.scan_dir)
+    error_exit(root, '未选择要扫描的文件夹')
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)
@@ -313,12 +316,10 @@ if __name__ == "__main__":
     print(f'扫描影片文件...')
     all_movies = scan_movies(root)
     movie_count = len(all_movies)
-    if movie_count == 0:
-        error_exit('未找到影片文件，脚本退出')
+    error_exit(movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     print('')
 
     RunNormalMode(all_movies)
-    # 整理完成后要执行的操作
-    if args.shutdown:
-        shutdown()
+
+    sys_exit(0)
