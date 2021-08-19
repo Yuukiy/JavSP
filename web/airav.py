@@ -33,6 +33,8 @@ def search_movie(dvdid):
     # 如果什么都没搜索到，直接返回
     if not result:
         return
+    # 排序，以优先选择更符合预期的结果（如'012717_472'对应的'1pondo_012717_472'和'_1pondo_012717_472'）
+    result.sort(key=lambda x:x['barcode'])
     # 从所有搜索结果中选择最可能的番号，返回它的URL
     target = dvdid.replace('-', '_')
     for item in result:
@@ -82,7 +84,8 @@ def parse_data(movie: MovieInfo):
         resp = request_get(video_url).json()
         # 如果失败，结果如 {'msg': 'fail', 'status': 'fail'}
         if 'data' in resp:
-            # 此外还有url_cdn, url_hlx, url_hls_cdn字段，后两者为m3u8格式。目前将url作为预览视频的地址
+            # 除url外还有url_cdn, url_hlx, url_hls_cdn字段，后两者为m3u8格式。目前将url作为预览视频的地址
+            # TODO: 发现部分影片（如080719-976）的传统格式预览片错误
             movie.preview_video = resp['data'].get('url')
 
     movie.url = new_url
@@ -101,6 +104,6 @@ def parse_data(movie: MovieInfo):
 
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('SKYHD-012')
+    movie = MovieInfo('012717_472')
     parse_data(movie)
     print(movie)
