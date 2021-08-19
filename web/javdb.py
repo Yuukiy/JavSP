@@ -71,7 +71,11 @@ def parse_data(movie: MovieInfo):
         # 判定影片有码/无码
         subsite = pre_id.split('?')[0]
         movie.uncensored = {'uncensored': True, 'tags':False}.get(subsite)
-    actress = info.xpath("//strong[text()='演員:']/../span/a/text()")
+    # JavDB目前同时提供男女优信息，根据用来标识性别的符号筛选出女优
+    actors_tag = info.xpath("//strong[text()='演員:']/../span")[0]
+    all_actors = actors_tag.xpath("a/text()")
+    genders = actors_tag.xpath("strong/text()")
+    actress = [i for i in all_actors if genders[all_actors.index(i)] == '♀']
     magnet = container.xpath("//td[@class='magnet-name']/a/@href")
 
     movie.url = new_url.replace(base_url, permanent_url)
