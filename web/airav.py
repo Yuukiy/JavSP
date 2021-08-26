@@ -1,6 +1,7 @@
 """从airav抓取数据"""
 import os
 import sys
+import json
 import logging
 
 
@@ -78,9 +79,14 @@ def parse_data(movie: MovieInfo):
     plot_tag = info.xpath("//div[@class='synopsis']/p/text()")
     if plot_tag:
         movie.plot = plot_tag[0]
+    # 从json格式的数据中提取vid，用于后续获取预览视频地址
+    # TODO: json格式的数据中发现了更多信息（如女优的中文&日文名对照），可能有助于未来功能扩展
+    meta = json.loads(html.xpath("//script[@id='__NEXT_DATA__'][@type='application/json']/text()")[0])
+    vid = meta['props']['initialProps']['pageProps']['video']['vid']
 
     if cfg.Crawler.hardworking_mode:
-        video_url = f'{base_url}/api/video/getVideoMedia?barcode={movie.dvdid}'
+        # 注意这里用的是获取的dvdid，而不是传入的movie.dvdid（如'1pondo_012717_472'与'012717_472'）
+        video_url = f'{base_url}/api/video/getVideoMedia?barcode={dvdid}&vid={vid}'
         resp = request_get(video_url).json()
         # 如果失败，结果如 {'msg': 'fail', 'status': 'fail'}
         if 'data' in resp:
