@@ -4,7 +4,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html, is_connectable
+from web.base import *
 
 
 def get_proxy_free_url(site_name: str, prefer_url=None) -> str:
@@ -53,8 +53,8 @@ def _get_javbus_urls() -> list:
 
 
 def _get_javlib_urls() -> list:
-    html = get_html('https://www.ebay.com/usr/javlibrary')
-    text = html.xpath('//h2[@class="bio inline_value"]')[0].text_content()
+    html = get_html('https://github.com/javlibcom')
+    text = html.xpath("//div[@class='p-note user-profile-bio mb-3 js-user-profile-bio f4']")[0].text_content()
     match = re.search(r'[\w\.]+', text, re.A)
     if match:
         domain = f'https://www.{match.group(0)}.com'
@@ -62,12 +62,15 @@ def _get_javlib_urls() -> list:
 
 
 def _get_javdb_urls() -> list:
-    html = get_html('https://lynnconway.me/javdbnews')
-    text = html.xpath('//p[@class="text3"]')[0].text_content()
-    domains = [i.strip() for i in text.split('/')]
-    urls = [i if i.startswith('http') else ('https://' + i) for i in domains]
-    return urls
+    html = get_html('https://jav2.app')
+    js_links = html.xpath("//script[@src]/@src")
+    for link in js_links:
+        if '/js/index' in link:
+            text = get_resp_text(request_get(link))
+            match = re.search(r'\$officialUrl\s*=\s*"(https://(?:[\d\w][-\d\w]{1,61}[\d\w]\.){1,2}[a-z]{2,})"', text, flags=re.I | re.A)
+            if match:
+                return [match.group(1)]
 
 
 if __name__ == "__main__":
-    print(get_proxy_free_url('javlib'))
+    print(get_proxy_free_url('javdb'))
