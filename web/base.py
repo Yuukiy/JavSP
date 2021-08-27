@@ -2,6 +2,7 @@
 import os
 import sys
 import requests
+import cloudscraper
 import lxml.html
 from lxml import etree
 from lxml.html.clean import Cleaner
@@ -17,6 +18,7 @@ __all__ = ['get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable'
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
+scraper = cloudscraper.create_scraper()
 # 删除js脚本相关的tag，避免网页检测到没有js运行环境时强行跳转，影响调试
 cleaner = Cleaner(kill_tags=['script', 'noscript'])
 
@@ -35,6 +37,13 @@ def request_post(url, data, cookies={}, timeout=cfg.Network.timeout):
     return r
 
 
+def scraper_get(url, cookies={}, timeout=cfg.Network.timeout):
+    """使用cloudscraper访问指定url并返回原始请求"""
+    r = scraper.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
+    r.raise_for_status()
+    return r
+
+
 def get_resp_text(resp: Response, encoding=None):
     """提取Response的文本"""
     if encoding:
@@ -44,9 +53,12 @@ def get_resp_text(resp: Response, encoding=None):
     return resp.text
 
 
-def get_html(url, encoding='utf-8', cookies={}, attach_raw=False):
+def get_html(url, encoding='utf-8', cookies={}, attach_raw=False, use_scraper=False):
     """使用get方法访问指定网页并返回经lxml解析后的document"""
-    resp = request_get(url, cookies=cookies)
+    if use_scraper:
+        resp = scraper_get(url, cookies=cookies)
+    else:
+        resp = request_get(url, cookies=cookies)
     text = get_resp_text(resp, encoding=encoding)
     html = lxml.html.fromstring(text)
     html.make_links_absolute(url, resolve_base_href=True)

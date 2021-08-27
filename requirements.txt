@@ -1,6 +1,7 @@
 altgraph==0.17
 certifi==2020.12.5
 chardet==4.0.0
+cloudscraper==1.2.58
 colorama==0.4.4
 future==0.18.2
 idna==2.10

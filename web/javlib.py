@@ -12,10 +12,8 @@ from core.datatype import MovieInfo
 
 logger = logging.getLogger(__name__)
 permanent_url = 'https://www.javlibrary.com'
-# javlib的永久地址上套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
-# (无法用cloudscraper绕过: Cloudflare version 2 challenge is not available in the opensource version)
 if cfg.Network.proxy:
-    base_url = 'https://www.b49t.com'
+    base_url = permanent_url
 else:
     base_url = cfg.ProxyFree.javlib
 
@@ -24,7 +22,7 @@ else:
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = new_url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
-    html, resp = get_html(url, attach_raw=True)
+    html, resp = get_html(url, attach_raw=True, use_scraper=True)
     if resp.history:    # 如果仅有一个搜搜结果，JavLibrary会自动跳转
         new_url = resp.url
     else:               # 如果有多个搜索结果则不会自动跳转，此时需要程序介入选择搜索结果
