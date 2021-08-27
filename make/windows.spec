@@ -1,13 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+import inspect
+import cloudscraper
 
 block_cipher = None
-
+cloudscraper_dir = os.path.dirname(inspect.getfile(cloudscraper))
+cloudscraper_json = cloudscraper_dir + '/user_agent/browsers.json'
 
 # pyinstaller locates path relative to the .spec file
 a = Analysis(['../JavSP.py'],
              pathex=['build'],
              binaries=[],
              datas=[
+                 (cloudscraper_json, 'cloudscraper/user_agent'),
                  ("../core/config.ini", "."),
                  ("../data/*.*", "data")
              ],
