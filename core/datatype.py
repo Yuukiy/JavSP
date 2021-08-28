@@ -128,11 +128,13 @@ class Movie:
             # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
             filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
 
+        new_paths = []
         if len(self.files) == 1:
             fullpath = self.files[0]
             ext = os.path.splitext(fullpath)[1]
             newpath = os.path.join(self.save_dir, self.basename + ext)
             move_file(fullpath, newpath)
+            new_paths.append(newpath)
         else:
             for i in range(len(self.files)):
                 fullpath = self.files[i]
@@ -140,6 +142,8 @@ class Movie:
                 cdx = f'-CD{i+1}'
                 newpath = os.path.join(self.save_dir, self.basename + cdx + ext)
                 move_file(fullpath, newpath)
+                new_paths.append(newpath)
+        self.new_paths = new_paths
 
 
 class ColoredFormatter(logging.Formatter):

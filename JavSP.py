@@ -4,6 +4,7 @@ import time
 import logging
 import requests
 import threading
+from shutil import copyfile
 
 import colorama
 import pretty_errors
@@ -197,6 +198,18 @@ def generate_names(movie: Movie):
     setattr(info, 'nfo_title', nfo_title)
 
 
+def postStep_videostation(movie: Movie):
+    """使用群晖Video Station时，生成额外的影片poster、fanart文件"""
+    fanart_ext = os.path.splitext(movie.fanart_file)[1]
+    for file in movie.new_paths:
+        # 创建与影片同名的fanart
+        samename_fanart = os.path.splitext(file)[0] + fanart_ext
+        copyfile(movie.fanart_file, samename_fanart)
+        # 将fanart裁剪为png格式作为poster
+        samename_poster = os.path.splitext(file)[0] + '.png'
+        crop_poster(movie.fanart_file, samename_poster)
+
+
 def RunNormalMode(all_movies):
     """普通整理模式"""
     def check_step(result):
@@ -241,6 +254,9 @@ def RunNormalMode(all_movies):
             inner_bar.set_description('裁剪海报封面')
             crop_poster(movie.fanart_file, movie.poster_file)
             check_step(True)
+
+            if 'video_station' in cfg.NamingRule.media_servers:
+                postStep_videostation(movie)
 
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
