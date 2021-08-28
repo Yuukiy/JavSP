@@ -2,7 +2,7 @@
 import os
 import sys
 import logging
-from urllib.parse import urlsplit, urljoin
+from urllib.parse import urlsplit
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -32,7 +32,7 @@ def parse_data(movie: MovieInfo):
         else:
             # 重定向到了不同的netloc时，新地址并不是影片地址。这种情况下新地址中丢失了path字段，
             # 为无效地址（应该是JavBus重定向配置有问题），需要使用新的base_url抓取数据
-            base_url = urljoin(resp.url, '/')
+            base_url = 'https://' + urlsplit(resp.url).netloc
             logger.info(f"请将配置文件中的JavLib防屏蔽地址更新为: {base_url}")
             return parse_data(movie)
     else:               # 如果有多个搜索结果则不会自动跳转，此时需要程序介入选择搜索结果
