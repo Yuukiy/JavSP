@@ -281,7 +281,12 @@ args = parse_args()
 cfg.read(args.config)
 # 先覆盖配置，再进行配置有效性的验证
 overwrite_cfg(cfg, args)
-cfg.validate()
+try:
+    cfg.validate()
+except:
+    logger.error('验证配置文件时出错。如果你更新了软件，请重命名原有的配置文件后重新运行软件以生成新的配置文件，并将你此前的配置移植到新的配置文件中。')
+    os.system('pause')
+    sys.exit(2)
 
 
 if __name__ == "__main__":
