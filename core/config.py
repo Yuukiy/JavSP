@@ -90,6 +90,7 @@ class Config(configparser.ConfigParser):
         validate_translation(self)
         # 作为配置模块，始终检查免代理地址；由各个抓取器中根据代理情况选择是否启用免代理地址
         check_proxy_free_url(self)
+        validate_media_servers(self)
 
 
 def is_url(url: str):
@@ -147,6 +148,17 @@ def norm_ignore_pattern(cfg: Config):
     pattern_str = f'({words_pattern})|{regex_patterns}'
     ignore_pattern = re.compile(pattern_str, flags=re.I | re.A)
     cfg.MovieID.ignore_pattern = ignore_pattern
+
+
+def validate_media_servers(cfg: Config):
+    """获取媒体服务器配置并验证有效性"""
+    supported = set(('plex', 'emby', 'jellyfin', 'kodi', 'video_station'))
+    servers = cfg.NamingRule.media_servers.lower()
+    items = set(re.split(r'[^\w_]', servers, flags=re.I))
+    cfg.NamingRule.media_servers = items & supported
+    invalid = items - supported
+    if invalid:
+        logger.error("媒体服务器无效: {}。仅支持: {}".format(','.join(invalid), ','.join(supported)))
 
 
 def validate_translation(cfg: Config):
