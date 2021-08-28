@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+from urllib.parse import urlsplit, urljoin
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,10 +22,19 @@ else:
 # TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
+    global base_url
     url = new_url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
     html, resp = get_html(url, attach_raw=True, use_scraper=True)
-    if resp.history:    # 如果仅有一个搜搜结果，JavLibrary会自动跳转
-        new_url = resp.url
+    if resp.history:
+        if urlsplit(resp.url).netloc == urlsplit(base_url).netloc:
+            # 出现301重定向通常且新老地址netloc相同时，说明搜索到了影片且只有一个结果
+            new_url = resp.url
+        else:
+            # 重定向到了不同的netloc时，新地址并不是影片地址。这种情况下新地址中丢失了path字段，
+            # 为无效地址（应该是JavBus重定向配置有问题），需要使用新的base_url抓取数据
+            base_url = urljoin(resp.url, '/')
+            logger.info(f"请将配置文件中的JavLib防屏蔽地址更新为: {base_url}")
+            return parse_data(movie)
     else:               # 如果有多个搜索结果则不会自动跳转，此时需要程序介入选择搜索结果
         video_tags = html.xpath("//div[@class='video'][@id]/a")
         # 通常第一部影片就是我们要找的，但是以免万一还是遍历所有搜索结果
@@ -92,6 +102,7 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
     movie = MovieInfo('STARS-213')
     parse_data(movie)
     print(movie)
