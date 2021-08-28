@@ -154,7 +154,7 @@ def validate_media_servers(cfg: Config):
     """获取媒体服务器配置并验证有效性"""
     supported = set(('plex', 'emby', 'jellyfin', 'kodi', 'video_station'))
     servers = cfg.NamingRule.media_servers.lower()
-    items = set(re.split(r'[^\w_]', servers, flags=re.I))
+    items = set(re.split(r'[^\w_]+', servers, flags=re.I))
     cfg.NamingRule.media_servers = items & supported
     invalid = items - supported
     if invalid:
