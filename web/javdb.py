@@ -12,11 +12,34 @@ from core.datatype import MovieInfo, GenreMap
 from core.chromium import get_browsers_cookies
 
 
+cookies = {}
+cookies_source = ''
 logger = logging.getLogger(__name__)
 genre_map = GenreMap('data/genre_javdb.csv')
 permanent_url = 'https://javdb.com'
 # javdb的永久地址上也套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
 base_url = cfg.ProxyFree.javdb
+
+
+def get_html_wrapper(url):
+    """包装外发的request请求并负责转换为可xpath的html，同时处理Cookies无效等问题"""
+    global cookies, cookies_source
+    r = request_get(url, cookies=cookies, delay_raise=True)
+    if r.status_code == 200:
+        # 发生重定向可能仅仅是域名重定向，因此还要检查url以判断是否被跳转到了登录页
+        if r.history and '/login' in r.url:
+            if len(cookies_pool) > 0:
+                item = cookies_pool.pop()
+                cookies_source, cookies = (item['profile'], item['site']), item['cookies']
+                logger.debug(f'检测到重定向，尝试使用新的Cookies: {cookies_source}')
+                return get_html_wrapper(url)
+        else:   
+            html = resp2html(r)
+            return html
+    elif r.status_code == 403:
+        raise Exception(f'JavDB: {r.status_code} 禁止访问: {url}')
+    else:
+        raise Exception(f'JavDB: {r.status_code} 非预期状态码: {url}')
 
 
 def get_user_info(site, cookies):
@@ -50,7 +73,7 @@ def get_valid_cookies():
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
-    html = get_html(f'{base_url}/search?q={movie.dvdid}')
+    html = get_html_wrapper(f'{base_url}/search?q={movie.dvdid}')
     ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
     movie_urls = html.xpath("//div[@id='videos']/div/div/a/@href")
     try:
@@ -59,7 +82,7 @@ def parse_data(movie: MovieInfo):
         logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
         return
 
-    html = get_html(new_url)
+    html = get_html_wrapper(new_url)
     container = html.xpath("/html/body/section/div[@class='container']")[0]
     info = container.xpath("div/div/div/nav")[0]
     title = container.xpath("h2/strong/text()")[0]
@@ -132,8 +155,17 @@ def parse_clean_data(movie: MovieInfo):
             movie.title = new_title
 
 
+def init_cookies_pool():
+    """初始化Cookies池"""
+    return get_browsers_cookies()
+
+
+cookies_pool = init_cookies_pool()
+
+
 if __name__ == "__main__":
-    movie = MovieInfo('ION-020')
-    # get_valid_cookies()
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    movie = MovieInfo('FC2-718323')
     parse_clean_data(movie)
     print(movie)
