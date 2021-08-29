@@ -120,5 +120,15 @@ def download(url, file):
         f.write(r.content)
 
 
+def open_in_chrome(url, new=0, autoraise=True):
+    """使用指定的Chrome Profile打开url，便于调试"""
+    import subprocess
+    chrome = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+    subprocess.run(f'"{chrome}" --profile-directory="Profile 2" {url}', shell=True)
+
+# import webbrowser
+# webbrowser.open = open_in_chrome
+
+
 if __name__ == "__main__":
     print(is_connectable('http://www.baidu.com'))
