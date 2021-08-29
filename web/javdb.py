@@ -39,13 +39,12 @@ def get_valid_cookies():
     """扫描浏览器，获取一个可用的Cookies"""
     # 经测试，Cookies所发往的域名不需要和登录时的域名保持一致，只要Cookies有效即可在多个域名间使用
     all_cookies = get_browsers_cookies()
-    for brw, data in all_cookies.items():
-        for site, cookies in data.items():
-            info = get_user_info(site, cookies)
-            if info:
-                return cookies
-            else:
-                logger.debug(f'{brw}, {site}: Cookies无效')
+    for d in all_cookies:
+        info = get_user_info(d['site'], d['cookies'])
+        if info:
+            return cookies
+        else:
+            logger.debug(f"{d['profile']}, {d['site']}: Cookies无效")
 
 
 def parse_data(movie: MovieInfo):

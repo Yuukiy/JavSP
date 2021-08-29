@@ -34,7 +34,7 @@ def get_browsers_cookies():
         'Vivaldi': '/Vivaldi/User Data'
     }
     LocalAppDataDir = os.getenv('LOCALAPPDATA')
-    all_browser_cookies = {}
+    all_browser_cookies = []
     for brw, path in user_data_dirs.items():
         user_dir = LocalAppDataDir + path
         cookies_files = glob(user_dir+'/*/Cookies')
@@ -43,10 +43,13 @@ def get_browsers_cookies():
             key = decrypt_key(local_state)
             decrypter = Decrypter(key)
             for file in cookies_files:
+                profile = brw + ": " + os.path.split(os.path.dirname(file))[1]
                 records = get_cookies(file, decrypter)
                 if records:
-                    profile = brw + ": " + os.path.split(os.path.dirname(file))[1]
-                    all_browser_cookies[profile] = records
+                    # 将records转换为便于使用的格式
+                    for site, cookies in records.items():
+                        entry = {'profile': profile, 'site': site, 'cookies': cookies}
+                        all_browser_cookies.append(entry)
     return all_browser_cookies
 
 
@@ -70,7 +73,7 @@ def decrypt_key(local_state):
 
 
 def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
-    """获取指定网站的Cookies"""
+    """从cookies_file文件中查找指定站点的所有Cookies"""
     # 复制Cookies文件到当前目录，避免直接操作原始的Cookies文件
     temp_cookie = './Cookies'
     copyfile(cookies_file, temp_cookie)
@@ -91,6 +94,8 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
 
 if __name__ == "__main__":
     all_cookies = get_browsers_cookies()
-    for brw, data in all_cookies.items():
-        print('{:<20}{}'.format(brw, ','.join(data.keys())))
+    # with open('cookies.json', 'wt') as f:
+    #     json.dump(all_cookies, f, indent=2)
+    for d in all_cookies:
+        print('{:<20}{}'.format(d['profile'], d['site']))
 
