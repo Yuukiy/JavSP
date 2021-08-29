@@ -9,6 +9,7 @@ from web.base import *
 from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
+from core.chromium import get_browsers_cookies
 
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,35 @@ genre_map = GenreMap('data/genre_javdb.csv')
 permanent_url = 'https://javdb.com'
 # javdb的永久地址上也套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
 base_url = cfg.ProxyFree.javdb
+
+
+def get_user_info(site, cookies):
+    """获取cookies对应的JavDB用户信息"""
+    try:
+        html = get_html(f'https://{site}/users/profile', cookies=cookies)
+    except Exception as e:
+        logger.debug(e)
+        return
+    # 扫描浏览器得到的Cookies对应的临时域名可能会过期，因此需要先判断域名是否仍然指向JavDB的站点
+    if 'JavDB' in html.text:
+        email = html.xpath("//div[@class='user-profile']/ul/li[1]/span/following-sibling::text()")[0].strip()
+        username = html.xpath("//div[@class='user-profile']/ul/li[2]/span/following-sibling::text()")[0].strip()
+        return email, username
+    else:
+        logger.debug('JavDB域名已过期: ' + site)
+
+
+def get_valid_cookies():
+    """扫描浏览器，获取一个可用的Cookies"""
+    # 经测试，Cookies所发往的域名不需要和登录时的域名保持一致，只要Cookies有效即可在多个域名间使用
+    all_cookies = get_browsers_cookies()
+    for brw, data in all_cookies.items():
+        for site, cookies in data.items():
+            info = get_user_info(site, cookies)
+            if info:
+                return cookies
+            else:
+                logger.debug(f'{brw}, {site}: Cookies无效')
 
 
 def parse_data(movie: MovieInfo):
@@ -105,5 +135,6 @@ def parse_clean_data(movie: MovieInfo):
 
 if __name__ == "__main__":
     movie = MovieInfo('ION-020')
+    # get_valid_cookies()
     parse_clean_data(movie)
     print(movie)
