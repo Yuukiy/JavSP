@@ -140,7 +140,8 @@ def check_update(allow_check=True):
                 update_status = 'new_version'
             else:
                 update_status = 'already_latest'
-        except:
+        except Exception as e:
+            logger.debug('检查版本更新时出错: ' + repr(e))
             update_status = 'fail_to_check'
     else:
         update_status = 'disallow'

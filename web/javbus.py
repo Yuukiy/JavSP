@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-import requests
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -34,13 +33,14 @@ def parse_data(movie: MovieInfo):
     html = None
     for _ in range(cfg.Network.retry):
         try:
-            resp = request_get(url)
+            resp = request_get(url, delay_raise=True)
+            resp.raise_for_status()
             html = resp2html(resp)
             break
         except Exception as e:
             # 404错误表明没有这部影片的数据，不是网络问题，因此不再重试
-            if isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 404:
-                logger.debug('无影片: ' + repr(movie))
+            if resp.status_code == 404:
+                logger.debug('JavBus无影片: ' + repr(movie))
                 break
             else:
                 logger.debug(e)

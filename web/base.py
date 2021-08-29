@@ -23,24 +23,27 @@ scraper = cloudscraper.create_scraper()
 cleaner = Cleaner(kill_tags=['script', 'noscript'])
 
 
-def request_get(url, cookies={}, timeout=cfg.Network.timeout):
+def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
     """获取指定url的原始请求"""
     r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
-    r.raise_for_status()
+    if not delay_raise:
+        r.raise_for_status()
     return r
 
 
-def request_post(url, data, cookies={}, timeout=cfg.Network.timeout):
+def request_post(url, data, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
     """向指定url发送post请求"""
     r = requests.post(url, data=data, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
-    r.raise_for_status()
+    if not delay_raise:
+        r.raise_for_status()
     return r
 
 
-def scraper_get(url, cookies={}, timeout=cfg.Network.timeout):
+def scraper_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
     """使用cloudscraper访问指定url并返回原始请求"""
     r = scraper.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
-    r.raise_for_status()
+    if not delay_raise:
+        r.raise_for_status()
     return r
 
 
