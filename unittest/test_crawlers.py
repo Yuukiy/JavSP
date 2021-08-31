@@ -45,7 +45,7 @@ def compare(avid, scraper, file):
     online_vars = vars(online)
     for k, v in online_vars.items():
         # 部分字段可能随时间变化，因此只要这些字段不是一方有值一方无值就行
-        if k in ['score', 'magnet'] or (scraper == 'airav' and k == 'preview_video'):
+        if k in ['score', 'magnet'] or (scraper in ['airav', 'javdb'] and k == 'preview_video'):
             assert bool(v) == bool(local_vars.get(k, None))
         else:
             assert v == local_vars.get(k, None)

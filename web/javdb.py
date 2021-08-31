@@ -5,32 +5,38 @@ import sys
 import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import *
+from web.base import Request, get_html, resp2html
 from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
 from core.chromium import get_browsers_cookies
 
 
-cookies = {}
+# 初始化Request实例。使用scraper绕过CloudFlare后，需要指定网页语言，否则可能会返回其他语言网页，影响解析
+request = Request(use_scraper=True)
+request.headers['Accept-Language'] = 'zh-CN,zh;q=0.9,zh-TW;q=0.8,en-US;q=0.7,en;q=0.6,ja;q=0.5'
+
 cookies_source = ''
 logger = logging.getLogger(__name__)
 genre_map = GenreMap('data/genre_javdb.csv')
 permanent_url = 'https://javdb.com'
-# javdb的永久地址上也套了CloudFlare的保护，因此即使启用了代理也不访问永久地址
-base_url = cfg.ProxyFree.javdb
+if cfg.Network.proxy:
+    base_url = permanent_url
+else:
+    base_url = cfg.ProxyFree.javdb
 
 
 def get_html_wrapper(url):
     """包装外发的request请求并负责转换为可xpath的html，同时处理Cookies无效等问题"""
-    global cookies, cookies_source
-    r = request_get(url, cookies=cookies, delay_raise=True)
+    global cookies_source
+    r = request.get(url, delay_raise=True)
     if r.status_code == 200:
         # 发生重定向可能仅仅是域名重定向，因此还要检查url以判断是否被跳转到了登录页
         if r.history and '/login' in r.url:
             if len(cookies_pool) > 0:
                 item = cookies_pool.pop()
-                cookies_source, cookies = (item['profile'], item['site']), item['cookies']
+                request.cookies = item['cookies']
+                cookies_source = (item['profile'], item['site'])
                 logger.debug(f'检测到重定向，尝试使用新的Cookies: {cookies_source}')
                 return get_html_wrapper(url)
         else:   
@@ -65,7 +71,7 @@ def get_valid_cookies():
     for d in all_cookies:
         info = get_user_info(d['site'], d['cookies'])
         if info:
-            return cookies
+            return d['cookies']
         else:
             logger.debug(f"{d['profile']}, {d['site']}: Cookies无效")
 
