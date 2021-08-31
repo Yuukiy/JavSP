@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from core.config import cfg
 
 
-__all__ = ['get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable', 'download', 'get_resp_text']
+__all__ = ['Request', 'get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable', 'download', 'get_resp_text']
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
@@ -21,6 +21,47 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 scraper = cloudscraper.create_scraper()
 # 删除js脚本相关的tag，避免网页检测到没有js运行环境时强行跳转，影响调试
 cleaner = Cleaner(kill_tags=['script', 'noscript'])
+
+
+# 与网络请求相关的功能汇总到一个模块中以方便处理，但是不同站点的抓取器又有自己的需求（针对不同网站
+# 需要使用不同的UA、语言等）。每次都传递参数很麻烦，而且会面临函数参数越加越多的问题。因此添加这个
+# 处理网络请求的类，它带有默认的属性，但是也可以在各个抓取器模块里进行进行定制
+class Request():
+    """作为网络请求出口并支持各个模块定制功能"""
+    def __init__(self, use_scraper=False) -> None:
+        self.headers = headers
+        self.cookies = {}
+        self.proxies = cfg.Network.proxy
+        self.timeout = cfg.Network.timeout
+        if not use_scraper:
+            self.scraper = None
+            self.__get = requests.get
+            self.__post = requests.post
+        else:
+            self.scraper = cloudscraper.create_scraper()
+            self.__get = self.scraper.get
+            self.__post = self.scraper.post
+
+    def get(self, url, delay_raise=False):
+        r = self.__get(url,
+                      headers=self.headers,
+                      proxies=self.proxies,
+                      cookies=self.cookies,
+                      timeout=self.timeout)
+        if not delay_raise:
+            r.raise_for_status()
+        return r
+
+    def post(self, url, data, delay_raise=False):
+        r = self.__post(url,
+                      data=data,
+                      headers=self.headers,
+                      proxies=self.proxies,
+                      cookies=self.cookies,
+                      timeout=self.timeout)
+        if not delay_raise:
+            r.raise_for_status()
+        return r
 
 
 def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
@@ -126,7 +167,7 @@ def download(url, file):
 def open_in_chrome(url, new=0, autoraise=True):
     """使用指定的Chrome Profile打开url，便于调试"""
     import subprocess
-    chrome = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+    chrome = R'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
     subprocess.run(f'"{chrome}" --profile-directory="Profile 2" {url}', shell=True)
 
 # import webbrowser
