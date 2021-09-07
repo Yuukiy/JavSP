@@ -6,10 +6,13 @@ from urllib.parse import urlsplit
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html
+from web.base import Request, resp2html
 from core.config import cfg
 from core.datatype import MovieInfo
 
+
+# 初始化Request实例
+request = Request(use_scraper=True)
 
 logger = logging.getLogger(__name__)
 permanent_url = 'https://www.javlibrary.com'
@@ -24,7 +27,8 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     global base_url
     url = new_url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
-    html, resp = get_html(url, attach_raw=True, use_scraper=True)
+    resp = request.get(url)
+    html = resp2html(resp)
     if resp.history:
         if urlsplit(resp.url).netloc == urlsplit(base_url).netloc:
             # 出现301重定向通常且新老地址netloc相同时，说明搜索到了影片且只有一个结果
@@ -67,7 +71,7 @@ def parse_data(movie: MovieInfo):
             logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，为避免误处理，已全部忽略")
             return
         # 重新抓取网页
-        html = get_html(new_url)
+        html = resp2html(request.get(new_url))
     container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
     title_tag = container.xpath("div/h3/a/text()")
     title = title_tag[0]
@@ -102,6 +106,8 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     logger.setLevel(logging.DEBUG)
     movie = MovieInfo('STARS-213')
     parse_data(movie)
