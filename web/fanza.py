@@ -7,24 +7,25 @@ import logging
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html
+from web.base import Request
 from core.config import cfg
 from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
 base_url = 'https://www.dmm.co.jp'
-# 要求访问者携带已通过R18认证的cookies才能够获得完整数据，否则会被重定向到认证页面
-cookies = {'age_check_done': '1'}
+# 初始化Request实例（要求携带已通过R18认证的cookies，否则会被重定向到认证页面）
+request = Request()
+request.cookies = {'age_check_done': '1'}
+request.headers['Accept-Language'] = 'ja,en-US;q=0.9'
 
 
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = f'{base_url}/digital/videoa/-/detail/=/cid={movie.cid}/'
-    html = get_html(url, cookies=cookies)
+    html = request.get_html(url)
     if 'not available in your region' in html.text_content():
-        # 经测试确认FANZA必须要有日本IP才可以，更改浏览器'Accept-Language'为单一'ja'也无法绕开限制
-        logger.error('FANZA仅可在日本IP地址下使用')
+        logger.error('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
         return
     title = html.xpath("//h1[@id='title']/text()")[0]
     # 注意: 浏览器在渲染时会自动加上了'tbody'字段，但是原始html网页中并没有，因此xpath解析时还是要按原始网页的来
@@ -69,7 +70,7 @@ def parse_data(movie: MovieInfo):
     if cfg.Crawler.hardworking_mode:
         # 预览视频是动态加载的，不在静态网页中
         video_url = f'{base_url}/service/digitalapi/-/html5_player/=/cid={movie.cid}'
-        html2 = get_html(video_url, cookies=cookies)
+        html2 = request.get_html(video_url)
         # 目前用到js脚本的地方不多，所以不使用专门的js求值模块，先用正则提取文本然后用json解析数据
         script = html2.xpath("//script[contains(text(),'getInstance(params)')]/text()")[0].strip()
         match = re.search(r'\{.*\}', script)

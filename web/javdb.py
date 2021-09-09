@@ -5,7 +5,7 @@ import sys
 import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import Request, get_html, resp2html
+from web.base import Request, resp2html
 from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
@@ -51,7 +51,8 @@ def get_html_wrapper(url):
 def get_user_info(site, cookies):
     """获取cookies对应的JavDB用户信息"""
     try:
-        html = get_html(f'https://{site}/users/profile', cookies=cookies)
+        request.cookies = cookies
+        html = request.get_html(f'https://{site}/users/profile')
     except Exception as e:
         logger.debug(e)
         return
