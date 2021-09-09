@@ -71,7 +71,7 @@ def parse_data(movie: MovieInfo):
             logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，为避免误处理，已全部忽略")
             return
         # 重新抓取网页
-        html = resp2html(request.get(new_url))
+        html = request.get_html(new_url)
     container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
     title_tag = container.xpath("div/h3/a/text()")
     title = title_tag[0]

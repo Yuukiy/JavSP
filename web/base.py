@@ -62,6 +62,11 @@ class Request():
             r.raise_for_status()
         return r
 
+    def get_html(self, url):
+        r = self.get(url)
+        html = resp2html(r)
+        return html
+
 
 def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
     """获取指定url的原始请求"""
@@ -88,7 +93,7 @@ def get_resp_text(resp: Response, encoding=None):
     return resp.text
 
 
-def get_html(url, encoding='utf-8', cookies={}, attach_raw=False):
+def get_html(url, encoding='utf-8', cookies={}):
     """使用get方法访问指定网页并返回经lxml解析后的document"""
     resp = request_get(url, cookies=cookies)
     text = get_resp_text(resp, encoding=encoding)
@@ -97,11 +102,7 @@ def get_html(url, encoding='utf-8', cookies={}, attach_raw=False):
     # 清理功能仅应在需要的时候用来调试网页（如prestige），否则可能反过来影响调试（如JavBus）
     # html = cleaner.clean_html(html)
     # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
-    if attach_raw:
-        # 部分情况下需要获得原始的request请求，但是为了统一管理网络出口，又不便在别的模块里使用requests
-        return html, resp
-    else:
-        return html
+    return html
 
 
 def resp2html(resp, encoding='utf-8'):
