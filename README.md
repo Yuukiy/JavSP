@@ -7,8 +7,10 @@
 提取影片文件名中的番号信息，自动抓取并汇总多个站点数据的 AV 元数据，按照指定的规则分类整理影片文件，并创建供 Emby、Jellyfin、Kodi 等软件使用的元数据文件
 
 ![License](https://img.shields.io/github/license/Yuukiy/JavSP)
+[![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
 ![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg)
-![Latest release](https://img.shields.io/github/v/release/Yuukiy/JavSP)
+[![Latest release](https://img.shields.io/github/v/release/Yuukiy/JavSP)](https://github.com/Yuukiy/JavSP/releases/latest)
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
 ## 功能特点
 
@@ -77,7 +79,7 @@
 
 ## 许可
 
-此项目以 GPL-3.0 License 发布。此外，如果你使用此项目，表明你还额外接受以下条款：
+此项目的所有权利与许可受 GPL-3.0 License 与 [Anti 996 License](https://github.com/996icu/996.ICU/blob/master/LICENSE_CN) 共同限制。此外，如果你使用此项目，表明你还额外接受以下条款：
 
 - 本软件仅供学习 Python 和技术交流使用
 
