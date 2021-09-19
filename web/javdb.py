@@ -37,8 +37,10 @@ def get_html_wrapper(url):
                 item = cookies_pool.pop()
                 request.cookies = item['cookies']
                 cookies_source = (item['profile'], item['site'])
-                logger.debug(f'检测到重定向，尝试使用新的Cookies: {cookies_source}')
+                logger.debug(f'检测到重定向，尝试更换Cookies为: {cookies_source}')
                 return get_html_wrapper(url)
+            else:
+                raise Exception(f'JavDB: 所有浏览器Cookies均已过期')
         else:   
             html = resp2html(r)
             return html
