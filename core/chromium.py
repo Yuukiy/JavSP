@@ -86,14 +86,19 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
     cursor = conn.cursor()
     cursor.execute(f'SELECT host_key, name, encrypted_value, expires_utc FROM cookies WHERE host_key LIKE "{host_pattern}"')
     # 将查询结果按照host_key进行组织
+    now = datetime.now()
     records = {}
     for host_key, name, encrypted_value, expires_utc in cursor.fetchall():
         d = records.setdefault(host_key, {})
-        d[name] = decrypter.decrypt(encrypted_value)
-        # d['expires'] = convert_chrome_utc(expires_utc)
+        # 只提取尚在有效期内的Cookies
+        expires = convert_chrome_utc(expires_utc)
+        if expires > now:
+            d[name] = decrypter.decrypt(encrypted_value)
+    # Cookies的核心字段是'_jdb_session'，因此如果records中缺失此字段（说明已过期），则对应的Cookies不再有效
+    valid_records = {k: v for k, v in records.items() if '_jdb_session' in v}
     conn.close()
     os.remove(temp_cookie)
-    return records
+    return valid_records
 
 
 if __name__ == "__main__":
