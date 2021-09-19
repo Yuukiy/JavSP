@@ -1,7 +1,5 @@
 import os
-import re
 import sys
-from glob import glob
 
 
 file_dir = os.path.dirname(__file__)
@@ -23,7 +21,7 @@ for i in all_crawler:
 
 
 
-def test_prepare_compare(crawler_params):
+def test_crawler(crawler_params):
     """包装函数，便于通过参数判断测试用例生成，以及负责将参数解包后进行实际调用"""
     compare(*crawler_params)
 

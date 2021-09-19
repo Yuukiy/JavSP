@@ -93,7 +93,7 @@ def parse_data(movie: MovieInfo):
     movie.genre_id = genre_id
     movie.plot = plot
     movie.preview_pics = preview_pics
-    movie.uncensored = False    # 服务器在日本且面向日本国内公开发售，只会包含无码片
+    movie.uncensored = False    # 服务器在日本且面向日本国内公开发售，不会包含无码片
 
 
 if __name__ == "__main__":
