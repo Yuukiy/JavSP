@@ -162,8 +162,8 @@ def open_in_chrome(url, new=0, autoraise=True):
     chrome = R'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
     subprocess.run(f'"{chrome}" --profile-directory="Profile 2" {url}', shell=True)
 
-# import webbrowser
-# webbrowser.open = open_in_chrome
+import webbrowser
+webbrowser.open = open_in_chrome
 
 
 if __name__ == "__main__":
