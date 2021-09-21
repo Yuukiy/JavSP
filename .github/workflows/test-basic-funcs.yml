@@ -45,3 +45,9 @@ jobs:
     - name: Test func.py
       run: |
         pytest unittest/test_func.py
+    - name: Upload log as artifact
+      uses: actions/upload-artifact@v1
+      if: ${{ always() }}
+      with:
+        name: JavSP-basic-funcs.log
+        path: JavSP.log

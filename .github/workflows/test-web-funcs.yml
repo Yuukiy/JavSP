@@ -39,3 +39,9 @@ jobs:
     - name: Test web crawlers
       run: |
         pytest unittest/test_crawlers.py
+    - name: Upload log as artifact
+      uses: actions/upload-artifact@v1
+      if: ${{ always() }}
+      with:
+        name: JavSP-web-funcs.log
+        path: JavSP.log
