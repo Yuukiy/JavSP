@@ -1,5 +1,6 @@
 import os
 import sys
+from urllib.parse import urlsplit
 
 
 file_dir = os.path.dirname(__file__)
@@ -43,7 +44,12 @@ def compare(avid, scraper, file):
     online_vars = vars(online)
     for k, v in online_vars.items():
         # 部分字段可能随时间变化，因此只要这些字段不是一方有值一方无值就行
-        if k in ['score', 'magnet'] or (scraper in ['airav', 'javdb'] and k == 'preview_video'):
+        if k in ['score', 'magnet']:
             assert bool(v) == bool(local_vars.get(k, None))
+        elif k == 'preview_video' and scraper in ['airav', 'javdb']:
+            assert bool(v) == bool(local_vars.get(k, None))
+        elif k == 'cover' and scraper == 'javbus':
+            # JavBus采用免代理域名时封面地址也会是免代理域名，因此只比较path部分即可
+            assert urlsplit(v).path == urlsplit(local_vars.get(k, None)).path
         else:
             assert v == local_vars.get(k, None)
