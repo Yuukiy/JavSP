@@ -41,8 +41,21 @@ class Request():
             self.__post = requests.post
         else:
             self.scraper = cloudscraper.create_scraper()
-            self.__get = self.scraper.get
-            self.__post = self.scraper.post
+            self.__get = self._scraper_monitor(self.scraper.get)
+            self.__post = self._scraper_monitor(self.scraper.post)
+
+    def _scraper_monitor(self, func):
+        """监控cloudscraper的工作状态，遇到不支持的Challenge时尝试退回常规的requests请求"""
+        def wrapper(*args, **kw):
+            try:
+                return func(*args, **kw)
+            except cloudscraper.exceptions.CloudflareChallengeError as e:
+                logger.debug(f"无法通过CloudFlare检测: '{e}', 尝试退回常规的requests请求")
+                if func == self.scraper.get:
+                    return requests.get(*args, **kw)
+                else:
+                    return requests.post(*args, **kw)
+        return wrapper
 
     def get(self, url, delay_raise=False):
         r = self.__get(url,
