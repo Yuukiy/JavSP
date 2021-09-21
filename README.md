@@ -9,6 +9,7 @@
 ![License](https://img.shields.io/github/license/Yuukiy/JavSP)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
 ![Python 3.8](https://img.shields.io/badge/python-3.8-green.svg)
+[![Crawlers test](https://img.shields.io/github/workflow/status/Yuukiy/JavSP/Unit%20Test:%20web-based%20functions?label=crawlers%20test)](https://github.com/Yuukiy/JavSP/actions/workflows/test-web-funcs.yml)
 [![Latest release](https://img.shields.io/github/v/release/Yuukiy/JavSP)](https://github.com/Yuukiy/JavSP/releases/latest)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
@@ -19,6 +20,7 @@
 - [x] 自动识别影片番号
 - [x] 支持处理影片分片
 - [x] 汇总多个站点的数据生成NFO数据文件
+- [x] 每天自动对站点抓取器进行测试
 - [x] 多线程并行抓取
 - [x] 下载高清封面
 - [x] 自动检查新版本
