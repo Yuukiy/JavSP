@@ -24,7 +24,7 @@ def prepare_files(files):
         folder = os.path.split(path)[0]
         if folder and (not os.path.exists(folder)):
             os.makedirs(folder)
-        with open(path, 'wt') as f:
+        with open(path, 'wt', encoding='utf-8') as f:
             f.write(path)
     yield
     rmtree(tmp_folder)
