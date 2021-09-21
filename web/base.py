@@ -30,7 +30,8 @@ cleaner = Cleaner(kill_tags=['script', 'noscript'])
 class Request():
     """作为网络请求出口并支持各个模块定制功能"""
     def __init__(self, use_scraper=False) -> None:
-        self.headers = headers
+        # 必须使用copy()，否则各个模块对headers的修改都将会指向本模块中定义的headers变量，导致只有最后一个对headers的修改生效
+        self.headers = headers.copy()
         self.cookies = {}
         self.proxies = cfg.Network.proxy
         self.timeout = cfg.Network.timeout
