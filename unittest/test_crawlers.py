@@ -59,5 +59,11 @@ def compare(avid, scraper, file):
             if v:
                 online_tmp = {name: urlsplit(url).path for name, url in v.items()}
             assert local_tmp == online_tmp
+        # 对顺序没有要求的list型字段，比较时也应该忽略顺序信息
+        elif k in ['genre', 'genre_id', 'genre_norm', 'actress']:
+            if isinstance(v, list):
+                assert sorted(v) == sorted(local_vars.get(k, []))
+            else:
+                assert v == local_vars.get(k, None)
         else:
             assert v == local_vars.get(k, None)
