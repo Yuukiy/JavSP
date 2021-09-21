@@ -1,6 +1,7 @@
 """网络请求的统一接口"""
 import os
 import sys
+import logging
 import requests
 import cloudscraper
 import lxml.html
@@ -18,6 +19,7 @@ __all__ = ['Request', 'get_html', 'post_html', 'request_get', 'resp2html', 'is_c
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36'}
 
+logger = logging.getLogger(__name__)
 # 删除js脚本相关的tag，避免网页检测到没有js运行环境时强行跳转，影响调试
 cleaner = Cleaner(kill_tags=['script', 'noscript'])
 
@@ -139,9 +141,10 @@ def is_connectable(url, timeout=3):
     """测试与指定url的连接"""
     try:
         r = requests.get(url, headers=headers, timeout=timeout)
-        r.raise_for_status()
+        logger.debug(f"Connectable: {url} HTTP {r.status_code}")
         return True
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+        logger.debug(f"Not connectable: {url}\n" + repr(e))
         return False
 
 
