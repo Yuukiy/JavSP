@@ -23,6 +23,6 @@ if platform.system() == 'Windows':
         f.write(command)
 
 hook_file = sys.argv[1]
-with open(hook_file, 'wt') as f:
+with open(hook_file, 'wt', encoding='utf-8') as f:
     f.write('import sys\n')
     f.write("setattr(sys, 'javsp_version', '" + auto_ver + "')\n")

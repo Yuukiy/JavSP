@@ -68,7 +68,7 @@ def convert_chrome_utc(chrome_utc):
 def decrypt_key(local_state):
     """从Local State文件中提取并解密出Cookies文件的密钥"""
     # Chrome 80+ 的Cookies解密方法参考自: https://stackoverflow.com/a/60423699/6415337
-    with open(local_state, 'rt') as file:
+    with open(local_state, 'rt', encoding='utf-8') as file:
         encrypted_key = json.loads(file.read())['os_crypt']['encrypted_key']
     encrypted_key = base64.b64decode(encrypted_key)                                       # Base64 decoding
     encrypted_key = encrypted_key[5:]                                                     # Remove DPAPI
@@ -103,7 +103,7 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
 
 if __name__ == "__main__":
     all_cookies = get_browsers_cookies()
-    # with open('cookies.json', 'wt') as f:
+    # with open('cookies.json', 'wt', encoding='utf-8') as f:
     #     json.dump(all_cookies, f, indent=2)
     for d in all_cookies:
         print('{:<20}{}'.format(d['profile'], d['site']))
