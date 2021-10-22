@@ -34,16 +34,16 @@ def parse_data(movie: MovieInfo):
     for _ in range(cfg.Network.retry):
         try:
             resp = request_get(url, delay_raise=True)
-            resp.raise_for_status()
-            html = resp2html(resp)
-            break
-        except Exception as e:
             # 404错误表明没有这部影片的数据，不是网络问题，因此不再重试
             if resp.status_code == 404:
                 logger.debug('JavBus无影片: ' + repr(movie))
                 break
             else:
-                logger.debug(e)
+                resp.raise_for_status()
+                html = resp2html(resp)
+                break
+        except Exception as e:
+            logger.debug(e)
     if html is not None:
         try:
             parse_data_raw(movie, html)
