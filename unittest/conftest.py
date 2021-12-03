@@ -12,6 +12,17 @@ def pytest_addoption(parser):
         "--only", action="store", default="", help="仅测试指定抓取器的数据"
     )
 
+def pytest_runtest_logreport(report):
+    """定制 short test summary info 显示格式"""
+    # report 的部分属性形如
+    # nodeid: unittest/test_crawlers.py::test_crawler[082713-417: avsox]
+    # location: ('unittest\\test_crawlers.py', 27, 'test_crawler[082713-417: avsox]')
+    # keywords: {'082713-417: avsox': 1, 'unittest/test_crawlers.py': 1, 'test_crawler[082713-417: avsox]': 1, 'JavSP': 1}
+
+    # 为test_crawlers.py定制short test summary格式
+    if 'test_crawlers.py::' in report.nodeid:
+        report.nodeid = re.sub(r'^.*::test_crawler', '', report.nodeid)
+
 
 @pytest.fixture
 def crawler(request):
