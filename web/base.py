@@ -136,7 +136,11 @@ def post_html(url, data, encoding='utf-8', cookies={}):
     resp = request_post(url, data, cookies=cookies)
     text = get_resp_text(resp, encoding=encoding)
     html = lxml.html.fromstring(text)
-    html.make_links_absolute(url, resolve_base_href=True)
+    # jav321提供ed2k形式的资源链接，其中的非ASCII字符可能导致转换失败，因此要捕获异常
+    try:
+        html.make_links_absolute(url, resolve_base_href=True)
+    except ValueError as e:
+        logger.debug(f"{str(data)}: {repr(e)}")
     # html = cleaner.clean_html(html)
     # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
     return html
