@@ -14,7 +14,8 @@ a = Analysis(['../JavSP.py'],
              datas=[
                  (cloudscraper_json, 'cloudscraper/user_agent'),
                  ("../core/config.ini", "."),
-                 ("../data/*.*", "data")
+                 ("../data/*.*", "data"),
+                 ("../image/JavSP.ico", "image")
              ],
              hiddenimports=[
                  'core/config.py'
@@ -42,4 +43,4 @@ exe = EXE(pyz,
           upx_exclude=[],
           runtime_tmpdir=None,
           console=True,
-          icon='./JavSP.ico')
+          icon='../image/JavSP.ico')

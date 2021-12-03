@@ -13,6 +13,7 @@ from colorama import Fore, Style
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
+from core.datatype import mei_path
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
@@ -25,8 +26,9 @@ logger = logging.getLogger(__name__)
 
 def select_folder(default_dir=''):
     """使用文件对话框提示用户选择一个文件夹"""
-    directory_root = Tk()
-    directory_root.withdraw()
+    window = Tk()
+    window.withdraw()
+    window.iconbitmap(mei_path('image/JavSP.ico'))
     path = filedialog.askdirectory(initialdir=default_dir)
     if path != '':
         return os.path.normpath(path)
