@@ -32,15 +32,15 @@ def parse_data(movie: MovieInfo):
     for _ in range(cfg.Network.retry):
         try:
             resp = request_get(url, cookies=cookies, delay_raise=True)
-            resp.raise_for_status()
-            html = resp2html(resp)
-            break
-        except Exception as e:
             # 500错误表明prestige没有这部影片的数据，不是网络问题，因此不再重试
             if resp.status_code == 500:
                 logger.debug('Prestige无影片: ' + repr(movie))
                 break
             else:
+                resp.raise_for_status()
+                html = resp2html(resp)
+                break
+        except Exception as e:
                 logger.debug(e)
     if html is not None:
         try:
@@ -99,6 +99,8 @@ def parse_data_raw(movie: MovieInfo, html):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     logger.setLevel(logging.DEBUG)
     movie = MovieInfo('ABP-647')
     if parse_data(movie):
