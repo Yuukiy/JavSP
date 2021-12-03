@@ -16,7 +16,6 @@ from core.chromium import get_browsers_cookies
 request = Request(use_scraper=True)
 request.headers['Accept-Language'] = 'zh-CN,zh;q=0.9,zh-TW;q=0.8,en-US;q=0.7,en;q=0.6,ja;q=0.5'
 
-cookies_source = ''
 logger = logging.getLogger(__name__)
 genre_map = GenreMap('data/genre_javdb.csv')
 permanent_url = 'https://javdb.com'
@@ -28,13 +27,15 @@ else:
 
 def get_html_wrapper(url):
     """包装外发的request请求并负责转换为可xpath的html，同时处理Cookies无效等问题"""
-    global cookies_source
+    global request
     r = request.get(url, delay_raise=True)
     if r.status_code == 200:
         # 发生重定向可能仅仅是域名重定向，因此还要检查url以判断是否被跳转到了登录页
         if r.history and '/login' in r.url:
             if len(cookies_pool) > 0:
                 item = cookies_pool.pop()
+                # 更换Cookies时需要创建新的request实例，否则cloudscraper会保留它内部第一次发起网络访问时获得的Cookies
+                request = Request(use_scraper=True)
                 request.cookies = item['cookies']
                 cookies_source = (item['profile'], item['site'])
                 logger.debug(f'检测到重定向，尝试更换Cookies为: {cookies_source}')
@@ -70,8 +71,7 @@ def get_user_info(site, cookies):
 def get_valid_cookies():
     """扫描浏览器，获取一个可用的Cookies"""
     # 经测试，Cookies所发往的域名不需要和登录时的域名保持一致，只要Cookies有效即可在多个域名间使用
-    all_cookies = get_browsers_cookies()
-    for d in all_cookies:
+    for d in cookies_pool:
         info = get_user_info(d['site'], d['cookies'])
         if info:
             return d['cookies']
@@ -164,12 +164,7 @@ def parse_clean_data(movie: MovieInfo):
             movie.title = new_title
 
 
-def init_cookies_pool():
-    """初始化Cookies池"""
-    return get_browsers_cookies()
-
-
-cookies_pool = init_cookies_pool()
+cookies_pool = get_browsers_cookies()
 
 
 if __name__ == "__main__":
