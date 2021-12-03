@@ -72,7 +72,7 @@ def parse_data(movie: MovieInfo):
         video_url = f'{base_url}/service/digitalapi/-/html5_player/=/cid={movie.cid}'
         html2 = request.get_html(video_url)
         # 目前用到js脚本的地方不多，所以不使用专门的js求值模块，先用正则提取文本然后用json解析数据
-        script = html2.xpath("//script[contains(text(),'getInstance(params)')]/text()")[0].strip()
+        script = html2.xpath("//script[contains(text(),'getElementById(\"dmmplayer\")')]/text()")[0].strip()
         match = re.search(r'\{.*\}', script)
         # 主要是为了捕捉json.loads的异常，但是也借助try-except判断是否正则表达式是否匹配
         try:
