@@ -76,11 +76,11 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                     tqdm_bar.set_description(f'{crawler_name}: 抓取完成')
                 break
             except requests.exceptions.RequestException as e:
-                logger.debug(f'{task_info}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{e}')
+                logger.debug(f'{task_info}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{repr(e)}')
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
             except Exception as e:
-                logger.exception(f'{task_info}: 未处理的异常: {e}')
+                logger.exception(f'{task_info}: 未处理的异常: {repr(e)}')
                 break
 
     # 根据影片的数据源获取对应的抓取器

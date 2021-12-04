@@ -41,14 +41,14 @@ def parse_data(movie: MovieInfo):
                 html = resp2html(resp)
                 break
         except Exception as e:
-                logger.debug(e)
+                logger.debug(repr(e))
     if html is not None:
         try:
             parse_data_raw(movie, html)
             movie.url = url
             return True
         except Exception as e:
-            logger.error('解析网页数据时出现异常: ' + str(e))
+            logger.error('解析网页数据时出现异常: ' + repr(e))
     return False
 
 

@@ -57,7 +57,7 @@ def get_user_info(site, cookies):
         request.cookies = cookies
         html = request.get_html(f'https://{site}/users/profile')
     except Exception as e:
-        logger.debug(e)
+        logger.debug(repr(e))
         return
     # 扫描浏览器得到的Cookies对应的临时域名可能会过期，因此需要先判断域名是否仍然指向JavDB的站点
     if 'JavDB' in html.text:
@@ -170,6 +170,7 @@ cookies_pool = get_browsers_cookies()
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
+    logger.setLevel(logging.DEBUG)
     movie = MovieInfo('FC2-718323')
     parse_clean_data(movie)
     print(movie)

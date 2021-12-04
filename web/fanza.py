@@ -82,7 +82,7 @@ def parse_data(movie: MovieInfo):
                 video_url = 'https:' + video_url
             movie.preview_video = video_url
         except Exception as e:
-            logger.debug('解析视频地址时异常: ' + str(e))
+            logger.debug('解析视频地址时异常: ' + repr(e))
 
     movie.url = url
     movie.title = title
@@ -97,6 +97,8 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     logger.setLevel(logging.DEBUG)
     movie = MovieInfo(cid='sqte00300')
     parse_data(movie)

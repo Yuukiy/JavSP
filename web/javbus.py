@@ -43,7 +43,7 @@ def parse_data(movie: MovieInfo):
                 html = resp2html(resp)
                 break
         except Exception as e:
-            logger.debug(e)
+            logger.debug(repr(e))
     if html is not None:
         try:
             parse_data_raw(movie, html)
@@ -51,7 +51,7 @@ def parse_data(movie: MovieInfo):
             movie.url = f'{permanent_url}/{movie.dvdid}'
             return True
         except Exception as e:
-            logger.error('解析网页数据时出现异常: ' + str(e))
+            logger.error('解析网页数据时出现异常: ' + repr(e))
     return False
 
 
@@ -129,6 +129,8 @@ def parse_clean_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     logger.setLevel(logging.DEBUG)
     movie = MovieInfo('130614-KEIKO')
     if parse_clean_data(movie):
