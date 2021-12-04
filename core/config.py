@@ -4,6 +4,7 @@ import sys
 import logging
 import argparse
 import configparser
+from shutil import copyfile
 from string import Template
 
 
@@ -84,13 +85,47 @@ class Config(configparser.ConfigParser):
             except:
                 super(Config, self).read(cfg_file)
         # 处理配置文件缺失特定字段的情况
+        missed_items = []
         for sec in builtin.sections():
             if not self.has_section(sec):
                 self.add_section(sec)
             for opt in builtin[sec]:
                 if not self.has_option(sec, opt):
                     self[sec][opt] = builtin[sec][opt]
-                    logger.warning(f'使用默认配置: {sec}:{opt}')
+                    missed_items.append(f"'{sec}:{opt}'")
+        if missed_items:
+            logger.warning('从内置文件中读取缺失的配置项: ' + ', '.join(missed_items))
+            self.update_cfg_file(cfg_file)
+
+    def update_cfg_file(self, cfg_file):
+        """将内置的配置文件作为模板，基于self重写cfg_file"""
+        ext = os.path.splitext(cfg_file)[1]
+        backup = cfg_file.replace(ext, '.bak'+ext)
+        copyfile(cfg_file, backup)
+        # 读取内置配置文件
+        with open(built_in_cfg_file, encoding='utf-8') as f:
+            builtin = f.readlines()
+        with open(cfg_file, 'wt', encoding='utf-8') as f:
+            for line in builtin:
+                # 注释行直接原样写入
+                value = line.strip()
+                if value.startswith(self._comment_prefixes):
+                    f.write(line)
+                    continue
+                # 判断section和option
+                mo = self.SECTCRE.match(value)
+                if mo:      # section
+                    sectname = mo.group('header')
+                    f.write(line)
+                else:
+                    mo = self._optcre.match(value)
+                    if mo:  # option
+                        optname, vi, optval = mo.group('option', 'vi', 'value')
+                        new_optval = self[sectname][optname]
+                        f.write("{} {} {}\n".format(optname, vi, new_optval))
+                    else:   # 空行等其他信息
+                        f.write(line)
+        logger.info('已补全配置文件中缺失的字段，原配置文件已备份到: ' + backup)
 
     def validate(self):
         """对配置中必要的项目进行验证和转换，以便于其他模块直接使用"""
