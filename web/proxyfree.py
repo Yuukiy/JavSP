@@ -73,4 +73,5 @@ def _get_javdb_urls() -> list:
 
 
 if __name__ == "__main__":
-    print(get_proxy_free_url('javdb'))
+    for site in ('avsox', 'javdb', 'javbus', 'javlib'):
+        print(site + '\t' + get_proxy_free_url(site))
