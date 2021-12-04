@@ -8,6 +8,7 @@ from shutil import copyfile
 
 import colorama
 import pretty_errors
+from colorama import Fore, Style
 from tqdm import tqdm
 
 
@@ -210,6 +211,39 @@ def postStep_videostation(movie: Movie):
         crop_poster(movie.fanart_file, samename_poster)
 
 
+def reviewMovieID(all_movies, root):
+    """人工检查每一部影片的番号"""
+    count = len(all_movies)
+    logger.info('进入手动模式检查番号: ')
+    for i, movie in enumerate(all_movies, start=1):
+        id = repr(movie)[7:-2]
+        print(f'[{i}/{count}]\t{Fore.LIGHTMAGENTA_EX}{id}{Style.RESET_ALL}, 对应文件:')
+        relpaths = [os.path.relpath(i, root) for i in movie.files]
+        print('\n'.join(['  '+i for i in relpaths]))
+        s = input("回车确认当前番号，或直接输入更正后的番号（如'ABC-123'或'cid:sqte00300'）")
+        if not s:
+            logger.info(f"已确认影片番号: {','.join(relpaths)}: {id}")
+        else:
+            s = s.strip()
+            s_lc = s.lower()
+            if s_lc.startswith(('cid:', 'cid=')):
+                new_movie = Movie(cid=s_lc[4:])
+                new_movie.data_src = 'cid'
+                new_movie.files = movie.files
+            elif s_lc.startswith('fc2'):
+                new_movie = Movie(s)
+                new_movie.data_src = 'fc2'
+                new_movie.files = movie.files
+            else:
+                new_movie = Movie(s)
+                new_movie.data_src = 'normal'
+                new_movie.files = movie.files
+            all_movies[i-1] = new_movie
+            new_id = repr(new_movie)[7:-2]
+            logger.info(f"已更正影片番号: {','.join(relpaths)}: {id} -> {new_id}")
+        print()
+
+
 def RunNormalMode(all_movies):
     """普通整理模式"""
     def check_step(result):
@@ -263,8 +297,8 @@ def RunNormalMode(all_movies):
             check_step(True)
 
             logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
-        except:
-            logger.error('整理失败\n')
+        except Exception as e:
+            logger.error(f'整理失败: {repr(e)}\n')
         finally:
             inner_bar.close()
 
@@ -336,6 +370,8 @@ if __name__ == "__main__":
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     print('')
 
+    if args.manual:
+        reviewMovieID(all_movies, root)
     RunNormalMode(all_movies)
 
     sys_exit(0)
