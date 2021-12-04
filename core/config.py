@@ -9,6 +9,11 @@ from string import Template
 
 __all__ = ['cfg', 'args', 'is_url']
 
+if getattr(sys, 'frozen', False):
+    built_in_cfg_file = os.path.join(sys._MEIPASS, 'config.ini')
+else:
+    built_in_cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+
 
 def rel_path_from_exe(path):
     """将一个相对于exe文件的路径转换为绝对路径"""
@@ -67,15 +72,25 @@ class Config(configparser.ConfigParser):
             raise KeyError(name)
         return self._sections.get(name)
 
-    def read(self, filenames, encoding='utf-8'):
+    def read_cfg(self, cfg_file):
+        builtin = Config()
+        super(Config, builtin).read(built_in_cfg_file, 'utf-8')
         # 覆盖原生的read方法，以自动处理不同的编码
         try:
-            super(Config, self).read(filenames, encoding)
+            super(Config, self).read(cfg_file, 'utf-8')
         except UnicodeDecodeError:
             try:
-                super(Config, self).read(filenames, 'utf-8-sig')
+                super(Config, self).read(cfg_file, 'utf-8-sig')
             except:
-                super(Config, self).read(filenames)
+                super(Config, self).read(cfg_file)
+        # 处理配置文件缺失特定字段的情况
+        for sec in builtin.sections():
+            if not self.has_section(sec):
+                self.add_section(sec)
+            for opt in builtin[sec]:
+                if not self.has_option(sec, opt):
+                    self[sec][opt] = builtin[sec][opt]
+                    logger.warning(f'使用默认配置: {sec}:{opt}')
 
     def validate(self):
         """对配置中必要的项目进行验证和转换，以便于其他模块直接使用"""
@@ -250,7 +265,7 @@ def parse_args():
                 logger.warning(f"已创建默认配置文件: '{cfg_file}'")
                 dump_config(cfg_file)
         else:
-            cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+            cfg_file = built_in_cfg_file
     args.config = cfg_file
     return args
 
@@ -258,8 +273,7 @@ def parse_args():
 def dump_config(out_file):
     """将内置的配置文件输出到指定路径"""
     # 使用文件读写来创建配置文件，使得创建的配置文件具有与平台相适应的换行符
-    internal_config = os.path.join(sys._MEIPASS, 'config.ini')
-    with open(internal_config, 'rt', encoding='utf-8') as f:
+    with open(built_in_cfg_file, 'rt', encoding='utf-8') as f:
         content = f.read()
     with open(out_file, 'wt', encoding='utf-8') as f:
         f.write(content)
@@ -278,13 +292,13 @@ def overwrite_cfg(cfg, args):
 
 cfg = Config()
 args = parse_args()
-cfg.read(args.config)
+cfg.read_cfg(args.config)
 # 先覆盖配置，再进行配置有效性的验证
 overwrite_cfg(cfg, args)
 try:
     cfg.validate()
-except:
-    logger.error('验证配置文件时出错。如果你更新了软件，请重命名原有的配置文件后重新运行软件以生成新的配置文件，并将你此前的配置移植到新的配置文件中。')
+except Exception as e:
+    logger.error('验证配置文件时出错: ' + repr(e))
     os.system('pause')
     sys.exit(2)
 
