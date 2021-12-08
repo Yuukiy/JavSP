@@ -41,6 +41,7 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     # thumb字段可以用来为不同的aspect强制指定图片文件名
     # 例如可以将'NoPoster.jpg'指定给'ABC-123.mp4'，而不必按照poster文件名的常规命名规则来
+    # 但是Emby不支持此特性，Jellyfin的文档和社区都比较弱，没找到相关说明，推测多半也不支持
 
     # fanart通常也是通过给fanart图片命名来匹配
     nfo.append(E.mpaa('NC-17'))     # 分级

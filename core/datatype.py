@@ -140,11 +140,9 @@ class Movie:
             move_file(fullpath, newpath)
             new_paths.append(newpath)
         else:
-            for i in range(len(self.files)):
-                fullpath = self.files[i]
+            for i, fullpath in enumerate(self.files, start=1):
                 ext = os.path.splitext(fullpath)[1]
-                cdx = f'-CD{i+1}'
-                newpath = os.path.join(self.save_dir, self.basename + cdx + ext)
+                newpath = os.path.join(self.save_dir, self.basename + f'-CD{i}' + ext)
                 move_file(fullpath, newpath)
                 new_paths.append(newpath)
         self.new_paths = new_paths

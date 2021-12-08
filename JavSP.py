@@ -169,7 +169,8 @@ def generate_names(movie: Movie):
     for k, v in d.items():
         d[k] = replace_illegal_chars(v.strip())
 
-    # 使用字典填充模板，生成相关文件的路径
+    # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
+    cdx = '' if len(movie.files) <= 1 else '-CD1'
     if hasattr(info, 'title_break'):
         copyd = d.copy()
         title_break = info.title_break
@@ -177,13 +178,13 @@ def generate_names(movie: Movie):
             copyd['title'] = ''.join(title_break[:end])
             save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**copyd)).strip()
             basename = os.path.normpath(cfg.NamingRule.filename.substitute(**copyd)).strip()
-            fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
+            fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
             if check_path_len(fanart_file):
                 movie.save_dir = save_dir
                 movie.basename = basename
-                movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
+                movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
                 movie.fanart_file = fanart_file
-                movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
+                movie.poster_file = os.path.join(save_dir, f'{basename}{cdx}-poster.jpg')
                 logger.info(f"自动截短标题为:\n{copyd['title']}")
                 break
     else:
@@ -191,9 +192,9 @@ def generate_names(movie: Movie):
         basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d)).strip()
         movie.save_dir = save_dir
         movie.basename = basename
-        movie.nfo_file = os.path.join(save_dir, f'{basename}.nfo')
-        movie.fanart_file = os.path.join(save_dir, f'{basename}-fanart.jpg')
-        movie.poster_file = os.path.join(save_dir, f'{basename}-poster.jpg')
+        movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
+        movie.fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
+        movie.poster_file = os.path.join(save_dir, f'{basename}{cdx}-poster.jpg')
     # 生成nfo文件中的影片标题
     nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
     setattr(info, 'nfo_title', nfo_title)
@@ -209,6 +210,15 @@ def postStep_videostation(movie: Movie):
         # 将fanart裁剪为png格式作为poster
         samename_poster = os.path.splitext(file)[0] + '.png'
         crop_poster(movie.fanart_file, samename_poster)
+
+
+def postStep_MultiMoviePoster(movie: Movie):
+    """为多分片的影片创建额外的poster图片"""
+    # Jellyfin将多分片影片视作CD1的附加部分，nfo文件名、fanart均使用的CD1的文件名，
+    # 只有poster是为各个分片创建的
+    for i, _ in enumerate(movie.files[1:], start=2):
+        cdx_poster = os.path.join(movie.save_dir, f'{movie.basename}-CD{i}-poster.jpg')
+        copyfile(movie.poster_file, cdx_poster)
 
 
 def reviewMovieID(all_movies, root):
@@ -291,6 +301,8 @@ def RunNormalMode(all_movies):
 
             if 'video_station' in cfg.NamingRule.media_servers:
                 postStep_videostation(movie)
+            if len(movie.files) > 1:
+                postStep_MultiMoviePoster(movie)
 
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
