@@ -10,6 +10,7 @@ IF EXIST %activate% (
 	call %activate%
 )
 
+echo JavSP version:
 python make\gen_ver_hook.py ver_hook.py
 pyinstaller --clean --noconfirm make\windows.spec
 
