@@ -16,4 +16,4 @@ PySocks==1.7.1
 pywin32-ctypes==0.2.0
 requests==2.25.1
 tqdm==4.59.0
-urllib3==1.26.3
+urllib3==1.26.5
