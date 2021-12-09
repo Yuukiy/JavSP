@@ -27,18 +27,26 @@ else:
 
 def get_html_wrapper(url):
     """包装外发的request请求并负责转换为可xpath的html，同时处理Cookies无效等问题"""
-    global request
+    global request, cookies_pool
     r = request.get(url, delay_raise=True)
     if r.status_code == 200:
         # 发生重定向可能仅仅是域名重定向，因此还要检查url以判断是否被跳转到了登录页
         if r.history and '/login' in r.url:
+            # 仅在需要时去读取Cookies
+            if 'cookies_pool' not in globals():
+                try:
+                    cookies_pool = get_browsers_cookies()
+                except Exception as e:
+                    logger.warning('获取JavDB的登录凭据时出错，你可能使用的是绿色版、修改版等非官方Chrome系浏览器')
+                    logger.debug(e, exc_info=True)
+                    cookies_pool = []
             if len(cookies_pool) > 0:
                 item = cookies_pool.pop()
                 # 更换Cookies时需要创建新的request实例，否则cloudscraper会保留它内部第一次发起网络访问时获得的Cookies
                 request = Request(use_scraper=True)
                 request.cookies = item['cookies']
                 cookies_source = (item['profile'], item['site'])
-                logger.debug(f'检测到重定向，尝试更换Cookies为: {cookies_source}')
+                logger.debug(f'未携带有效Cookies而发生重定向，尝试更换Cookies为: {cookies_source}')
                 return get_html_wrapper(url)
             else:
                 raise Exception(f'JavDB: 所有浏览器Cookies均已过期')
@@ -162,9 +170,6 @@ def parse_clean_data(movie: MovieInfo):
         if new_title != movie.title:
             movie.ori_title = movie.title
             movie.title = new_title
-
-
-cookies_pool = get_browsers_cookies()
 
 
 if __name__ == "__main__":

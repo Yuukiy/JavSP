@@ -78,8 +78,9 @@ def decrypt_key(local_state):
 
 def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
     """从cookies_file文件中查找指定站点的所有Cookies"""
-    # 复制Cookies文件到当前目录，避免直接操作原始的Cookies文件
-    temp_cookie = './Cookies'
+    # 复制Cookies文件到临时目录，避免直接操作原始的Cookies文件
+    temp_dir = os.getenv('TMPDIR', os.getenv('TEMP', os.getenv('TMP', '.')))
+    temp_cookie = os.path.join(temp_dir, 'Cookies')
     copyfile(cookies_file, temp_cookie)
     # 连接数据库进行查询
     conn = sqlite3.connect(temp_cookie)
@@ -103,8 +104,6 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
 
 if __name__ == "__main__":
     all_cookies = get_browsers_cookies()
-    # with open('cookies.json', 'wt', encoding='utf-8') as f:
-    #     json.dump(all_cookies, f, indent=2)
     for d in all_cookies:
         print('{:<20}{}'.format(d['profile'], d['site']))
 
