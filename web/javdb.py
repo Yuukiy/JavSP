@@ -88,7 +88,14 @@ def get_valid_cookies():
 
 
 def parse_data(movie: MovieInfo):
-    """解析指定番号的影片数据"""
+    """从网页抓取并解析指定番号的数据
+
+    Args:
+        movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
+
+    Returns:
+        bool: True 表示解析成功，movie中携带有效数据；否则为 False
+    """
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
     html = get_html_wrapper(f'{base_url}/search?q={movie.dvdid}')
     ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
@@ -97,7 +104,7 @@ def parse_data(movie: MovieInfo):
         new_url = movie_urls[ids.index(movie.dvdid.lower())]
     except ValueError:
         logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
-        return
+        return False
 
     html = get_html_wrapper(new_url)
     container = html.xpath("/html/body/section/div[@class='container']")[0]
@@ -157,13 +164,16 @@ def parse_data(movie: MovieInfo):
     movie.genre_id = genre_id
     movie.actress = actress
     movie.magnet = [i.replace('[javdb.com]','') for i in magnet]
+    return True
 
 
 def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
-    parse_data(movie)
+    success = parse_data(movie)
+    if not success:
+        return
     movie.genre_norm = genre_map.map(movie.genre_id)
-    movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（暗示已经完成转换）
+    movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
     # 将此功能放在各个抓取器以保持数据的一致，避免影响转换（写入nfo时的信息来自多个抓取器的汇总，数据来源一致性不好）
     if cfg.Crawler.title__remove_actor:
         new_title = remove_trail_actor_in_title(movie.title, movie.actress)
