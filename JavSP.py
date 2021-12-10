@@ -80,7 +80,8 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
             except Exception as e:
-                logger.exception(f'{task_info}: 未处理的异常: {repr(e)}')
+                logger.error(e)
+                logger.debug(e, exc_info=True)
                 break
 
     # 根据影片的数据源获取对应的抓取器

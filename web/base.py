@@ -3,8 +3,10 @@ import os
 import sys
 import logging
 import requests
+import contextlib
 import cloudscraper
 import lxml.html
+from tqdm import tqdm
 from lxml import etree
 from lxml.html.clean import Cleaner
 from requests.models import Response
@@ -82,6 +84,13 @@ class Request():
         r = self.get(url)
         html = resp2html(r)
         return html
+
+
+class DownloadProgressBar(tqdm):
+    def update_to(self, b=1, bsize=1, tsize=None):
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)
 
 
 def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
@@ -166,12 +175,34 @@ def is_connectable(url, timeout=3):
         return False
 
 
-def download(url, file):
+def urlretrieve(url, filename=None, reporthook=None, data=None):
+    """使用requests实现urlretrieve"""
+    # https://blog.csdn.net/qq_38282706/article/details/80253447
+    with contextlib.closing(requests.get(url, headers=headers,
+                                         proxies=cfg.Network.proxy, stream=True)) as r:
+        header = r.headers
+        with open(filename, 'wb+') as fp:
+            bs = 1024
+            size = -1
+            blocknum = 0
+            if "content-length" in header:
+                size = int(header["Content-Length"])    # 文件总大小（理论值）
+            if reporthook:                              # 写入前运行一次回调函数
+                reporthook(blocknum, bs, size)
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    fp.write(chunk)
+                    fp.flush()
+                    blocknum += 1
+                    if reporthook:
+                        reporthook(blocknum, bs, size)  # 每写入一次运行一次回调函数
+
+
+def download(url, output_path):
     """下载指定url的资源"""
-    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy)
-    r.raise_for_status()
-    with open(file, 'wb') as f:
-        f.write(r.content)
+    with DownloadProgressBar(unit='B', unit_scale=True,
+                             miniters=1, desc=url.split('/')[-1], leave=False) as t:
+        urlretrieve(url, filename=output_path, reporthook=t.update_to)
 
 
 def open_in_chrome(url, new=0, autoraise=True):
