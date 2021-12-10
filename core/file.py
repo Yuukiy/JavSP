@@ -152,7 +152,7 @@ def get_fmt_size(file_or_size) -> str:
     Returns:
         str: e.g. 20.21 MiB
     """
-    if isinstance(file_or_size, int):
+    if isinstance(file_or_size, (int, float)):
         size = file_or_size
     else:
         size = os.path.getsize(file_or_size)

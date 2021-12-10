@@ -322,7 +322,7 @@ def download_cover(cover_url, fanart_path, big_cover_url=None):
     for _ in range(cfg.Network.retry):
         if big_cover_url:
             try:
-                download(big_cover_url, fanart_path)
+                info = download(big_cover_url, fanart_path)
                 used_url = big_cover_url
             except requests.exceptions.HTTPError:
                 download(cover_url, fanart_path)
@@ -333,7 +333,9 @@ def download_cover(cover_url, fanart_path, big_cover_url=None):
             if used_url == big_cover_url:
                 filesize = get_fmt_size(fanart_path)
                 width, height = get_pic_size(fanart_path)
-                logger.info(f"已下载高清封面: {width}x{height}, {filesize}")
+                elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
+                speed = get_fmt_size(info['rate']) + '/s'
+                logger.info(f"已下载高清封面: {width}x{height}, {filesize} [{elapsed}, {speed}]")
             # 图片完整时直接返回
             return True
         else:
