@@ -310,7 +310,7 @@ def RunNormalMode(all_movies):
 
             logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
         except Exception as e:
-            logger.error(f'整理失败: {repr(e)}\n')
+            logger.error(f'整理失败: \n')
         finally:
             inner_bar.close()
 
@@ -376,14 +376,23 @@ if __name__ == "__main__":
     os.chdir(root)
 
     print(f'扫描影片文件...')
-    all_movies = scan_movies(root)
-    movie_count = len(all_movies)
+    recognized = scan_movies(root)
+    movie_count = len(recognized)
+    # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
+    if args.manual:
+        recognize_fail = get_failed_when_scan()
+        fail_count = len(recognize_fail)
+        if fail_count > 0:
+            reviewMovieID(recognize_fail, root)
+            movie_count += fail_count
+    else:
+        recognize_fail = []
     error_exit(movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     print('')
 
-    if args.manual:
-        reviewMovieID(all_movies, root)
-    RunNormalMode(all_movies)
+    if args.manual == 'all':
+        reviewMovieID(recognized, root)
+    RunNormalMode(recognized + recognize_fail)
 
     sys_exit(0)

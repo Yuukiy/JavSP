@@ -6,7 +6,7 @@ import logging
 from sys import platform
 from typing import List
 
-__all__ = ['scan_movies', 'get_fmt_size', 'check_path_len', 'replace_illegal_chars']
+__all__ = ['scan_movies', 'get_fmt_size', 'check_path_len', 'replace_illegal_chars', 'get_failed_when_scan']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -15,7 +15,7 @@ from core.config import cfg
 from core.datatype import Movie
 
 logger = logging.getLogger(__name__)
-
+failed_items = []
 
 
 def scan_movies(root: str) -> List[Movie]:
@@ -44,6 +44,9 @@ def scan_movies(root: str) -> List[Movie]:
                     else:
                         dic[avid] = [fullpath]
                 else:
+                    fail = Movie('无法识别番号')
+                    fail.files = [fullpath]
+                    failed_items.append(fail)
                     logger.error(f"无法提取影片番号: '{fullpath}'")
     # 检查是否有多部影片对应同一个番号
     non_slice_dup = {}  # avid: [abspath1, abspath2...]
@@ -101,6 +104,11 @@ def scan_movies(root: str) -> List[Movie]:
         logger.debug(f'影片数据源类型: {avid}: {src}')
         movies.append(mov)
     return movies
+
+
+def get_failed_when_scan():
+    """获取扫描影片过程中无法自动识别番号的条目"""
+    return failed_items
 
 
 def replace_illegal_chars(name):

@@ -274,12 +274,14 @@ def check_proxy_free_url(cfg: Config):
 
 def parse_args():
     """解析从命令行传入的参数并进行有效性验证"""
-    parser = argparse.ArgumentParser(prog='JavSP', description='汇总多站点数据的AV元数据刮削器')
+    parser = argparse.ArgumentParser(prog='JavSP', description='汇总多站点数据的AV元数据刮削器',
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-c', '--config', help='使用指定的配置文件')
     parser.add_argument('-i', '--input', help='要扫描的文件夹')
     parser.add_argument('-o', '--output', help='保存整理结果的文件夹')
     parser.add_argument('-x', '--proxy', help='代理服务器地址')
-    parser.add_argument('-m', '--manual', action='store_true', help='手动模式：由用户输入每一部影片的番号')
+    parser.add_argument('-m', '--manual', nargs='?', default=-1, 
+                        help="由用户介入番号识别过程，可选值为：\n'all': 检查所有番号\n'failed': 仅检查无法识别的番号（默认）")
     parser.add_argument('-e', '--auto-exit', action='store_true', help='运行结束后自动退出')
     parser.add_argument('-s', '--shutdown', action='store_true', help='整理完成后关机')
     # 忽略无法识别的参数，避免传入供pytest使用的参数时报错
@@ -301,6 +303,20 @@ def parse_args():
                 dump_config(cfg_file)
         else:
             cfg_file = built_in_cfg_file
+    # manual: 未传入选项时值为-1，仅传入选项时值为None，传入选项且有对应值时为对应值
+    # 为了方便使用，仅传入选项时的默认值修改为'failed'，未传入选项时修改为None
+    # raise argparse.ArgumentError('a', "invalid choice: 'aa' (choose from 1, 23)")
+    if args.manual == None:
+        args.manual = 'failed'
+    elif args.manual == -1:
+        args.manual = None
+    elif args.manual.lower() in ('all', 'failed'):
+        args.manual = args.manual.lower()
+    else:
+        # 生成与argparser类似格式的异常消息
+        msg = f"{parser.prog}: error: argument -m/--manual: invalid choice: '{args.manual}' (choose from 'all', 'failed' or leave it empty)"
+        # 使用SystemExit异常以避免显示traceback信息
+        raise SystemExit(msg)
     args.config = cfg_file
     return args
 
@@ -343,3 +359,4 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
 
     print(cfg.NamingRule.output_folder)
+    print(args)
