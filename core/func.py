@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import time
+import shutil
 import zipfile
 import logging
 import subprocess
@@ -187,6 +188,8 @@ def check_update(allow_check=True, auto_update=True):
             except Exception as e:
                 logger.warning('自动更新失败，请重启程序再试或者手动下载更新')
                 logger.debug(e, exc_info=True)
+            finally:
+                print()     # 输出空行，作为新旧程序的分隔
 
 
 def download_update(rel_info):
@@ -198,7 +201,8 @@ def download_update(rel_info):
     if rel_info.get('assets') and getattr(sys, 'frozen', False):
         down_url = rel_info['assets'][0]['browser_download_url']
         asset_name = rel_info['assets'][0]['name']
-        download(down_url, asset_name, desc='正在下载更新: '+asset_name)
+        desc = '下载更新' if shutil.get_terminal_size().columns < 120 else '下载更新: '+asset_name
+        download(down_url, asset_name, desc=desc)
         if os.path.exists(asset_name):
             # 备份原有的程序
             basepath, ext = os.path.splitext(sys.executable)
@@ -210,7 +214,10 @@ def download_update(rel_info):
             with zipfile.ZipFile(asset_name, 'r') as zip_ref:
                 zip_ref.extractall()
             logger.info('更新完成，启动新版本程序...')
-            p = subprocess.Popen(['JavSP'], start_new_session=True)
+            args = [sys.executable] + sys.argv[1:]
+            p = subprocess.Popen(args, start_new_session=True)
+            p.wait()
+            p.terminate()
             sys.exit(0)
 
 
