@@ -116,7 +116,8 @@ def check_update(allow_check=True, auto_update=True):
             info_width = max([get_actual_width(i) for i in info])
         else:
             info_width = 0
-        display_width = max(title_width, info_width) + 6
+        terminal_width = shutil.get_terminal_size().columns
+        display_width = min(max(title_width, info_width) + 6, terminal_width)
         print('=' * display_width)
         for line in title:
             print(align_center(line, display_width))
@@ -168,12 +169,17 @@ def check_update(allow_check=True, auto_update=True):
         titles.append(release_url)
         # 提取changelog消息
         try:
-            lines = data['body'].split('\r\n')
+            enable_msg_head = True
+            lines = data['body'].splitlines()
             changelog = [f'更新时间: {release_date}']
             for line in lines:
                 if line.startswith('## '):
+                    enable_msg_head = False
                     changelog.append(Style.BRIGHT + line[3:] + Style.RESET_ALL)
                 elif line.startswith('- '):
+                    enable_msg_head = False
+                    changelog.append(line)
+                elif enable_msg_head:
                     changelog.append(line)
             print_header(titles, changelog)
         except:
