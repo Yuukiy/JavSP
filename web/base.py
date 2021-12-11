@@ -198,10 +198,12 @@ def urlretrieve(url, filename=None, reporthook=None, data=None):
                         reporthook(blocknum, bs, size)  # 每写入一次运行一次回调函数
 
 
-def download(url, output_path):
+def download(url, output_path, desc=None):
     """下载指定url的资源"""
+    if not desc:
+        desc = url.split('/')[-1]
     with DownloadProgressBar(unit='B', unit_scale=True,
-                             miniters=1, desc=url.split('/')[-1], leave=False) as t:
+                             miniters=1, desc=desc, leave=False) as t:
         urlretrieve(url, filename=output_path, reporthook=t.update_to)
         info = {k: t.format_dict[k] for k in ('total', 'elapsed', 'rate')}
         return info

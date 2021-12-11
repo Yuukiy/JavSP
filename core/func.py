@@ -5,7 +5,9 @@ import os
 import re
 import sys
 import time
+import zipfile
 import logging
+import subprocess
 from datetime import datetime
 from packaging import version
 from tkinter import filedialog, Tk
@@ -104,7 +106,7 @@ def align_center(mix_str: str, total_width: int) -> str:
     return aligned_str
 
 
-def check_update(allow_check=True):
+def check_update(allow_check=True, auto_update=True):
     """检查版本更新"""
 
     def print_header(title, info=[]):
@@ -175,6 +177,41 @@ def check_update(allow_check=True):
             print_header(titles, changelog)
         except:
             print_header(titles)
+        # 尝试自动更新
+        if auto_update:
+            try:
+                logger.info('尝试自动更新到新版本: ' + latest_version + " （按'Ctrl+C'取消）")
+                download_update(data)
+            except KeyboardInterrupt:
+                logger.info('用户取消更新')
+            except Exception as e:
+                logger.warning('自动更新失败，请重启程序再试或者手动下载更新')
+                logger.debug(e, exc_info=True)
+
+
+def download_update(rel_info):
+    """下载版本更新
+
+    Args:
+        rel_info (json): 调用Github API得到的最新版的release信息
+    """
+    if rel_info.get('assets') and getattr(sys, 'frozen', False):
+        down_url = rel_info['assets'][0]['browser_download_url']
+        asset_name = rel_info['assets'][0]['name']
+        download(down_url, asset_name, desc='正在下载更新: '+asset_name)
+        if os.path.exists(asset_name):
+            # 备份原有的程序
+            basepath, ext = os.path.splitext(sys.executable)
+            backup_name = basepath + '_backup' + ext
+            if os.path.exists(backup_name):
+                os.remove(backup_name)
+            os.rename(sys.executable, backup_name)
+            # 解压下载的zip文件
+            with zipfile.ZipFile(asset_name, 'r') as zip_ref:
+                zip_ref.extractall()
+            logger.info('更新完成，启动新版本程序...')
+            p = subprocess.Popen(['JavSP'], start_new_session=True)
+            sys.exit(0)
 
 
 if __name__ == "__main__":
