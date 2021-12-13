@@ -5,7 +5,7 @@ cloudscraper==1.2.58
 colorama==0.4.4
 future==0.18.2
 idna==2.10
-lxml==4.6.3
+lxml==4.6.5
 packaging==20.9
 pefile==2019.4.18
 Pillow==8.3.2
