@@ -229,12 +229,12 @@ def validate_translation(cfg: Config):
         if trans.baidu_appid and trans.baidu_key:
             cfg.Translate.engine = engine_name
         else:
-            logger.error('使用百度翻译时，appid和key均不能留空')
+            logger.error('启用百度翻译时，appid和key均不能留空')
     elif engine_name == 'bing':
         if trans.bing_key:
             cfg.Translate.engine = engine_name
         else:
-            logger.error('使用必应翻译时，key不能留空')
+            logger.error('启用必应翻译时，key不能留空')
     elif engine_name == 'google':
         cfg.Translate.engine = engine_name
     else:
@@ -293,6 +293,7 @@ def parse_args():
         cfg_file = os.path.abspath(args.config)
         if not os.path.exists(cfg_file):
             logger.error(f"找不到指定的配置文件: '{cfg_file}'")
+            raise SystemExit()
         else:
             logger.debug(f"读取指定的配置文件: '{cfg_file}'")
     else:
