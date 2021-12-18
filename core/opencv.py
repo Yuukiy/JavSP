@@ -2,7 +2,6 @@
 import os
 import cv2
 import sys
-import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.datatype import mei_path
@@ -12,21 +11,19 @@ face_cascade = cv2.CascadeClassifier(mei_path('data/haarcascade_frontalface_defa
 
 # https://github.com/PyImageSearch/imutils/blob/master/imutils/convenience.py#L41
 def rotate_bound(image, angle):
-    # grab the dimensions of the image and then determine the
-    # center
+    # grab the dimensions of the image and then determine the center
     (h, w) = image.shape[:2]
     (cX, cY) = (w / 2, h / 2)
 
-    # grab the rotation matrix (applying the negative of the
-    # angle to rotate clockwise), then grab the sine and cosine
-    # (i.e., the rotation components of the matrix)
+    # grab the rotation matrix (applying the negative of the angle to rotate clockwise),
+    # then grab the sine and cosine (i.e., the rotation components of the matrix)
     M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-    cos = np.abs(M[0, 0])
-    sin = np.abs(M[0, 1])
+    cosine = abs(M[0, 0])
+    sine = abs(M[0, 1])
 
     # compute the new bounding dimensions of the image
-    nW = int((h * sin) + (w * cos))
-    nH = int((h * cos) + (w * sin))
+    nW = int((h * sine) + (w * cosine))
+    nH = int((h * cosine) + (w * sine))
 
     # adjust the rotation matrix to take into account translation
     M[0, 2] += (nW / 2) - cX
@@ -57,7 +54,6 @@ def detect_faces(img_path, debug=False):
 
 
 if __name__ == "__main__":
-    # import the necessary packages
     import argparse
     # construct the argument parse and parse the arguments
     ap = argparse.ArgumentParser()
