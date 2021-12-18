@@ -176,7 +176,7 @@ def generate_names(movie: Movie):
         copyd = d.copy()
         title_break = info.title_break
         for end in range(len(title_break), 0, -1):
-            copyd['title'] = ''.join(title_break[:end])
+            copyd['title'] = replace_illegal_chars(''.join(title_break[:end]))
             save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**copyd)).strip()
             basename = os.path.normpath(cfg.NamingRule.filename.substitute(**copyd)).strip()
             fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
@@ -311,7 +311,8 @@ def RunNormalMode(all_movies):
 
             logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
         except Exception as e:
-            logger.error(f'整理失败: \n')
+            logger.error(f'整理失败: {e}')
+            logger.debug(e, exc_info=True)
         finally:
             inner_bar.close()
 
