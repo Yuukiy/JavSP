@@ -13,6 +13,8 @@ from core.datatype import MovieInfo
 # 初始化Request实例
 request = Request()
 request.headers['Accept-Language'] = 'zh-TW,zh;q=0.9'
+# 近期airav服务器似乎不稳定，时好时坏，单次查询平均在17秒左右，timeout时间增加到20秒
+request.timeout = 20
 
 
 logger = logging.getLogger(__name__)
