@@ -170,35 +170,53 @@ def generate_names(movie: Movie):
     for k, v in d.items():
         d[k] = replace_illegal_chars(v.strip())
 
+    # 生成nfo文件中的影片标题
+    nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
+    setattr(info, 'nfo_title', nfo_title)
+
     # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
     cdx = '' if len(movie.files) <= 1 else '-CD1'
     if hasattr(info, 'title_break'):
-        copyd = d.copy()
         title_break = info.title_break
-        for end in range(len(title_break), 0, -1):
-            copyd['title'] = replace_illegal_chars(''.join(title_break[:end]))
-            save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**copyd)).strip()
-            basename = os.path.normpath(cfg.NamingRule.filename.substitute(**copyd)).strip()
+    else:
+        title_break = split_by_punc(d['title'])
+    if hasattr(info, 'ori_title_break'):
+        ori_title_break = info.ori_title_break
+    else:
+        ori_title_break = split_by_punc(d['rawtitle'])
+    copyd = d.copy()
+    for end in range(len(ori_title_break), 0, -1):
+        copyd['rawtitle'] = replace_illegal_chars(''.join(ori_title_break[:end]).strip())
+        for sub_end in range(len(title_break), 0, -1):
+            copyd['title'] = replace_illegal_chars(''.join(title_break[:sub_end]).strip())
+            save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+            basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd).strip())
             fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
-            if check_path_len(fanart_file):
+            remaining = get_remaining_path_len(os.path.abspath(fanart_file))
+            if remaining > 0:
                 movie.save_dir = save_dir
                 movie.basename = basename
                 movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
                 movie.fanart_file = fanart_file
                 movie.poster_file = os.path.join(save_dir, f'{basename}{cdx}-poster.jpg')
-                logger.info(f"自动截短标题为:\n{copyd['title']}")
-                break
+                if d['title'] != copyd['title']:
+                    logger.info(f"自动截短标题为:\n{copyd['title']}")
+                if d['rawtitle'] != copyd['rawtitle']:
+                    logger.info(f"自动截短原始标题为:\n{copyd['rawtitle']}")
+                return
     else:
-        save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(**d)).strip()
-        basename = os.path.normpath(cfg.NamingRule.filename.substitute(**d)).strip()
-        movie.save_dir = save_dir
-        movie.basename = basename
+        # 以防万一，当整理路径非常深或者标题起始很长一段没有标点符号时，硬性截短生成的名称
+        copyd['title'] = copyd['title'][:remaining]
+        copyd['rawtitle'] = copyd['rawtitle'][:remaining]
+        movie.save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+        movie.basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd)).strip()
         movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
         movie.fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
         movie.poster_file = os.path.join(save_dir, f'{basename}{cdx}-poster.jpg')
-    # 生成nfo文件中的影片标题
-    nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
-    setattr(info, 'nfo_title', nfo_title)
+        if d['title'] != copyd['title']:
+            logger.info(f"自动截短标题为:\n{copyd['title']}")
+        if d['rawtitle'] != copyd['rawtitle']:
+            logger.info(f"自动截短原始标题为:\n{copyd['rawtitle']}")
 
 
 def postStep_videostation(movie: Movie):

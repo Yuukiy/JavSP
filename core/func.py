@@ -20,7 +20,7 @@ from core.datatype import mei_path
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
-           'shutdown', 'CLEAR_LINE', 'check_update']
+           'shutdown', 'CLEAR_LINE', 'check_update', 'split_by_punc']
 
 
 CLEAR_LINE = '\r\x1b[K'
@@ -105,6 +105,29 @@ def align_center(mix_str: str, total_width: int) -> str:
     add_space = int((total_width - actual_width) / 2)
     aligned_str = ' ' * add_space + mix_str
     return aligned_str
+
+
+# 枚举Unicode各平面内中日韩区块及拉丁字母区块内的所有标点符号
+_punc = (
+" 　",                      # spaces
+"!\"#%&'()*,-./:;?@[\]_{}", # (0x0, 0x7f), Basic Latin
+"¡§«¶·»¿",                  # (0x80, 0xff), Latin-1 Supplement
+";·",                       # (0x370, 0x3ff), Greek and Coptic
+"‐‑‒–—―‖‗‘’‚‛“”„‟†‡•‣․‥…‧‰‱′″‴‵‶‷‸‹›※‼‽‾‿⁀⁁⁂⁃⁅⁆⁇⁈⁉⁊⁋⁌⁍⁎⁏⁐⁑⁓⁔⁕⁖⁗⁘⁙⁚⁛⁜⁝⁞",  # (0x2000, 0x206f), General Punctuation
+"、。〃〈〉《》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〽",                        # (0x3000, 0x303f), CJK Symbols and Punctuation
+"゠・",                     # (0x30a0, 0x30ff), Katakana
+"︐︑︒︓︔︕︖︗︘︙",      # (0xfe10, 0xfe1f), Vertical Forms
+"︰︱︲︳︴︵︶︷︸︹︺︻︼︽︾︿﹀﹁﹂﹃﹄﹅﹆﹇﹈﹉﹊﹋﹌﹍﹎﹏",              # (0xfe30, 0xfe4f), CJK Compatibility Forms
+# "﹐﹑﹒﹔﹕﹖﹗﹘﹙﹚﹛﹜﹝﹞﹟﹠﹡﹣﹨﹪﹫",                                  # (0xfe50, 0xfe6f), Small Form Variants
+"！＂＃％＆＇（）＊，－．／：；？＠［＼］＿｛｝｟｠｡｢｣､･",                      # (0xff00, 0xffef), Halfwidth and Fullwidth Forms
+)
+_punc_pattern = re.compile('.*?[' + ''.join(_punc) + ']')
+def split_by_punc(s):
+    """将一个字符串按照Unicode标准中的标点符号进行分割"""
+    iters = list(_punc_pattern.finditer(s))
+    ls = [s[i.span()[0]: i.span()[1]] for i in iters]
+    ls.append(s[iters[-1].span()[1]:])
+    return ls
 
 
 def check_update(allow_check=True, auto_update=True):
