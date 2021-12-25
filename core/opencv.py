@@ -59,22 +59,26 @@ def calc_origin_area(img, area, rotate, ori_size):
     (ori_h, ori_w) = ori_size
     origin_x = int(ori_w // 2 + anti_x)
     origin_y = int(ori_h // 2 + anti_y)
-    return (origin_x, origin_y)
+    # 倾斜度数大的图片，保持人脸居中会使得裁剪范围内的图像内容不平衡（如siro-4727）
+    # 因此，计算裁剪框时适当进行居中
+    crop_x = int(((ori_w // 2 + new_x) + origin_x) / 2)
+    crop_y = int(((ori_h // 2 + new_y) + origin_y) / 2)
+    return (origin_x, origin_y), (crop_x, crop_y)
 
 
 def detect_faces(img_path, debug=False):
     """检测图片中的人脸并返回第一个有效的人脸区域"""
     img = cv.imread(img_path)
-    # OpenCV的检测效果似乎受图像角度影响很大，因此要尝试旋转图片
+    # OpenCV的检测效果似乎受图像角度影响很大，因此要尝试旋转图片（顺时针为正）
     rotate_angles = (0, 10, -10, 20, -20, 30, -30, 40, -40, 50, -50, 60, -60)
     for angle in rotate_angles:
         rotated = rotate_bound(img, angle)
         grey = cv.cvtColor(rotated, cv.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(grey, 1.1, 4)
         for area in faces:
-            if isValidArea(area) and (not debug):
-                ori_pos = calc_origin_area(rotated, area, angle, img.shape[:2])
-                return ori_pos
+            if isValidArea(area):
+                face_pos, crop_pos = calc_origin_area(rotated, area, angle, img.shape[:2])
+                return face_pos, crop_pos, angle
             # 有效区域用绿框标记，无效区域用红框标记
             color = (0, 255, 0) if isValidArea(area) else (0, 0, 255)
             (x, y, w, h) = area
@@ -92,7 +96,7 @@ def detect_faces(img_path, debug=False):
 
 def crop_by_face(img_path, debug=False):
     """根据指定的人脸区域裁剪图片"""
-    (cx, cy) = detect_faces(img_path)
+    (face_cx, face_cy), (crop_cx, crop_cy), angle = detect_faces(img_path)
     img = cv.imread(img_path)
     (h, w) = img.shape[:2]
     # 按照Kodi的poster宽高比2:3来裁剪，计算裁剪位置
@@ -101,8 +105,8 @@ def crop_by_face(img_path, debug=False):
         ph = h
     else:           # 图片太“瘦”，以宽度来定裁剪高度
         (pw, ph) = (w, int(w * 3 / 2))
-    x1 = max(0, cx - pw//2)
-    y1 = max(0, cy - ph//2)
+    x1 = max(0, crop_cx - pw//2)
+    y1 = max(0, crop_cy - ph//2)
     x2 = x1 + pw
     y2 = y1 + ph
     if debug:
@@ -110,16 +114,21 @@ def crop_by_face(img_path, debug=False):
         if not os.path.exists('debug'):
             os.mkdir('debug')
         img = cv.imread(img_path)
-        cv.circle(img, (cx, cy), 100, (0,255,0), 1)
+        cv.circle(img, (face_cx, face_cy), 100, (0,255,0), 1)
         cv.rectangle(img, (x1, y1), (x2, y2-1), (0, 0, 255), 1)
         filepath, ext = os.path.splitext(img_path)
         output = 'debug/' + filepath + '_opencv' + ext
         cv.imwrite(output, img)
-    return
+    print(img_path, f'{angle}°')
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.argv.append('siro-4701.jpg')
-    for img_path in sys.argv[1:]:
-        crop_by_face(img_path, True)
+    for dirpath, dirnames, filenames in os.walk('.'):
+        for file in filenames:
+            if file.endswith('.jpg'):
+                crop_by_face(file, True)
+        break
+    # if len(sys.argv) < 2:
+    #     sys.argv.append('siro-4727.jpg')
+    # for img_path in sys.argv[1:]:
+    #     crop_by_face(img_path, True)
