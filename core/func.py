@@ -125,8 +125,11 @@ _punc_pattern = re.compile('.*?[' + ''.join(_punc) + ']')
 def split_by_punc(s):
     """将一个字符串按照Unicode标准中的标点符号进行分割"""
     iters = list(_punc_pattern.finditer(s))
-    ls = [s[i.span()[0]: i.span()[1]] for i in iters]
-    ls.append(s[iters[-1].span()[1]:])
+    if iters:
+        ls = [s[i.span()[0]: i.span()[1]] for i in iters]
+        ls.append(s[iters[-1].span()[1]:])
+    else:
+        ls = [s]
     return ls
 
 
