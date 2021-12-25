@@ -41,13 +41,13 @@ def get_browsers_cookies():
     all_browser_cookies = []
     for brw, path in user_data_dirs.items():
         user_dir = LocalAppDataDir + path
-        cookies_files = glob(user_dir+'/*/Cookies')
+        cookies_files = glob(user_dir+'/*/Cookies') + glob(user_dir+'/*/Network/Cookies')
         local_state = user_dir+'/Local State'
         if os.path.exists(local_state):
             key = decrypt_key(local_state)
             decrypter = Decrypter(key)
             for file in cookies_files:
-                profile = brw + ": " + os.path.split(os.path.dirname(file))[1]
+                profile = brw + ": " + file.split('User Data')[1].split(os.sep)[1]
                 records = get_cookies(file, decrypter)
                 if records:
                     # 将records转换为便于使用的格式
