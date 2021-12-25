@@ -16,6 +16,7 @@ pretty_errors.configure(display_link=True)
 
 
 from core.print import TqdmOut
+from core.opencv import crop_by_face
 from core.datatype import ColoredFormatter
 
 
@@ -165,7 +166,8 @@ def generate_names(movie: Movie):
     # cid中不会出现'-'，可以直接从d['num']拆分出label
     num_items = d['num'].split('-')
     d['label'] = num_items[0] if len(num_items) > 1 else '---'
-
+    # 保存label供后面判断裁剪图片的方式使用
+    setattr(info, 'label', d['label'].upper())
     # 处理字段：替换不能作为文件名的字符，移除首尾的空字符
     for k, v in d.items():
         d[k] = replace_illegal_chars(v.strip())
@@ -226,9 +228,9 @@ def postStep_videostation(movie: Movie):
         # 创建与影片同名的fanart
         samename_fanart = os.path.splitext(file)[0] + fanart_ext
         copyfile(movie.fanart_file, samename_fanart)
-        # 将fanart裁剪为png格式作为poster
+        # 将现有poster以新名字复制一份
         samename_poster = os.path.splitext(file)[0] + '.png'
-        crop_poster(movie.fanart_file, samename_poster)
+        crop_poster(movie.poster_file, samename_poster)
 
 
 def postStep_MultiMoviePoster(movie: Movie):
@@ -314,8 +316,12 @@ def RunNormalMode(all_movies):
             success = download_cover(movie.info.cover, movie.fanart_file, movie.info.big_cover)
             check_step(success)
 
-            inner_bar.set_description('裁剪海报封面')
-            crop_poster(movie.fanart_file, movie.poster_file)
+            if cfg.Picture.use_ai_crop and movie.info.label in cfg.Picture.use_ai_crop_labels:
+                inner_bar.set_description('基于人脸探测裁剪海报封面')
+                crop_by_face(movie.fanart_file, movie.poster_file)
+            else:
+                inner_bar.set_description('裁剪海报封面')
+                crop_poster(movie.fanart_file, movie.poster_file)
             check_step(True)
 
             if 'video_station' in cfg.NamingRule.media_servers:

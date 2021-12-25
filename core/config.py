@@ -174,6 +174,9 @@ def norm_tuples(cfg: Config):
     # required_keys: 转换为元组
     items = cfg.Crawler.required_keys.split(',')
     cfg.Crawler.required_keys = tuple(items)
+    # use_ai_crop_labels: 转换为元祖
+    items = cfg.Picture.use_ai_crop_labels.upper().split(',')
+    cfg.Picture.use_ai_crop_labels = tuple(items)
 
 
 def norm_boolean(cfg: Config):
@@ -183,6 +186,7 @@ def norm_boolean(cfg: Config):
             ('Crawler', 'title__remove_actor'),
             ('Crawler', 'title__chinese_first'),
             ('Picture', 'use_big_cover'),
+            ('Picture', 'use_ai_crop'),
             ('NFO', 'add_genre_to_tag'),
             ('Other', 'check_update'),
             ('Other', 'auto_update')

@@ -7,6 +7,8 @@ import math
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.datatype import mei_path
 
+__all__ = ['crop_by_face']
+
 face_cascade = cv.CascadeClassifier(mei_path('data/haarcascade_frontalface_default.xml'))
 
 
@@ -94,7 +96,7 @@ def detect_faces(img_path, debug=False):
             cv.waitKey(0)
 
 
-def crop_by_face(img_path, debug=False):
+def crop_by_face(img_path, out_path, debug=False):
     """根据指定的人脸区域裁剪图片"""
     (face_cx, face_cy), (crop_cx, crop_cy), angle = detect_faces(img_path)
     img = cv.imread(img_path)
@@ -109,26 +111,27 @@ def crop_by_face(img_path, debug=False):
     y1 = max(0, crop_cy - ph//2)
     x2 = x1 + pw
     y2 = y1 + ph
+    # 裁剪图片
+    crop = img[y1:y2, x1:x2]
+    cv.imwrite(out_path, crop)
     if debug:
         # 绿线标注检测到的人脸位置，红框标注裁剪区域
         if not os.path.exists('debug'):
             os.mkdir('debug')
-        img = cv.imread(img_path)
         cv.circle(img, (face_cx, face_cy), 100, (0,255,0), 1)
         cv.rectangle(img, (x1, y1), (x2, y2-1), (0, 0, 255), 1)
         filepath, ext = os.path.splitext(img_path)
         output = 'debug/' + filepath + '_opencv' + ext
         cv.imwrite(output, img)
-    print(img_path, f'{angle}°')
 
 
 if __name__ == "__main__":
-    for dirpath, dirnames, filenames in os.walk('.'):
-        for file in filenames:
-            if file.endswith('.jpg'):
-                crop_by_face(file, True)
-        break
-    # if len(sys.argv) < 2:
-    #     sys.argv.append('siro-4727.jpg')
-    # for img_path in sys.argv[1:]:
-    #     crop_by_face(img_path, True)
+    if len(sys.argv) < 2:
+        for dirpath, dirnames, filenames in os.walk('.'):
+            for file in filenames:
+                if file.endswith('.jpg'):
+                    crop_by_face(file, 'debug/output.jpg', True)
+            break
+    else:
+        for img_path in sys.argv[1:]:
+            crop_by_face(img_path, 'debug/output.jpg', True)
