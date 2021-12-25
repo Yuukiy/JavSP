@@ -308,7 +308,8 @@ def RunNormalMode(all_movies):
             
             inner_bar.set_description('移动影片文件')
             generate_names(movie)
-            os.makedirs(movie.save_dir)
+            if not os.path.exists(movie.save_dir):
+                os.makedirs(movie.save_dir)
             movie.rename_files()
             check_step(True)
 
@@ -317,8 +318,14 @@ def RunNormalMode(all_movies):
             check_step(success)
 
             if cfg.Picture.use_ai_crop and movie.info.label in cfg.Picture.use_ai_crop_labels:
-                inner_bar.set_description('基于人脸探测裁剪海报封面')
-                crop_by_face(movie.fanart_file, movie.poster_file)
+                try:
+                    crop_by_face(movie.fanart_file, movie.poster_file)
+                    inner_bar.set_description('基于人脸识别裁剪海报封面')
+                except Exception as e:
+                    logger.warning('人脸识别失败，回退到常规裁剪方法')
+                    logger.debug(e, exc_info=True)
+                    inner_bar.set_description('裁剪海报封面')
+                    crop_poster(movie.fanart_file, movie.poster_file)
             else:
                 inner_bar.set_description('裁剪海报封面')
                 crop_poster(movie.fanart_file, movie.poster_file)

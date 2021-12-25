@@ -76,7 +76,8 @@ def write_nfo(info: MovieInfo, nfo_file):
         nfo.append(E.premiered(info.publish_date))
 
     # 原文是 Production studio: 因此这里写入的是影片制作商
-    nfo.append(E.studio(info.producer))
+    if info.producer:
+        nfo.append(E.studio(info.producer))
 
     # trailer 预告片
     if info.preview_video:

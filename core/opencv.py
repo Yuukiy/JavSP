@@ -3,6 +3,7 @@ import os
 import cv2 as cv
 import sys
 import math
+import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.datatype import mei_path
@@ -10,6 +11,25 @@ from core.datatype import mei_path
 __all__ = ['crop_by_face']
 
 face_cascade = cv.CascadeClassifier(mei_path('data/haarcascade_frontalface_default.xml'))
+logger = logging.getLogger(__name__)
+
+
+def imread_safe(filename, *args, **kwargs):
+    """包装cv2.imread方法以处理读取失败的问题"""
+    path = os.path.normpath(os.path.abspath(filename))
+    cwd = os.getcwd()
+    dirpath, basename = os.path.split(path)
+    try:
+        os.chdir(dirpath)
+        rtn = cv.imread(basename, *args, **kwargs)
+        if rtn is None:
+            logger.error('OpenCV reads image failed for unknown reason')
+            logger.debug(filename)
+        return rtn
+    except Exception as e:
+        logger.debug(e, exc_info=True)
+    finally:
+        os.chdir(cwd)
 
 
 # https://github.com/PyImageSearch/imutils/blob/master/imutils/convenience.py#L41
@@ -68,9 +88,8 @@ def calc_origin_area(img, area, rotate, ori_size):
     return (origin_x, origin_y), (crop_x, crop_y)
 
 
-def detect_faces(img_path, debug=False):
+def detect_faces(img, debug=False):
     """检测图片中的人脸并返回第一个有效的人脸区域"""
-    img = cv.imread(img_path)
     # OpenCV的检测效果似乎受图像角度影响很大，因此要尝试旋转图片（顺时针为正）
     rotate_angles = (0, 10, -10, 20, -20, 30, -30, 40, -40, 50, -50, 60, -60)
     for angle in rotate_angles:
@@ -80,7 +99,7 @@ def detect_faces(img_path, debug=False):
         for area in faces:
             if isValidArea(area):
                 face_pos, crop_pos = calc_origin_area(rotated, area, angle, img.shape[:2])
-                return face_pos, crop_pos, angle
+                return face_pos, crop_pos
             # 有效区域用绿框标记，无效区域用红框标记
             color = (0, 255, 0) if isValidArea(area) else (0, 0, 255)
             (x, y, w, h) = area
@@ -98,8 +117,8 @@ def detect_faces(img_path, debug=False):
 
 def crop_by_face(img_path, out_path, debug=False):
     """根据指定的人脸区域裁剪图片"""
-    (face_cx, face_cy), (crop_cx, crop_cy), angle = detect_faces(img_path)
-    img = cv.imread(img_path)
+    img = imread_safe(img_path)
+    (face_cx, face_cy), (crop_cx, crop_cy) = detect_faces(img)
     (h, w) = img.shape[:2]
     # 按照Kodi的poster宽高比2:3来裁剪，计算裁剪位置
     pw = int(h * 2 / 3)
