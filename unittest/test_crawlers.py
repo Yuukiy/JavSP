@@ -47,34 +47,38 @@ def compare(avid, scraper, file):
         online = MovieInfo(cid=avid)
     parse_data = getattr(sys.modules[f'web.{scraper}'], 'parse_data')
     parse_data(online)
-    ## 取消下面两行注释可以用来更新已有的测试数据
-    # online.dump(file)
-    # return
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
     local_vars = vars(local)
     online_vars = vars(online)
-    for k, v in online_vars.items():
-        # 部分字段可能随时间变化，因此只要这些字段不是一方有值一方无值就行
-        if k in ['score', 'magnet']:
-            assert bool(v) == bool(local_vars.get(k, None))
-        elif k == 'preview_video' and scraper in ['airav', 'javdb']:
-            assert bool(v) == bool(local_vars.get(k, None))
-        # JavBus采用免代理域名时图片地址也会是免代理域名，因此只比较path部分即可
-        elif k == 'cover' and scraper == 'javbus':
-            assert urlsplit(v).path == urlsplit(local_vars.get(k, None)).path
-        elif k == 'actress_pics' and scraper == 'javbus':
-            local_tmp = online_tmp = {}
-            local_pics = local_vars.get('actress_pics')
-            if local_pics:
-                local_tmp = {name: urlsplit(url).path for name, url in local_pics.items()}
-            if v:
-                online_tmp = {name: urlsplit(url).path for name, url in v.items()}
-            assert local_tmp == online_tmp
-        # 对顺序没有要求的list型字段，比较时也应该忽略顺序信息
-        elif k in ['genre', 'genre_id', 'genre_norm', 'actress']:
-            if isinstance(v, list):
-                assert sorted(v) == sorted(local_vars.get(k, []))
+    try:
+        for k, v in online_vars.items():
+            # 部分字段可能随时间变化，因此只要这些字段不是一方有值一方无值就行
+            if k in ['score', 'magnet']:
+                assert bool(v) == bool(local_vars.get(k, None))
+            elif k == 'preview_video' and scraper in ['airav', 'javdb']:
+                assert bool(v) == bool(local_vars.get(k, None))
+            # JavBus采用免代理域名时图片地址也会是免代理域名，因此只比较path部分即可
+            elif k == 'cover' and scraper == 'javbus':
+                assert urlsplit(v).path == urlsplit(local_vars.get(k, None)).path
+            elif k == 'actress_pics' and scraper == 'javbus':
+                local_tmp = online_tmp = {}
+                local_pics = local_vars.get('actress_pics')
+                if local_pics:
+                    local_tmp = {name: urlsplit(url).path for name, url in local_pics.items()}
+                if v:
+                    online_tmp = {name: urlsplit(url).path for name, url in v.items()}
+                assert local_tmp == online_tmp
+            # 对顺序没有要求的list型字段，比较时也应该忽略顺序信息
+            elif k in ['genre', 'genre_id', 'genre_norm', 'actress']:
+                if isinstance(v, list):
+                    assert sorted(v) == sorted(local_vars.get(k, []))
+                else:
+                    assert v == local_vars.get(k, None)
             else:
                 assert v == local_vars.get(k, None)
-        else:
-            assert v == local_vars.get(k, None)
+    except AssertionError:
+        # 本地运行时更新已有的测试数据，方便利用版本控制系统检查差异项
+        if not os.getenv('GITHUB_ACTIONS'):
+            online.dump(file)
+        raise
+
