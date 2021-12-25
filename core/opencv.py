@@ -92,16 +92,30 @@ def detect_faces(img_path, debug=False):
 
 def crop_by_face(img_path, debug=False):
     """根据指定的人脸区域裁剪图片"""
-    face_center = detect_faces(img_path)
+    (cx, cy) = detect_faces(img_path)
+    img = cv.imread(img_path)
+    (h, w) = img.shape[:2]
+    # 按照Kodi的poster宽高比2:3来裁剪，计算裁剪位置
+    pw = int(h * 2 / 3)
+    if pw <= w:     # poster_size = (pw, h)
+        ph = h
+    else:           # 图片太“瘦”，以宽度来定裁剪高度
+        (pw, ph) = (w, int(w * 3 / 2))
+    x1 = max(0, cx - pw//2)
+    y1 = max(0, cy - ph//2)
+    x2 = x1 + pw
+    y2 = y1 + ph
     if debug:
+        # 绿线标注检测到的人脸位置，红框标注裁剪区域
         if not os.path.exists('debug'):
             os.mkdir('debug')
         img = cv.imread(img_path)
-        cv.circle(img, face_center, 100, (0,255,0), 1)
+        cv.circle(img, (cx, cy), 100, (0,255,0), 1)
+        cv.rectangle(img, (x1, y1), (x2, y2-1), (0, 0, 255), 1)
         filepath, ext = os.path.splitext(img_path)
         output = 'debug/' + filepath + '_opencv' + ext
         cv.imwrite(output, img)
-    return face_center
+    return
 
 
 if __name__ == "__main__":
