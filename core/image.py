@@ -23,7 +23,13 @@ def crop_poster(fanart_file, poster_file):
     fanart_w, fanart_h = fanart.size
     # 1.42 = 2535/1785（高清封面）, 539/379（普通封面）
     poster_w = int(fanart_h / 1.42)
-    box = (fanart_w-poster_w, 0, fanart_w, fanart_h)
+    if poster_w <= fanart_w:
+        poster_h = fanart_h
+    else:
+        # 图片太“瘦”时以宽度来定裁剪高度
+        poster_w, poster_h = fanart_w, int(fanart_w * 1.42)
+    # (left, upper, right, lower)
+    box = (fanart_w-poster_w, 0, fanart_w, poster_h)
     poster = fanart.crop(box)
     # quality: from doc, default is 75, values above 95 should be avoided
     poster.save(poster_file, quality=95)
@@ -33,3 +39,14 @@ def get_pic_size(pic_file):
     """获取图片文件的分辨率"""
     pic = Image.open(pic_file)
     return pic.size
+
+
+if __name__ == "__main__":
+    import os, sys
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    for file in sys.argv[1:]:
+        if os.path.exists(file):
+            base, ext = os.path.splitext(file)
+            poster = base.replace('_fanart', '') + '_poster' + ext
+            crop_poster(file, poster)

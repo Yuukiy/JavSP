@@ -146,8 +146,8 @@ def crop_by_face(img_path, out_path, debug=False):
         ph = h
     else:           # 图片太“瘦”，以宽度来定裁剪高度
         (pw, ph) = (w, int(w * 3 / 2))
-    x1 = max(0, crop_cx - pw//2)
-    y1 = max(0, crop_cy - ph//2)
+    x1 = min(max(0, crop_cx - pw//2), w-pw)
+    y1 = min(max(0, crop_cy - ph//2), h-ph)
     x2 = x1 + pw
     y2 = y1 + ph
     # 裁剪图片
