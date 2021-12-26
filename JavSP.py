@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import logging
@@ -305,7 +306,7 @@ def RunNormalMode(all_movies):
                 inner_bar.set_description('翻译影片信息')
                 success = translate_movie_info(movie.info)
                 check_step(success)
-            
+
             inner_bar.set_description('移动影片文件')
             generate_names(movie)
             if not os.path.exists(movie.save_dir):
@@ -317,7 +318,10 @@ def RunNormalMode(all_movies):
             success = download_cover(movie.info.cover, movie.fanart_file, movie.info.big_cover)
             check_step(success)
 
-            if cfg.Picture.use_ai_crop and movie.info.label in cfg.Picture.use_ai_crop_labels:
+            if cfg.Picture.use_ai_crop and (
+                    movie.info.label in cfg.Picture.use_ai_crop_labels or
+                (R'\d' in cfg.Picture.use_ai_crop_labels
+                 and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
                 try:
                     crop_by_face(movie.fanart_file, movie.poster_file)
                     inner_bar.set_description('基于人脸识别裁剪海报封面')
