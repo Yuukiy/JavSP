@@ -14,18 +14,35 @@ face_cascade = cv.CascadeClassifier(mei_path('data/haarcascade_frontalface_defau
 logger = logging.getLogger(__name__)
 
 
-def imread_safe(filename, *args, **kwargs):
+def imread_safe(filepath, *args, **kwargs):
     """包装cv2.imread方法以处理读取失败的问题"""
-    path = os.path.normpath(os.path.abspath(filename))
+    abspath = os.path.normpath(os.path.abspath(filepath))
     cwd = os.getcwd()
-    dirpath, basename = os.path.split(path)
+    dirpath, basename = os.path.split(abspath)
     try:
         os.chdir(dirpath)
         rtn = cv.imread(basename, *args, **kwargs)
         if rtn is None:
-            logger.error('OpenCV reads image failed for unknown reason')
-            logger.debug(filename)
+            logger.error('OpenCV reading image failed for unknown reason')
+            logger.debug(abspath)
         return rtn
+    except Exception as e:
+        logger.debug(e, exc_info=True)
+    finally:
+        os.chdir(cwd)
+
+
+def imwrite_safe(filepath, img, *args, **kwargs):
+    """包装cv2.imwrite方法以处理读取失败的问题"""
+    abspath = os.path.normpath(os.path.abspath(filepath))
+    cwd = os.getcwd()
+    dirpath, basename = os.path.split(abspath)
+    try:
+        os.chdir(dirpath)
+        cv.imwrite(basename, img, *args, **kwargs)
+        if not os.path.exists(abspath):
+            logger.error('OpenCV writing image failed for unknown reason')
+            logger.debug(abspath)
     except Exception as e:
         logger.debug(e, exc_info=True)
     finally:
@@ -118,7 +135,10 @@ def detect_faces(img, debug=False):
 def crop_by_face(img_path, out_path, debug=False):
     """根据指定的人脸区域裁剪图片"""
     img = imread_safe(img_path)
-    (face_cx, face_cy), (crop_cx, crop_cy) = detect_faces(img)
+    results = detect_faces(img)
+    if not results:
+        raise Exception('未在图片中检测到人脸: ' + img_path)
+    (face_cx, face_cy), (crop_cx, crop_cy) = results
     (h, w) = img.shape[:2]
     # 按照Kodi的poster宽高比2:3来裁剪，计算裁剪位置
     pw = int(h * 2 / 3)
@@ -132,19 +152,22 @@ def crop_by_face(img_path, out_path, debug=False):
     y2 = y1 + ph
     # 裁剪图片
     crop = img[y1:y2, x1:x2]
-    cv.imwrite(out_path, crop)
+    imwrite_safe(out_path, crop)
+    logger.debug('使用人脸识别裁剪图片: ' + out_path)
     if debug:
         # 绿线标注检测到的人脸位置，红框标注裁剪区域
         if not os.path.exists('debug'):
             os.mkdir('debug')
         cv.circle(img, (face_cx, face_cy), 100, (0,255,0), 1)
         cv.rectangle(img, (x1, y1), (x2, y2-1), (0, 0, 255), 1)
-        filepath, ext = os.path.splitext(img_path)
+        filepath, ext = os.path.splitext(os.path.basename(img_path))
         output = 'debug/' + filepath + '_opencv' + ext
-        cv.imwrite(output, img)
+        imwrite_safe(output, img)
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     if len(sys.argv) < 2:
         for dirpath, dirnames, filenames in os.walk('.'):
             for file in filenames:

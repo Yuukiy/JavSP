@@ -322,7 +322,7 @@ def RunNormalMode(all_movies):
                     crop_by_face(movie.fanart_file, movie.poster_file)
                     inner_bar.set_description('基于人脸识别裁剪海报封面')
                 except Exception as e:
-                    logger.warning('人脸识别失败，回退到常规裁剪方法')
+                    logger.info('人脸识别失败，回退到常规裁剪方法')
                     logger.debug(e, exc_info=True)
                     inner_bar.set_description('裁剪海报封面')
                     crop_poster(movie.fanart_file, movie.poster_file)
