@@ -54,7 +54,24 @@ def parse_data(movie: MovieInfo):
     if match:
         score = float(match.group()) * 2
         movie.score = f'{score:.2f}'
-    plot = container.xpath("//p[@class='txt introduction']/text()")[0]
+    # plot可能含有嵌套格式，为了保留plot中的换行关系，手动处理plot中的各个标签
+    plots = []
+    plot_p_tags = container.xpath("//dl[@id='introduction']/dd/p[not(@class='more')]")
+    for p in plot_p_tags:
+        children = p.getchildren()
+        # 没有children时表明plot不含有格式，此时简单地提取文本就可以
+        if not children:
+            plots.append(p.text_content())
+            continue
+        for child in children:
+            if child.tag == 'br' and plots[-1] != '\n':
+                plots.append('\n')
+            else:
+                if child.text:
+                    plots.append(child.text)
+                if child.tail:
+                    plots.append(child.tail)
+    plot = ''.join(plots).strip()
     preview_pics = container.xpath("//a[@class='sample_image']/@href")
 
     if cfg.Crawler.hardworking_mode:
@@ -83,6 +100,8 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    movie = MovieInfo('SIRO-3093')
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    movie = MovieInfo('SIRO-4718')
     parse_data(movie)
     print(movie)
