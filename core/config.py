@@ -29,6 +29,17 @@ def rel_path_from_exe(path):
     return abs_path
 
 
+def gen_backup_path(path):
+    """为给定文件生成一个备份路径（必要时增加序号以避免覆盖现有文件）"""
+    abspath = os.path.abspath(path)
+    backup_path = abspath + '.bak'
+    i = 1
+    while os.path.exists(backup_path):
+        backup_path = abspath + '.' + str(i) + '.bak'
+        i += 1
+    return backup_path
+
+
 def log_filter(record):
     """只接受JavSP自身的日志，排除所依赖的库的日志"""
     rname = record.name
@@ -77,13 +88,21 @@ class Config(configparser.ConfigParser):
         builtin = Config()
         super(Config, builtin).read(built_in_cfg_file, 'utf-8')
         # 覆盖原生的read方法，以自动处理不同的编码
-        try:
-            super(Config, self).read(cfg_file, 'utf-8')
-        except UnicodeDecodeError:
+        for encoding in ('utf-8-sig', 'utf-8', None):
             try:
-                super(Config, self).read(cfg_file, 'utf-8-sig')
-            except:
-                super(Config, self).read(cfg_file)
+                super(Config, self).read(cfg_file, encoding)
+                break
+            except Exception:
+                # 编码问题不一定报 UnicodeDecodeError, 因此要捕获所有异常
+                logger.debug('解析配置文件时出错', exc_info=True)
+        else:
+            backup = gen_backup_path(cfg_file)
+            copyfile(cfg_file, backup)
+            dump_config(cfg_file)
+            logger.warning('解析配置文件时出错，已重新生成配置文件')
+            logger.info('原配置文件已备份到: ' + backup)
+            # 直接退出，以便用户对生成的配置文件进行修改
+            raise SystemExit()
         # 处理配置文件缺失特定字段的情况
         missed_items = []
         for sec in builtin.sections():
@@ -94,13 +113,12 @@ class Config(configparser.ConfigParser):
                     self[sec][opt] = builtin[sec][opt]
                     missed_items.append(f"'{sec}:{opt}'")
         if missed_items:
-            logger.warning('从内置文件中读取缺失的配置项: ' + ', '.join(missed_items))
+            logger.warning('使用默认配置补全缺失的配置项: ' + ', '.join(missed_items))
             self.update_cfg_file(cfg_file)
 
     def update_cfg_file(self, cfg_file):
         """将内置的配置文件作为模板，基于self重写cfg_file"""
-        ext = os.path.splitext(cfg_file)[1]
-        backup = cfg_file.replace(ext, '.bak'+ext)
+        backup = gen_backup_path(cfg_file)
         copyfile(cfg_file, backup)
         # 读取内置配置文件
         with open(built_in_cfg_file, encoding='utf-8') as f:
@@ -125,7 +143,7 @@ class Config(configparser.ConfigParser):
                         f.write("{} {} {}\n".format(optname, vi, new_optval))
                     else:   # 空行等其他信息
                         f.write(line)
-        logger.info('已补全配置文件中缺失的字段，原配置文件已备份到: ' + backup)
+        logger.info('原配置文件已备份到: ' + backup)
 
     def validate(self):
         """对配置中必要的项目进行验证和转换，以便于其他模块直接使用"""
