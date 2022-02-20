@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
+from web.proxyfree import get_proxy_free_url
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -16,10 +17,26 @@ request = Request(use_scraper=True)
 
 logger = logging.getLogger(__name__)
 permanent_url = 'https://www.javlibrary.com'
-if cfg.Network.proxy:
-    base_url = permanent_url
-else:
-    base_url = cfg.ProxyFree.javlib
+
+
+def init_network_cfg():
+    """设置合适的代理模式和base_url"""
+    proxy_free_url = get_proxy_free_url('javlib')
+    urls = [cfg.ProxyFree.javlib, permanent_url]
+    if proxy_free_url and proxy_free_url not in urls:
+        urls.insert(1, proxy_free_url)
+    # 使用代理容易触发IUAM保护，先尝试不使用代理访问
+    proxy_cfgs = [{}, cfg.Network.proxy] if cfg.Network.proxy else [{}]
+    for proxies in proxy_cfgs:
+        request.proxies = proxies
+        for url in urls:
+            resp = request.get(url, delay_raise=True)
+            if resp.status_code == 200:
+                return url
+    logger.warning('无法绕开JavLib的反爬机制')
+    return permanent_url
+
+base_url = init_network_cfg()
 
 
 # TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
@@ -39,7 +56,7 @@ def parse_data(movie: MovieInfo):
             base_url = 'https://' + urlsplit(resp.url).netloc
             logger.warning(f"请将配置文件中的JavLib免代理地址更新为: {base_url}")
             return parse_data(movie)
-    else:               # 如果有多个搜索结果则不会自动跳转，此时需要程序介入选择搜索结果
+    else:   # 如果有多个搜索结果则不会自动跳转，此时需要程序介入选择搜索结果
         video_tags = html.xpath("//div[@class='video'][@id]/a")
         # 通常第一部影片就是我们要找的，但是以免万一还是遍历所有搜索结果
         pre_choose = []
