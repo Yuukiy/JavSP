@@ -1,4 +1,6 @@
 import os
+import urllib3
+urllib3.disable_warnings()
 import re
 import sys
 import time

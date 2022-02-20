@@ -95,7 +95,7 @@ class DownloadProgressBar(tqdm):
 
 def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
     """获取指定url的原始请求"""
-    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
+    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout, verify=False)
     if not delay_raise:
         r.raise_for_status()
     return r
