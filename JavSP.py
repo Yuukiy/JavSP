@@ -46,6 +46,8 @@ def import_crawlers(cfg):
     unknown_mods = []
     for typ, cfg_str in cfg.CrawlerSelect.items():
         mods = cfg_str.split(',')
+        if 'airav' in mods:
+            mods.sort(key=lambda x:x=='airav', reverse=cfg.Crawler.title__chinese_first)
         valid_mods = []
         for name in mods:
             try:
