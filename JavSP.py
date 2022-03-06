@@ -123,17 +123,34 @@ def info_summary(movie: Movie, all_info):
     # parser直接更新了all_info中的项目，而初始all_info是按照优先级生成的，已经符合配置的优先级顺序了
     # 按照优先级取出各个爬虫获取到的信息
     attrs = [i for i in dir(final_info) if not i.startswith('_')]
+    covers, big_covers = [], []
     for name, data in all_info.items():
         absorbed = []
         # 遍历所有属性，如果某一属性当前值为空而爬取的数据中含有该属性，则采用爬虫的属性
         for attr in attrs:
-            current = getattr(final_info, attr)
             incoming = getattr(data, attr)
-            if (not current) and (incoming):
-                setattr(final_info, attr, incoming)
-                absorbed.append(attr)
+            if attr == 'cover':
+                if incoming and (incoming not in covers):
+                    covers.append(incoming)
+                    absorbed.append(attr)
+            elif attr == 'big_cover':
+                if incoming and (incoming not in big_covers):
+                    big_covers.append(incoming)
+                    absorbed.append(attr)
+            else:
+                current = getattr(final_info, attr)
+                if (not current) and (incoming):
+                    setattr(final_info, attr, incoming)
+                    absorbed.append(attr)
         if absorbed:
             logger.debug(f"从'{name}'中获取了字段: " + ' '.join(absorbed))
+    setattr(final_info, 'covers', covers)
+    setattr(final_info, 'big_covers', big_covers)
+    # 对cover和big_cover赋值，避免后续检查必须字段时出错
+    if covers:
+        final_info.cover = covers[0]
+    if big_covers:
+        final_info.big_cover = big_covers[0]
     ########## 部分字段放在最后进行检查 ##########
     # title
     if cfg.Crawler.title__chinese_first and 'airav' in all_info:
@@ -317,8 +334,14 @@ def RunNormalMode(all_movies):
             check_step(True)
 
             inner_bar.set_description('下载封面图片')
-            success = download_cover(movie.info.cover, movie.fanart_file, movie.info.big_cover)
-            check_step(success)
+            if cfg.Picture.use_big_cover:
+                cover = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
+            else:
+                cover = download_cover(movie.info.covers, movie.fanart_file)
+            check_step(cover)
+            # 确保实际下载的封面的url与即将写入到movie.info中的一致
+            if cover and cover != movie.info.cover:
+                movie.info.cover = cover
 
             if cfg.Picture.use_ai_crop and (
                     movie.info.label in cfg.Picture.use_ai_crop_labels or
@@ -354,34 +377,39 @@ def RunNormalMode(all_movies):
             inner_bar.close()
 
 
-def download_cover(cover_url, fanart_path, big_cover_url=None):
+def download_cover(covers, fanart_path, big_covers=[]):
     """下载封面图片"""
-    used_url = cover_url
-    for _ in range(cfg.Network.retry):
-        if big_cover_url:
+    # 优先下载高清封面
+    for url in big_covers:
+        for _ in range(cfg.Network.retry):
             try:
-                info = download(big_cover_url, fanart_path)
-                used_url = big_cover_url
+                info = download(url, fanart_path)
+                if valid_pic(fanart_path):
+                    filesize = get_fmt_size(fanart_path)
+                    width, height = get_pic_size(fanart_path)
+                    elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
+                    speed = get_fmt_size(info['rate']) + '/s'
+                    logger.info(f"已下载高清封面: {width}x{height}, {filesize} [{elapsed}, {speed}]")
+                    return url
             except requests.exceptions.HTTPError:
-                download(cover_url, fanart_path)
-        else:
-            download(cover_url, fanart_path)
-        # 检查图片是否完整
-        if valid_pic(fanart_path):
-            if used_url == big_cover_url:
-                filesize = get_fmt_size(fanart_path)
-                width, height = get_pic_size(fanart_path)
-                elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
-                speed = get_fmt_size(info['rate']) + '/s'
-                logger.info(f"已下载高清封面: {width}x{height}, {filesize} [{elapsed}, {speed}]")
-            # 图片完整时直接返回
-            return True
-        else:
-            logger.debug(f"图片不完整，尝试重新下载: '{cover_url}'")
-    else:
-        logger.error(f"下载封面图片失败: '{cover_url}'")
-
-    return False
+                # HTTPError通常说明猜测的高清封面地址实际不可用，因此不再重试
+                break
+    # 如果没有高清封面或高清封面下载失败
+    for url in covers:
+        for _ in range(cfg.Network.retry):
+            try:
+                download(url, fanart_path)
+                if valid_pic(fanart_path):
+                    logger.debug(f"已下载封面: '{url}'")
+                    return url
+                else:
+                    logger.debug(f"图片无效或已损坏: '{url}'，尝试更换下载地址")
+                    break
+            except Exception as e:
+                logger.debug(e, exc_info=True)
+    logger.error(f"下载封面图片失败")
+    logger.debug('big_covers:'+str(big_covers) + ', covers'+str(covers))
+    return None
 
 
 def error_exit(success, err_info):

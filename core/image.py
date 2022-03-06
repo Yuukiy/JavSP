@@ -1,8 +1,12 @@
 """处理本地图片的相关功能"""
+import os
+import logging
 from PIL import Image
 
 
 __all__ = ['valid_pic', 'crop_poster', 'get_pic_size']
+
+logger = logging.getLogger(__name__)
 
 
 def valid_pic(pic_path):
@@ -11,7 +15,8 @@ def valid_pic(pic_path):
         img = Image.open(pic_path)
         img.load()
         return True
-    except (FileNotFoundError, OSError):
+    except Exception as e:
+        logger.debug(e, exc_info=True)
         return False
 
 
