@@ -433,11 +433,6 @@ if __name__ == "__main__":
     colorama.init(autoreset=True)
     # 检查更新
     check_update(cfg.Other.check_update, cfg.Other.auto_update)
-    # 如果未配置有效代理，则显示相应提示
-    if not cfg.Network.proxy:
-        logger.warning('未配置有效代理，程序会努力继续运行，但是部分功能可能受限：\n'
-                       ' - 将尝试自动获取部分站点的免代理地址，没有免代理地址的站点抓取器将无法工作\n'
-                       ' - 抓取fanza的数据时，有一小部分影片仅能在日本归属的IP下抓取到')
     root = get_scan_dir(cfg.File.scan_dir)
     error_exit(root, '未选择要扫描的文件夹')
     # 导入抓取器，必须在chdir之前
