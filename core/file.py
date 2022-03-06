@@ -31,7 +31,7 @@ def scan_movies(root: str) -> List[Movie]:
             if name.startswith('.') or name in cfg.File.ignore_folder:
                 dirnames.remove(name)
         for file in filenames:
-            ext = os.path.splitext(file)[1]
+            ext = os.path.splitext(file)[1].lower()
             if ext in cfg.File.media_ext:
                 fullpath = os.path.join(dirpath, file)
                 dvdid = get_id(fullpath)
