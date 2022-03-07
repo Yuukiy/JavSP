@@ -81,7 +81,14 @@ class MovieInfo:
         else:
             return False
 
-    def dump(self, filepath) -> None:
+    def dump(self, filepath=None, crawler=None) -> None:
+        if not filepath:
+            id = self.dvdid if self.dvdid else self.cid
+            if crawler:
+                filepath = f'../unittest/data/{id} ({crawler}).json'
+                filepath = os.path.join(os.path.dirname(__file__), filepath)
+            else:
+                filepath = id + '.json'
         with open(filepath, 'wt', encoding='utf-8') as f:
             f.write(str(self))
 
