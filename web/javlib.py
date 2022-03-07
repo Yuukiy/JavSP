@@ -62,7 +62,7 @@ def parse_data(movie: MovieInfo):
         pre_choose = []
         for tag in video_tags:
             tag_dvdid = tag.xpath("div[@class='id']/text()")[0]
-            if tag_dvdid == movie.dvdid:
+            if tag_dvdid.upper() == movie.dvdid.upper():
                 pre_choose.append(tag)
         match_count = len(pre_choose)
         if match_count == 0:
@@ -126,6 +126,6 @@ if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
     logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('STARS-213')
+    movie = MovieInfo('AbW-001')
     parse_data(movie)
     print(movie)
