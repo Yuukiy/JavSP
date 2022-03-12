@@ -228,9 +228,15 @@ def generate_names(movie: Movie):
                 return
     else:
         # 以防万一，当整理路径非常深或者标题起始很长一段没有标点符号时，硬性截短生成的名称
+        templates = cfg.NamingRule.save_dir.template + os.sep + cfg.NamingRule.filename.template
         copyd['title'] = copyd['title'][:remaining]
         copyd['rawtitle'] = copyd['rawtitle'][:remaining]
-        movie.save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+        if (copyd['title'] == '' and '$title' in templates) or (copyd['rawtitle'] == '' and '$rawtitle' in templates):
+            logger.error("命名规则导致标题被截断至空，请增大'max_path_len'配置项后重试")
+            logger.debug((d, templates, cfg.NamingRule.max_path_len))
+            return
+        save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+        movie.save_dir = save_dir
         movie.basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd)).strip()
         movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
         movie.fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
@@ -297,12 +303,12 @@ def reviewMovieID(all_movies, root):
 
 def RunNormalMode(all_movies):
     """普通整理模式"""
-    def check_step(result):
+    def check_step(result, msg='步骤错误'):
         """检查一个整理步骤的结果，并负责更新tqdm的进度"""
         if result:
             inner_bar.update()
         else:
-            raise Exception('步骤错误')
+            raise Exception(msg)
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     total_step = 7 if cfg.Translate.engine else 6
@@ -328,6 +334,7 @@ def RunNormalMode(all_movies):
 
             inner_bar.set_description('移动影片文件')
             generate_names(movie)
+            check_step(movie.save_dir, '无法按命名规则生成目标文件夹')
             if not os.path.exists(movie.save_dir):
                 os.makedirs(movie.save_dir)
             movie.rename_files()

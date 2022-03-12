@@ -137,8 +137,8 @@ def replace_illegal_chars(name):
 def get_remaining_path_len(path):
     """计算当前系统支持的最大路径长度与给定路径长度的差值"""
     #TODO: 支持不同的操作系统
-    fullpath = os.path.abspath(os.path.normpath(path))
-    remaining = 260-len(fullpath)
+    fullpath = os.path.abspath(path)
+    remaining = cfg.NamingRule.max_path_len - len(fullpath)
     return remaining
 
 

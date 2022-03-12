@@ -178,6 +178,7 @@ def norm_int(cfg: Config):
     """转换所有的整数类型配置"""
     cfg.Network.retry = cfg.getint('Network', 'retry')
     cfg.Network.timeout = cfg.getint('Network', 'timeout')
+    cfg.NamingRule.max_path_len = min(cfg.getint('NamingRule', 'max_path_len'), 256)
 
 
 def norm_tuples(cfg: Config):
