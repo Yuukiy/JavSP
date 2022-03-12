@@ -110,7 +110,7 @@ def align_center(mix_str: str, total_width: int) -> str:
 # 枚举Unicode各平面内中日韩区块及拉丁字母区块内的所有标点符号
 _punc = (
 " 　",                      # spaces
-"!\"#%&'()*,-./:;?@[\]_{}", # (0x0, 0x7f), Basic Latin
+"!\"#%&'()*,-./:;?@[\\]_{}", # (0x0, 0x7f), Basic Latin
 "¡§«¶·»¿",                  # (0x80, 0xff), Latin-1 Supplement
 ";·",                       # (0x370, 0x3ff), Greek and Coptic
 "‐‑‒–—―‖‗‘’‚‛“”„‟†‡•‣․‥…‧‰‱′″‴‵‶‷‸‹›※‼‽‾‿⁀⁁⁂⁃⁅⁆⁇⁈⁉⁊⁋⁌⁍⁎⁏⁐⁑⁓⁔⁕⁖⁗⁘⁙⁚⁛⁜⁝⁞",  # (0x2000, 0x206f), General Punctuation
