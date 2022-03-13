@@ -159,6 +159,7 @@ class Config(configparser.ConfigParser):
         # 作为配置模块，始终检查免代理地址；由各个抓取器中根据代理情况选择是否启用免代理地址
         check_proxy_free_url(self)
         validate_media_servers(self)
+        validate_ai_config(self)
 
 
 def is_url(url: str):
@@ -263,6 +264,21 @@ def validate_translation(cfg: Config):
         cfg.Translate.engine = engine_name
     else:
         logger.error('无效的翻译引擎: ' + engine_name)
+
+
+def validate_ai_config(cfg: Config):
+    """验证图像人脸/人体检测的相关配置是否完备"""
+    piccfg = cfg.Picture
+    if not piccfg.use_ai_crop:
+        return
+    if piccfg.ai_engine.lower() == 'baidu':
+        piccfg.ai_engine = 'baidu'
+        required_keys = ('aip_appid', 'aip_api_key', 'aip_secret_key')
+        empty_keys = [i for i in required_keys if not piccfg[i]]
+        if empty_keys:
+            logger.error('使用百度人体分析时，相关设置不能为空: ' + ', '.join(empty_keys))
+    else:
+        logger.error('不支持的图像识别引擎: ' + piccfg.ai_engine.lower())
 
 
 def validate_proxy(cfg: Config):
