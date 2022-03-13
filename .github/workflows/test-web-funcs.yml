@@ -11,6 +11,8 @@ on:
   schedule:
   # Web crawlers might be outdated because of website updating, so run every day to follow the changes
   - cron:  '9 9 * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   test-web-crawlers:
