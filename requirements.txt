@@ -12,7 +12,7 @@ pefile==2019.4.18
 Pillow==9.0.1
 pretty-errors==1.2.19
 pycryptodome==3.10.1
-pypiwin32==223
+pywin32==303
 PySocks==1.7.1
 pywin32-ctypes==0.2.0
 requests==2.25.1
