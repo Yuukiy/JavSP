@@ -86,6 +86,7 @@ def parse_data(movie: MovieInfo):
             preview_video = video_url.split('.ism/')[0] + '.mp4'
             movie.preview_video = preview_video
 
+    movie.dvdid = dvdid
     movie.url = url
     movie.title = title
     movie.cover = cover

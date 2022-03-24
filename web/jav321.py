@@ -68,6 +68,7 @@ def parse_data(movie: MovieInfo):
 
     movie.url = page_url
     movie.cid = cid
+    movie.dvdid = dvdid
     movie.title = title
     movie.actress = actress
     movie.actress_pics = actress_pics

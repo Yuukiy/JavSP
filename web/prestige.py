@@ -85,6 +85,7 @@ def parse_data_raw(movie: MovieInfo, html):
         big_cover = cover.replace('_e_', '_')
         movie.big_cover = big_cover
 
+    movie.dvdid = dvdid
     movie.title = title
     movie.cover = cover
     movie.actress = actress

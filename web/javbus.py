@@ -99,6 +99,7 @@ def parse_data_raw(movie: MovieInfo, html):
         if not pic_url.endswith('nowprinting.gif'):     # 略过默认的头像
             actress_pics[name] = pic_url
     # 整理数据并更新movie的相应属性
+    movie.dvdid = dvdid
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
     movie.preview_pics = preview_pics

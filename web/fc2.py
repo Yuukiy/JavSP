@@ -53,10 +53,10 @@ def get_movie_score(fc2_id):
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # 去除番号中的'FC2'字样
-    id_lc = movie.dvdid.lower()
-    if not id_lc.startswith('fc2-'):
+    id_uc = movie.dvdid.upper()
+    if not id_uc.startswith('FC2-'):
         raise ValueError('Invalid FC2 number: ' + movie.dvdid)
-    fc2_id = id_lc.replace('fc2-', '')
+    fc2_id = id_uc.replace('FC2-', '')
     # 抓取网页
     url = f'{base_url}/article/{fc2_id}/'
     html = get_html(url)
@@ -93,6 +93,7 @@ def parse_data(movie: MovieInfo):
         score = int(score_tag_attr[-1]) * 2
         movie.score = f'{score:.2f}'
 
+    movie.dvdid = id_uc
     movie.url = url
     movie.title = title
     movie.genre = genre

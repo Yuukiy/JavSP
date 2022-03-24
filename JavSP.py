@@ -144,6 +144,23 @@ def info_summary(movie: Movie, all_info):
                     absorbed.append(attr)
         if absorbed:
             logger.debug(f"从'{name}'中获取了字段: " + ' '.join(absorbed))
+    # 使用网站的番号作为番号
+    if cfg.Crawler.respect_site_avid:
+        id_weight = {}
+        for name, data in all_info.items():
+            if data.title:
+                if movie.dvdid:
+                    id_weight.setdefault(data.dvdid, []).append(name)
+                else:
+                    id_weight.setdefault(data.cid, []).append(name)
+        # 根据权重选择最终番号
+        if id_weight:
+            id_weight = {k:v for k, v in sorted(id_weight.items(), key=lambda x:len(x[1]), reverse=True)}
+            final_id = list(id_weight.keys())[0]
+            if movie.dvdid:
+                final_info.dvdid = final_id
+            else:
+                final_info.cid = final_id
     setattr(final_info, 'covers', covers)
     setattr(final_info, 'big_covers', big_covers)
     # 对cover和big_cover赋值，避免后续检查必须字段时出错

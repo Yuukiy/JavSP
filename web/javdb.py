@@ -154,6 +154,7 @@ def parse_data(movie: MovieInfo):
     actress = [i for i in all_actors if genders[all_actors.index(i)] == '♀']
     magnet = container.xpath("//td[@class='magnet-name']/a/@href")
 
+    movie.dvdid = dvdid
     movie.url = new_url.replace(base_url, permanent_url)
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover

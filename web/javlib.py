@@ -110,6 +110,7 @@ def parse_data(movie: MovieInfo):
     genre = info.xpath("//span[@class='genre']/a/text()")
     actress = info.xpath("//span[@class='star']/a/text()")
 
+    movie.dvdid = dvdid
     movie.url = new_url.replace(base_url, permanent_url)
     movie.title = title.replace(dvdid, '').strip()
     if cover.startswith('//'):  # 补全URL中缺少的协议段

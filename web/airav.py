@@ -70,6 +70,7 @@ def parse_data(movie: MovieInfo):
     # TODO: 数据中含有更多信息（如女优的中文&日文名对照），可能有助于未来功能扩展
     data = resp['result']
     dvdid = data['barcode']
+    movie.dvdid = dvdid
     movie.url = base_url + '/video/' + dvdid
     # plot和title中可能含有HTML的转义字符，需要进行解转义处理
     movie.plot = unescape(data['description']) or None

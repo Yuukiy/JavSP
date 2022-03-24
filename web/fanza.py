@@ -85,6 +85,7 @@ def parse_data(movie: MovieInfo):
         except Exception as e:
             logger.debug('解析视频地址时异常: ' + repr(e))
 
+    movie.cid = cid
     movie.url = url
     movie.title = title
     movie.cover = cover
