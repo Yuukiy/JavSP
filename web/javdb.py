@@ -100,10 +100,14 @@ def parse_data(movie: MovieInfo):
     html = get_html_wrapper(f'{base_url}/search?q={movie.dvdid}')
     ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
     movie_urls = html.xpath("//div[@id='videos']/div/div/a/@href")
-    try:
-        new_url = movie_urls[ids.index(movie.dvdid.lower())]
-    except ValueError:
+    match_count = len([i for i in ids if i == movie.dvdid.lower()])
+    if match_count == 0:
         logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
+        return False
+    elif match_count == 1:
+        new_url = movie_urls[ids.index(movie.dvdid.lower())]
+    else:
+        logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，为避免误处理，已全部忽略")
         return False
 
     html = get_html_wrapper(new_url)
