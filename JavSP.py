@@ -175,7 +175,7 @@ def generate_names(movie: Movie):
     d['num'] = info.dvdid or info.cid
     d['title'] = info.title or cfg.NamingRule.null_for_title
     d['rawtitle'] = info.ori_title or d['title']
-    if len(info.actress) > cfg.NamingRule.max_acctress_count:
+    if info.actress and len(info.actress) > cfg.NamingRule.max_acctress_count:
         logging.debug('女优人数过多，按配置保留了其中的前n个: ' + ','.join(info.actress))
         actress = info.actress[:cfg.NamingRule.max_acctress_count] + ['…']
     else:
