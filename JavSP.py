@@ -354,13 +354,10 @@ def RunNormalMode(all_movies):
                 success = translate_movie_info(movie.info)
                 check_step(success)
 
-            inner_bar.set_description('移动影片文件')
             generate_names(movie)
             check_step(movie.save_dir, '无法按命名规则生成目标文件夹')
             if not os.path.exists(movie.save_dir):
                 os.makedirs(movie.save_dir)
-            movie.rename_files()
-            check_step(True)
 
             inner_bar.set_description('下载封面图片')
             if cfg.Picture.use_big_cover:
@@ -396,6 +393,10 @@ def RunNormalMode(all_movies):
 
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
+            check_step(True)
+
+            inner_bar.set_description('移动影片文件')
+            movie.rename_files()
             check_step(True)
 
             logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
