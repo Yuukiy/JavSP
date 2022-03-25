@@ -19,7 +19,7 @@ class AipClient():
         self.file = rel_path_from_exe('data/baidu_aip.cache.json')
         dir_path = os.path.dirname(self.file)
         if not os.path.exists(dir_path):
-            os.mkdirs(dir_path)
+            os.makedirs(dir_path)
         if os.path.exists(self.file):
             with open(self.file, 'rt', encoding='utf-8') as f:
                 self.cache = json.load(f)
@@ -53,18 +53,18 @@ def choose_center(body_parts):
     if 'nose' in body_parts:
         return body_parts['nose']
     pair_parts = (('left_eye', 'right_eye'),
-        ('left_ear', 'right_ear'),
-        ('left_mouth_corner', 'right_mouth_corner'))
+                  ('left_ear', 'right_ear'),
+                  ('left_mouth_corner', 'right_mouth_corner'))
     for parts_name in pair_parts:
         pair = [body_parts.get(i) for i in parts_name]
         if all(pair):
-            return {i:(pair[0][i]+pair[1][i])/2 for i in pair[0].keys()}
+            return {i: (pair[0][i]+pair[1][i])/2 for i in pair[0].keys()}
     for part in ('top_head', 'neck'):
         if part in body_parts:
             return body_parts[part]
     pair = [body_parts.get(i) for i in ('left_shoulder', 'right_shoulder')]
     if all(pair):
-        return {i:(pair[0][i]+pair[1][i])/2 for i in pair[0].keys()}
+        return {i: (pair[0][i]+pair[1][i])/2 for i in pair[0].keys()}
     return {}
 
 
@@ -95,9 +95,9 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
         poster_w, poster_h = fanart_w, int(fanart_w * hw_ratio)
     # 寻找一个最佳位置的裁剪框，使得尽可能包含最多的人体
     # (left, upper, right, lower)
-    prefer_person = sorted(r['person_info'], key=lambda x:x['total_score'])[0]
+    prefer_person = sorted(r['person_info'], key=lambda x: x['total_score'])[0]
     body_parts = prefer_person['body_parts']
-    valid_parts = {k:v for k,v in body_parts.items() if v['score'] > 0.3}
+    valid_parts = {k: v for k, v in body_parts.items() if v['score'] > 0.3}
     center = choose_center(valid_parts)
     if not center:
         # 找不到人体关键部位时，使用人体框中心作为裁剪中心点
@@ -131,10 +131,10 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
 # 下面的函数主要用于调试，正常功能中不会触发
 
 def random_color():
-    r = random.randint(0,255)
-    g = random.randint(0,255)
-    b = random.randint(0,255)
-    rgb = [r,g,b]
+    r = random.randint(0, 255)
+    g = random.randint(0, 255)
+    b = random.randint(0, 255)
+    rgb = [r, g, b]
     return tuple(rgb)
 
 
