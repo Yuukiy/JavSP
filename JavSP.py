@@ -361,13 +361,19 @@ def RunNormalMode(all_movies):
 
             inner_bar.set_description('下载封面图片')
             if cfg.Picture.use_big_cover:
-                cover = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
+                cover_dl = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
             else:
-                cover = download_cover(movie.info.covers, movie.fanart_file)
-            check_step(cover)
+                cover_dl = download_cover(movie.info.covers, movie.fanart_file)
+            check_step(cover_dl, '下载封面图片失败')
+            cover, pic_path = cover_dl
             # 确保实际下载的封面的url与即将写入到movie.info中的一致
-            if cover and cover != movie.info.cover:
+            if cover != movie.info.cover:
                 movie.info.cover = cover
+            # 根据实际下载的封面的格式更新fanart/poster等图片的文件名
+            if pic_path != movie.fanart_file:
+                movie.fanart_file = pic_path
+                actual_ext = os.path.splitext(pic_path)[1]
+                movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
             if cfg.Picture.use_ai_crop and (
                     movie.info.label in cfg.Picture.use_ai_crop_labels or
@@ -410,28 +416,31 @@ def RunNormalMode(all_movies):
 def download_cover(covers, fanart_path, big_covers=[]):
     """下载封面图片"""
     # 优先下载高清封面
+    fanart_base = os.path.splitext(fanart_path)[0] + '.'
     for url in big_covers:
+        pic_path = fanart_base + url.split('.')[-1].lower()
         for _ in range(cfg.Network.retry):
             try:
-                info = download(url, fanart_path)
-                if valid_pic(fanart_path):
-                    filesize = get_fmt_size(fanart_path)
-                    width, height = get_pic_size(fanart_path)
+                info = download(url, pic_path)
+                if valid_pic(pic_path):
+                    filesize = get_fmt_size(pic_path)
+                    width, height = get_pic_size(pic_path)
                     elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
                     speed = get_fmt_size(info['rate']) + '/s'
                     logger.info(f"已下载高清封面: {width}x{height}, {filesize} [{elapsed}, {speed}]")
-                    return url
+                    return (url, pic_path)
             except requests.exceptions.HTTPError:
                 # HTTPError通常说明猜测的高清封面地址实际不可用，因此不再重试
                 break
     # 如果没有高清封面或高清封面下载失败
     for url in covers:
+        pic_path = fanart_base + url.split('.')[-1].lower()
         for _ in range(cfg.Network.retry):
             try:
-                download(url, fanart_path)
-                if valid_pic(fanart_path):
+                download(url, pic_path)
+                if valid_pic(pic_path):
                     logger.debug(f"已下载封面: '{url}'")
-                    return url
+                    return (url, pic_path)
                 else:
                     logger.debug(f"图片无效或已损坏: '{url}'，尝试更换下载地址")
                     break
