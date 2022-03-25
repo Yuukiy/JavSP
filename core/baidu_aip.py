@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import random
+import logging
 from hashlib import md5
 from datetime import datetime
 
@@ -11,6 +12,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.config import cfg, rel_path_from_exe
+
+logger = logging.getLogger(__name__)
 
 
 class AipClient():
@@ -36,11 +39,17 @@ class AipClient():
             return self.cache[hash]['result']
         else:
             now = datetime.now().isoformat()
-            result = self.client.bodyAnalysis(pic)
+            try:
+                result = self.client.bodyAnalysis(pic)
+            except Exception as e:
+                logger.debug(e, exc_info=True)
+                raise
+            if 'error_code' in result:
+                raise Exception(f"Baidu AIP error {result['error_code']}: {result['error_msg']}")
             record = {'pic': os.path.basename(pic_path), 'time': now, 'result': result}
             self.cache[hash] = record
             with open(self.file, 'wt', encoding='utf-8') as f:
-                json.dump(self.cache, f)
+                json.dump(self.cache, f, ensure_ascii=False)
             return result
 
 
@@ -79,9 +88,8 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
         if not (len(valid_parts) > 3 and person['location']['score'] > 0.03):
             person['total_score'] = 0
             continue
-        score, top, left, width, height = 0, 0, 0, 0, 0
-        # extract vars: score, top, left, width, height
-        locals().update(person['location'])
+        loc = person['location']
+        score, width, height = loc['score'], loc['width'], loc['height']
         # 为每个识别到的区域计算权重，综合考虑区域相对于图片大小的占比和人体识别置信度
         nose_weight = 100 if 'nose' in person['body_parts'] else 30
         total_score = (width*height)/(im.width*im.height) * score * nose_weight
@@ -93,16 +101,18 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
         poster_h = fanart_h
     else:
         poster_w, poster_h = fanart_w, int(fanart_w * hw_ratio)
-    # 寻找一个最佳位置的裁剪框，使得尽可能包含最多的人体
-    # (left, upper, right, lower)
+    # 采信得分最高的一个人体框
     prefer_person = sorted(r['person_info'], key=lambda x: x['total_score'])[0]
     body_parts = prefer_person['body_parts']
     valid_parts = {k: v for k, v in body_parts.items() if v['score'] > 0.3}
+    if not valid_parts:
+        raise Exception('Baidu AIP error: 人体识别未获得有效结果')
     center = choose_center(valid_parts)
     if not center:
         # 找不到人体关键部位时，使用人体框中心作为裁剪中心点
         # extract vars: score, top, left, width, height
-        locals().update(prefer_person['location'])
+        loc = prefer_person['location']
+        top, left, width, height = loc['top'], loc['left'], loc['width'], loc['height']
         center['x'] = left + width/2
         center['y'] = top + height/2
     # 调整裁剪框的位置，确保裁剪框没有超出图片范围
@@ -124,14 +134,15 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     if globals().get('baidu_aip_debug'):
         im2 = draw_marks(im, r)
         draw = ImageDraw.Draw(im2)
-        draw_labeled_box(draw, box, outline='red', width=2)
+        draw_labeled_box(draw, box, outline='red', width=2, label='CROP')
         im2.show()
 
 
 # 下面的函数主要用于调试，正常功能中不会触发
 
 def random_color():
-    r = random.randint(0, 255)
+    # 降低红色取值范围，以便与红色的裁剪框区分开来
+    r = random.randint(0, 180)
     g = random.randint(0, 255)
     b = random.randint(0, 255)
     rgb = [r, g, b]
@@ -147,7 +158,10 @@ def draw_labeled_box(draw: ImageDraw, xy, fill=None, outline=None, width=1, labe
     draw.rectangle(xy, fill, outline, width)
     scale = min(xy[2]-xy[0], xy[3]-xy[1])
     fontsize = max(12, min(40, int(scale/15)))
-    fnt = ImageFont.truetype("consola.ttf", fontsize)
+    try:
+        fnt = ImageFont.truetype("consola.ttf", fontsize)
+    except:
+        fnt = ImageFont.load_default()
     if label:
         tw, th = draw.textsize(label, font=fnt)
         textbox = (xy[0], xy[1], xy[0]+tw, xy[1]+th)
@@ -169,14 +183,15 @@ def draw_marks(im0, data):
                 draw.ellipse(calc_ellipse(point), fill=color)
         loc = person['location']
         rec = (loc['left'], loc['top'], loc['left']+loc['width'], loc['top']+loc['height'])
-        score = (loc['width']*loc['height'])/(im.width*im.height)*100 * loc['score']
-        if score > 2:
-            label = f"{loc['width']:.0f}x{loc['height']:.0f}, {loc['score']:.3}\n{score:.3f}"
-            draw_labeled_box(draw, rec, outline=color, width=2, label=label)
+        label = f"{loc['width']:.0f}x{loc['height']:.0f}, {loc['score']:.3}\n" + \
+                f"score: {person['total_score']:.3f}"
+        draw_labeled_box(draw, rec, outline=color, width=2, label=label)
     return im
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     baidu_aip_debug = True
     files = sys.argv[1:] or ["FC2-1283407-fanart.jpg"]
     for file in files:
