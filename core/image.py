@@ -1,7 +1,7 @@
 """处理本地图片的相关功能"""
 import os
 import logging
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 __all__ = ['valid_pic', 'crop_poster', 'get_pic_size']
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def valid_pic(pic_path):
     """检查图片文件是否完整"""
     try:
-        img = Image.open(pic_path)
+        img = ImageOps.exif_transpose(Image.open(pic_path))
         img.load()
         return True
     except Exception as e:
@@ -40,9 +40,9 @@ def crop_poster(fanart_file, poster_file):
     poster.save(poster_file, quality=95)
 
 
-def get_pic_size(pic_file):
+def get_pic_size(pic_path):
     """获取图片文件的分辨率"""
-    pic = Image.open(pic_file)
+    pic = ImageOps.exif_transpose(Image.open(pic_path))
     return pic.size
 
 

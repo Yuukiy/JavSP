@@ -7,7 +7,7 @@ from hashlib import md5
 from datetime import datetime
 
 from aip import AipBodyAnalysis
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.config import cfg, rel_path_from_exe
@@ -71,7 +71,7 @@ def choose_center(body_parts):
 def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     """将给定的fanart图片文件裁剪为适合poster尺寸的图片"""
     r = ai.analysis(fanart)
-    im = Image.open(fanart)
+    im = ImageOps.exif_transpose(Image.open(fanart))
     # 计算识别到的各人体框区域的权重
     for person in r['person_info']:
         # 当关键点得分大于0.2的个数大于3，且人体框的分数大于0.03时，才认为是有效人体
