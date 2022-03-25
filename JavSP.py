@@ -17,7 +17,7 @@ pretty_errors.configure(display_link=True)
 
 
 from core.print import TqdmOut
-from core.opencv import crop_by_face
+from core.baidu_aip import aip_crop_poster
 from core.datatype import ColoredFormatter
 
 
@@ -376,14 +376,14 @@ def RunNormalMode(all_movies):
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
             if cfg.Picture.use_ai_crop and (
-                    movie.info.label in cfg.Picture.use_ai_crop_labels or
+                    movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
                 (R'\d' in cfg.Picture.use_ai_crop_labels
                  and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
                 try:
-                    crop_by_face(movie.fanart_file, movie.poster_file)
+                    aip_crop_poster(movie.fanart_file, movie.poster_file)
                     inner_bar.set_description('基于人脸识别裁剪海报封面')
                 except Exception as e:
-                    logger.info('人脸识别失败，回退到常规裁剪方法')
+                    logger.debug('人脸识别失败，回退到常规裁剪方法')
                     logger.debug(e, exc_info=True)
                     inner_bar.set_description('裁剪海报封面')
                     crop_poster(movie.fanart_file, movie.poster_file)

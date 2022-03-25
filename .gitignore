@@ -129,3 +129,5 @@ dmypy.json
 
 # hook script generated for pyinstaller
 ver_hook.py
+# cached data
+*.cache.json
