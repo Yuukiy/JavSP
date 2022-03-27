@@ -105,22 +105,18 @@ def fit_crop_box(box, persons):
         left0, top0, right0, bottom0 = le0, to0, ri0, bo0
     # 调整裁剪框位置
     (left, top, right, bottom) = box
-    if left < left0:
-        pre_right = right + (left0-left)
-        if left0 < right < pre_right < right0:
-            left, right = left0, pre_right
-    if right > right0:
-        pre_left = left - (right-right0)
-        if left0 < pre_left < left < right0:
-            left, right = pre_left, right0
-    if top < top0:
-        pre_bottom = bottom + (top0-top)
-        if top0 < bottom < pre_bottom < bottom0:
-            top, bottom = top0, pre_bottom
-    if bottom > bottom0:
-        pre_top = top - (bottom-bottom0)
-        if top0 < pre_top < top < bottom0:
-            top, bottom = pre_top, bottom0
+    if left < left0 < right < right0:
+        move = min(left0-left, right0-right)
+        left, right = left+move, right+move
+    if left0 < left < right0 < right:
+        move = min(left-left0, right-right0)
+        left, right = left-move, right-move
+    if top < top0 < bottom < bottom0:
+        move = min(top0-top, bottom0-bottom)
+        top, bottom = top+move, bottom+move
+    if top0 < top < bottom0 < bottom:
+        move = min(top-top0, bottom-bottom0)
+        top, bottom = top-move, bottom-move
     return (left, top, right, bottom)
 
 
