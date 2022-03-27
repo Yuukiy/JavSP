@@ -77,6 +77,53 @@ def choose_center(body_parts):
     return {}
 
 
+def fit_crop_box(box, persons):
+    """根据人体框信息调整裁剪框，以包含更完整的人体区域"""
+    if len(persons) == 0:
+        return box
+    elif len(persons) == 1:
+        loc = persons[0]['location']
+        left0, right0 = loc['left'], loc['left']+loc['width']
+        top0, bottom0 = loc['top'], loc['top']+loc['height']
+    else:
+        allow_score = persons[0]['total_score'] * 0.7
+        allow_persons = [i for i in persons if i['total_score'] >= allow_score]
+        locs = []
+        # 求取一个包含重叠的几个人体框区域的矩形
+        for i in allow_persons:
+            loc = i['location']
+            le, ri = loc['left'], loc['left']+loc['width']
+            to, bo = loc['top'], loc['top']+loc['height']
+            locs.append((le, to, ri, bo))
+        locs.sort(key=lambda x: x[0])   # sort by postion left
+        le0, to0, ri0, bo0 = locs[0]
+        for (le, to, ri, bo) in locs[1:]:
+            if le0 <= le < ri0 and (to0 <= to < bo0 or to0 <= bo < bo0):
+                to0 = max(to, to0)
+                ri0 = max(ri, ri0)
+                bo0 = max(bo, bo0)
+        left0, top0, right0, bottom0 = le0, to0, ri0, bo0
+    # 调整裁剪框位置
+    (left, top, right, bottom) = box
+    if left < left0:
+        pre_right = right + (left0-left)
+        if left0 < right < pre_right < right0:
+            left, right = left0, pre_right
+    if right > right0:
+        pre_left = left - (right-right0)
+        if left0 < pre_left < left < right0:
+            left, right = pre_left, right0
+    if top < top0:
+        pre_bottom = bottom + (top0-top)
+        if top0 < bottom < pre_bottom < bottom0:
+            top, bottom = top0, pre_bottom
+    if bottom > bottom0:
+        pre_top = top - (bottom-bottom0)
+        if top0 < pre_top < top < bottom0:
+            top, bottom = pre_top, bottom0
+    return (left, top, right, bottom)
+
+
 def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     """将给定的fanart图片文件裁剪为适合poster尺寸的图片"""
     r = ai.analysis(fanart)
@@ -102,15 +149,14 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     else:
         poster_w, poster_h = fanart_w, int(fanart_w * hw_ratio)
     # 采信得分最高的一个人体框
-    prefer_person = sorted(r['person_info'], key=lambda x: x['total_score'], reverse=True)[0]
-    body_parts = prefer_person['body_parts']
+    persons = sorted(r['person_info'], key=lambda x: x['total_score'], reverse=True)
+    body_parts = persons[0]['body_parts']
     valid_parts = {k: v for k, v in body_parts.items() if v['score'] > 0.3}
     if not valid_parts:
         raise Exception('Baidu AIP error: 人体识别未获得有效结果')
     center = choose_center(valid_parts)
-    loc = prefer_person['location']
+    loc = persons[0]['location']
     top0, left0, width0, height0 = loc['top'], loc['left'], loc['width'], loc['height']
-    right0, bottom0 = left0 + width0, top0 + height0
     if not center:
         # 找不到人体关键部位时，使用人体框中心作为裁剪中心点
         center['x'] = left0 + width0/2
