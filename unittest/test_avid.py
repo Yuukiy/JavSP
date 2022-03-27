@@ -64,12 +64,20 @@ def test_from_file():
     with open(datafile, 'rt', encoding='utf-8') as f:
         lines = f.readlines()
         for line in lines:
-            filename, avid = line.strip('\r\n').split('\t')
-            guess_id = get_id(filename)
-            if not write_back:
-                assert guess_id == avid
+            items = line.strip('\r\n').split('\t')
+            if len(items) == 2:
+                (filename, avid), ignore = items, False
             else:
+                filename, avid, ignore = items
+            guess_id = get_id(filename)
+            if write_back:
                 rewrite_lines.append(f'{filename}\t{guess_id}\n')
+                continue
+            if guess_id != avid:
+                if ignore:
+                    print(f"Ignored: {guess_id} != {avid}\t'{filename}'")
+                else:
+                    assert guess_id == avid
     if write_back:
         with open(datafile, 'wt', encoding='utf-8') as f:
             f.writelines(rewrite_lines)

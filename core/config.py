@@ -220,7 +220,8 @@ def norm_ignore_pattern(cfg: Config):
     """将配置文件中推测番号时的忽略列表转换为正则表达式"""
     words = cfg.MovieID.ignore_whole_word.replace(' ','').split(';')
     regexes = cfg.MovieID.ignore_regex.split(';')
-    words_pattern = R'\b({})\b'.format('|'.join(words))
+    # \b匹配单词边界时，_连接的将视为一个单词。为了让_也作为单词的边界，需要进行额外处理
+    words_pattern = R'(?:\b|_)({})(?=\b|_)'.format('|'.join(words))
     regex_patterns = '|'.join([f'({i})' for i in regexes])
     pattern_str = f'({words_pattern})|{regex_patterns}'
     ignore_pattern = re.compile(pattern_str, flags=re.I | re.A)

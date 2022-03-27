@@ -40,7 +40,7 @@ jobs:
         chcp 65001
     - name: Test avid.py
       run: |
-        pytest unittest/test_avid.py
+        pytest -rA unittest/test_avid.py
     - name: Test file.py
       run: |
         pytest unittest/test_file.py

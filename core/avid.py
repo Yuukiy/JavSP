@@ -23,16 +23,32 @@ def get_id(filepath: str) -> str:
         if match:
             return 'FC2-' + match.group(2)
     else:
+        # 先尝试移除可疑域名进行匹配，如果匹配不到再使用原始文件名进行匹配
+        no_domain = re.sub(r'\w{3,10}\.(com|net|app|xyz)', '', filename, flags=re.I)
+        if no_domain != filename:
+            avid = get_id(no_domain)
+            if avid:
+                return avid
         # 普通番号，优先尝试匹配带分隔符的（如ABC-123）
         match = re.search(r'([a-z]{2,10})[-_](\d{2,5})', filename, re.I)
         if match:
             return match.group(1) + '-' + match.group(2)
         # 普通番号，运行到这里时表明无法匹配到带分隔符的番号
+        # 先尝试匹配东热的red, sky, ex三个不带-分隔符的系列
+        # （这三个系列已停止更新，因此根据其作品编号将数字范围限制得小一些以降低误匹配概率）
+        match = re.search(r'(red[01]\d\d|sky[0-3]\d\d|ex00[01]\d)', filename, re.I)
+        if match:
+            return match.group(1)
+        # 然后再将影片视作缺失了-分隔符来匹配
         match = re.search(r'([a-z]{2,})(\d{2,5})', filename, re.I)
         if match:
             return match.group(1) + '-' + match.group(2)
     # 尝试匹配TMA制作的影片（如'T28-557'，他家的番号很乱）
     match = re.search(r'(T28[-_]\d{3})', filename)
+    if match:
+        return match.group(1)
+    # 尝试匹配东热n, k系列
+    match = re.search(r'(n\d{4}|k\d{4})', filename, re.I)
     if match:
         return match.group(1)
     # 尝试匹配纯数字番号（无码影片）
@@ -80,7 +96,7 @@ def get_cid(filepath: str) -> str:
 
 def guess_av_type(avid: str) -> str:
     """识别给定的番号所属的分类: normal, fc2, cid"""
-    match = re.match(r'^FC2-\d{5,7}$', avid)
+    match = re.match(r'^FC2-\d{5,7}$', avid, re.I)
     if match:
         return 'fc2'
     # 如果传入的avid完全匹配cid的模式，则将影片归类为cid
@@ -96,7 +112,7 @@ if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
     if len(sys.argv) <= 1:
-        avid = get_id('ABC-123')
+        avid = get_id('ex0001')
         cid = get_cid('403ksxa54363_1')
         print(avid, cid)
     else:
