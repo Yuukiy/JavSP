@@ -280,7 +280,7 @@ def validate_ai_config(cfg: Config):
         if empty_keys:
             logger.error('使用百度人体分析时，相关设置不能为空: ' + ', '.join(empty_keys))
     else:
-        logger.error('不支持的图像识别引擎: ' + piccfg.ai_engine.lower())
+        logger.error('不支持的图像识别引擎: ' + piccfg.ai_engine)
 
 
 def validate_proxy(cfg: Config):

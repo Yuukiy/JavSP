@@ -18,17 +18,17 @@ logger = logging.getLogger(__name__)
 
 class AipClient():
     def __init__(self) -> None:
+        piccfg = cfg.Picture
         # 保存已经识别过的图片的结果，减少请求次数
         self.file = rel_path_from_exe('data/baidu_aip.cache.json')
         dir_path = os.path.dirname(self.file)
-        if not os.path.exists(dir_path):
+        if (not os.path.exists(dir_path)) and piccfg.ai_engine == 'baidu':
             os.makedirs(dir_path)
         if os.path.exists(self.file):
             with open(self.file, 'rt', encoding='utf-8') as f:
                 self.cache = json.load(f)
         else:
             self.cache = {}
-        piccfg = cfg.Picture
         self.client = AipBodyAnalysis(piccfg.aip_appid, piccfg.aip_api_key, piccfg.aip_secret_key)
 
     def analysis(self, pic_path):
@@ -102,32 +102,33 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     else:
         poster_w, poster_h = fanart_w, int(fanart_w * hw_ratio)
     # 采信得分最高的一个人体框
-    prefer_person = sorted(r['person_info'], key=lambda x: x['total_score'])[0]
+    prefer_person = sorted(r['person_info'], key=lambda x: x['total_score'], reverse=True)[0]
     body_parts = prefer_person['body_parts']
     valid_parts = {k: v for k, v in body_parts.items() if v['score'] > 0.3}
     if not valid_parts:
         raise Exception('Baidu AIP error: 人体识别未获得有效结果')
     center = choose_center(valid_parts)
+    loc = prefer_person['location']
+    top0, left0, width0, height0 = loc['top'], loc['left'], loc['width'], loc['height']
+    right0, bottom0 = left0 + width0, top0 + height0
     if not center:
         # 找不到人体关键部位时，使用人体框中心作为裁剪中心点
-        # extract vars: score, top, left, width, height
-        loc = prefer_person['location']
-        top, left, width, height = loc['top'], loc['left'], loc['width'], loc['height']
-        center['x'] = left + width/2
-        center['y'] = top + height/2
+        center['x'] = left0 + width0/2
+        center['y'] = top0 + height0/2
+    left2, top2 = center['x']-poster_w/2, center['y']-poster_h/2
+    right2, bottom2 = center['x']+poster_w/2, center['y']+poster_h/2
     # 调整裁剪框的位置，确保裁剪框没有超出图片范围
-    left2, upper2 = center['x']-poster_w/2, center['y']-poster_h/2
-    right2, lower2 = center['x']+poster_w/2, center['y']+poster_h/2
     if left2 < 0:
         left2, right2 = 0, right2-left2
-    if upper2 < 0:
-        upper2, lower2 = 0, lower2-upper2
+    if top2 < 0:
+        top2, bottom2 = 0, bottom2-top2
     if right2 > fanart_w:
         left2, right2 = left2-(right2-fanart_w), fanart_w
-    if lower2 > fanart_h:
-        upper2, lower2 = upper2-(lower2-fanart_h), fanart_h
-    # 裁剪图片 (left, upper, right, lower)
-    box = (left2, upper2, right2, lower2)
+    if bottom2 > fanart_h:
+        top2, bottom2 = top2-(bottom2-fanart_h), fanart_h
+    # 当裁剪框的一边超出人体框且另一边有移动余量时，移动裁剪框使其对齐人体框
+    box = fit_crop_box((left2, top2, right2, bottom2), persons)
+    # 裁剪图片
     im_poster = im.crop(box)
     im_poster.save(poster, quality=95)
     # 调试模式下显示图片结果和标注

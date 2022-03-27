@@ -323,6 +323,19 @@ def reviewMovieID(all_movies, root):
         print()
 
 
+def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
+    """包装各种海报裁剪方法，提供统一的调用"""
+    if cfg.Picture.ai_engine == 'baidu':
+        try:
+            aip_crop_poster(fanart_file, poster_file)
+        except Exception as e:
+            logger.debug('人脸识别失败，回退到常规裁剪方法')
+            logger.debug(e, exc_info=True)
+            crop_poster(fanart_file, poster_file)
+    else:
+        crop_poster(fanart_file, poster_file)
+
+
 def RunNormalMode(all_movies):
     """普通整理模式"""
     def check_step(result, msg='步骤错误'):
@@ -376,20 +389,13 @@ def RunNormalMode(all_movies):
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
             if cfg.Picture.use_ai_crop and (
-                    movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
-                (R'\d' in cfg.Picture.use_ai_crop_labels
-                 and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
-                try:
-                    aip_crop_poster(movie.fanart_file, movie.poster_file)
-                    inner_bar.set_description('基于人脸识别裁剪海报封面')
-                except Exception as e:
-                    logger.debug('人脸识别失败，回退到常规裁剪方法')
-                    logger.debug(e, exc_info=True)
-                    inner_bar.set_description('裁剪海报封面')
-                    crop_poster(movie.fanart_file, movie.poster_file)
+                movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
+                (R'\d' in cfg.Picture.use_ai_crop_labels and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
+                    method = cfg.Picture.ai_engine
             else:
-                inner_bar.set_description('裁剪海报封面')
-                crop_poster(movie.fanart_file, movie.poster_file)
+                method = 'normal'
+            inner_bar.set_description('裁剪海报封面')
+            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method)
             check_step(True)
 
             if 'video_station' in cfg.NamingRule.media_servers:
