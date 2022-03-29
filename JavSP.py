@@ -389,12 +389,15 @@ def RunNormalMode(all_movies):
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
             if cfg.Picture.use_ai_crop and (
-                movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
-                (R'\d' in cfg.Picture.use_ai_crop_labels and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
-                    method = cfg.Picture.ai_engine
+                    movie.info.uncensored or
+                    movie.data_src == 'fc2' or
+                    movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
+                    (R'\d' in cfg.Picture.use_ai_crop_labels and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
+                method = cfg.Picture.ai_engine
+                inner_bar.set_description('使用AI裁剪海报封面')
             else:
+                inner_bar.set_description('裁剪海报封面')
                 method = 'normal'
-            inner_bar.set_description('裁剪海报封面')
             crop_poster_wrapper(movie.fanart_file, movie.poster_file, method)
             check_step(True)
 

@@ -168,7 +168,6 @@ def is_connectable(url, timeout=3):
     """测试与指定url的连接"""
     try:
         r = requests.get(url, headers=headers, timeout=timeout)
-        logger.debug(f"Connectable: {url} HTTP {r.status_code}")
         return True
     except requests.exceptions.RequestException as e:
         logger.debug(f"Not connectable: {url}\n" + repr(e))
