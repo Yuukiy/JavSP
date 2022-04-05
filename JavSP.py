@@ -91,6 +91,13 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     # 根据影片的数据源获取对应的抓取器
     crawler_mods = cfg.CrawlerSelect[movie.data_src]
     all_info = {i: MovieInfo(movie) for i in crawler_mods}
+    # 番号为cid但同时也有有效的dvdid时，也尝试使用普通模式进行抓取
+    if movie.data_src == 'cid' and movie.dvdid:
+        crawler_mods = crawler_mods + cfg.CrawlerSelect['normal']
+        for i in all_info.values():
+            i.dvdid = None
+        for i in cfg.CrawlerSelect['normal']:
+            all_info[i] = MovieInfo(movie.dvdid)
     thread_pool = []
     for mod, info in all_info.items():
         parser = getattr(sys.modules[mod], 'parse_data')
@@ -106,6 +113,17 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     timeout = cfg.Network.retry * cfg.Network.timeout
     for th in thread_pool:
         th.join(timeout=timeout)
+    # 根据抓取结果更新影片类型判定
+    if movie.data_src == 'cid' and movie.dvdid:
+        titles = [all_info[i].title for i in cfg.CrawlerSelect[movie.data_src]]
+        if any(titles):
+            movie.dvdid = None
+            all_info = {k: v for k, v in all_info.items() if k in cfg.CrawlerSelect['cid']}
+        else:
+            logger.debug(f'自动更正影片数据源类型: {movie.dvdid} ({movie.cid}): normal')
+            movie.data_src = 'normal'
+            movie.cid = None
+            all_info = {k: v for k, v in all_info.items() if k not in cfg.CrawlerSelect['cid']}
     # 删除all_info中键名中的'web.'
     all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info

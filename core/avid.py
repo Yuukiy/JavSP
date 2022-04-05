@@ -52,7 +52,7 @@ def get_id(filepath: str) -> str:
     if match:
         return match.group(1)
     # 尝试匹配纯数字番号（无码影片）
-    match = re.search(r'(\d{6}[-_]\d{3})', filename)
+    match = re.search(r'(\d{6}[-_]\d{2,3})', filename)
     if match:
         return match.group(1)
     # 如果还是匹配不了，尝试将')('替换为'-'后再试，少部分影片的番号是由')('分隔的
@@ -79,7 +79,7 @@ def get_cid(filepath: str) -> str:
         possible = match.group(1)
         if '_' not in possible:
             # 长度为7-14的cid就占了约99.01%. 最长的cid为24，但是长为20-24的比例不到十万分之五
-            match = re.match(r'^[a-z\d]{6,19}$', possible)
+            match = re.match(r'^[a-z\d]{7,19}$', possible)
             if match:
                 return possible
         else:

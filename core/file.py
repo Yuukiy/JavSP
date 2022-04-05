@@ -99,6 +99,8 @@ def scan_movies(root: str) -> List[Movie]:
             mov = Movie(avid)
         else:
             mov = Movie(cid=avid)
+            # 即使初步识别为cid，也存储dvdid以供误识别时退回到dvdid模式进行抓取
+            mov.dvdid = get_id(files[0])
         mov.files = files
         mov.data_src = src
         logger.debug(f'影片数据源类型: {avid}: {src}')

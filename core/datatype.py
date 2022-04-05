@@ -121,10 +121,10 @@ class Movie:
         self.poster_file = None         # poster文件的路径
 
     def __repr__(self) -> str:
-        if self.dvdid:
-            expression = f"('{self.dvdid}')"
-        else:
+        if self.cid and self.data_src == 'cid':
             expression = f"('cid={self.cid}')"
+        else:
+            expression = f"('{self.dvdid}')"
         return __class__.__name__ + expression
 
     def rename_files(self):
