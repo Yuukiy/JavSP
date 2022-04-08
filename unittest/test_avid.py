@@ -63,7 +63,7 @@ def test_from_file():
     datafile = os.path.join(file_dir, 'testdata_avid.txt')
     with open(datafile, 'rt', encoding='utf-8') as f:
         lines = f.readlines()
-        for line in lines:
+        for line_no, line in enumerate(lines, start=1):
             items = line.strip('\r\n').split('\t')
             if len(items) == 2:
                 (filename, avid), ignore = items, False
@@ -77,7 +77,7 @@ def test_from_file():
                 if ignore:
                     print(f"Ignored: {guess_id} != {avid}\t'{filename}'")
                 else:
-                    assert guess_id == avid
+                    assert guess_id == avid, f'AV ID not match at line {line_no}'
     if write_back:
         with open(datafile, 'wt', encoding='utf-8') as f:
             f.writelines(rewrite_lines)

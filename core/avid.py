@@ -22,6 +22,10 @@ def get_id(filepath: str) -> str:
         match = re.search(r'fc2[^a-z\d]{0,5}(ppv[^a-z\d]{0,5})?(\d{5,7})', filename, re.I)
         if match:
             return 'FC2-' + match.group(2)
+    elif 'heydouga' in filename_lc:
+        match = re.search(r'(heydouga)[-_]*(\d{4})[-_]0?(\d{3,5})', filename, re.I)
+        if match:
+            return '-'.join(match.groups())
     else:
         # 先尝试移除可疑域名进行匹配，如果匹配不到再使用原始文件名进行匹配
         no_domain = re.sub(r'\w{3,10}\.(com|net|app|xyz)', '', filename, flags=re.I)
@@ -29,6 +33,10 @@ def get_id(filepath: str) -> str:
             avid = get_id(no_domain)
             if avid:
                 return avid
+        # 匹配缩写成hey的heydouga影片。由于番号分三部分，要先于后面分两部分的进行匹配
+        match = re.search(r'(?:hey)[-_]*(\d{4})[-_]0?(\d{3,5})', filename, re.I)
+        if match:
+            return 'heydouga-' + '-'.join(match.groups())
         # 普通番号，优先尝试匹配带分隔符的（如ABC-123）
         match = re.search(r'([a-z]{2,10})[-_](\d{2,5})', filename, re.I)
         if match:
