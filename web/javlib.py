@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 from urllib.parse import urlsplit
+from requests.exceptions import ConnectionError
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -30,9 +31,12 @@ def init_network_cfg():
     for proxies in proxy_cfgs:
         request.proxies = proxies
         for url in urls:
-            resp = request.get(url, delay_raise=True)
-            if resp.status_code == 200:
-                return url
+            try:
+                resp = request.get(url, delay_raise=True)
+                if resp.status_code == 200:
+                    return url
+            except ConnectionError as e:
+                logger.debug(f"Fail to connect to '{url}': {e}")
     logger.warning('无法绕开JavLib的反爬机制')
     return permanent_url
 

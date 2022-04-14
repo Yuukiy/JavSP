@@ -126,7 +126,7 @@ def get_html(url):
     html.make_links_absolute(url, resolve_base_href=True)
     # 清理功能仅应在需要的时候用来调试网页（如prestige），否则可能反过来影响调试（如JavBus）
     # html = cleaner.clean_html(html)
-    # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
+    # lxml.html.open_in_browser(html, encoding='utf-8')  # for develop and debug
     return html
 
 
@@ -211,7 +211,7 @@ def download(url, output_path, desc=None):
 def open_in_chrome(url, new=0, autoraise=True):
     """使用指定的Chrome Profile打开url，便于调试"""
     import subprocess
-    chrome = R'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
+    chrome = R'C:\Program Files\Google\Chrome\Application\chrome.exe'
     subprocess.run(f'"{chrome}" --profile-directory="Profile 2" {url}', shell=True)
 
 import webbrowser
