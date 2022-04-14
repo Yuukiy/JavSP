@@ -1,6 +1,8 @@
 """网络请求的统一接口"""
 import os
 import sys
+import time
+import shutil
 import logging
 import requests
 import contextlib
@@ -199,6 +201,14 @@ def urlretrieve(url, filename=None, reporthook=None, data=None):
 
 def download(url, output_path, desc=None):
     """下载指定url的资源"""
+    # 支持“下载”本地资源，以供fc2fan的本地镜像所使用
+    if not url.startswith('http'):
+        start_time = time.time()
+        shutil.copyfile(url, output_path)
+        filesize = os.path.getsize(url)
+        elapsed = time.time() - start_time
+        info = {'total': filesize, 'elapsed': elapsed, 'rate': filesize/elapsed}
+        return info
     if not desc:
         desc = url.split('/')[-1]
     with DownloadProgressBar(unit='B', unit_scale=True,
@@ -219,4 +229,6 @@ webbrowser.open = open_in_chrome
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
     print(is_connectable('http://www.baidu.com'))
