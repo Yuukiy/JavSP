@@ -50,11 +50,13 @@ def get_html_wrapper(url):
                 return get_html_wrapper(url)
             else:
                 raise Exception(f'JavDB: 所有浏览器Cookies均已过期')
-        else:   
+        elif r.history and '/sfpay' in r.url:
+            raise Exception(f'JavDB: 资源被限制为仅VIP可见: {r.history[0].url}')
+        else:
             html = resp2html(r)
             return html
-    elif r.status_code == 403:
-        raise Exception(f'JavDB: {r.status_code} 禁止访问: {url}')
+    elif r.status_code in (403, 503):
+        raise Exception(f'JavDB: {r.status_code} 禁止访问: {url} （可能触发了反爬虫机制，请稍后再试）')
     else:
         raise Exception(f'JavDB: {r.status_code} 非预期状态码: {url}')
 
