@@ -43,6 +43,9 @@ def parse_data(movie: MovieInfo):
         except Exception as e:
                 logger.debug(repr(e))
     if html is not None:
+        # prestige更新了找不到时的提示（之前是HTTP 500）
+        if 'ﾊﾟﾗﾒｰﾀｴﾗｰが発生しました' in html.text_content():
+            return False
         try:
             parse_data_raw(movie, html)
             movie.url = url
