@@ -18,7 +18,18 @@ a = Analysis(['../JavSP.py'],
                  ("../image/JavSP.ico", "image")
              ],
              hiddenimports=[
-                 'core/config.py'
+                 'core/config.py',
+                 'web/airav.py',
+                 'web/avsox.py',
+                 'web/fanza.py',
+                 'web/fc2.py',
+                 'web/fc2fan.py',
+                 'web/jav321.py',
+                 'web/javbus.py',
+                 'web/javdb.py',
+                 'web/javlib.py',
+                 'web/mgstage.py',
+                 'web/prestige.py'
              ],
              hookspath=[],
              runtime_hooks=['ver_hook.py'],
