@@ -28,6 +28,7 @@ a = Analysis(['../JavSP.py'],
                  'web/javbus.py',
                  'web/javdb.py',
                  'web/javlib.py',
+                 'web/javmenu.py',
                  'web/mgstage.py',
                  'web/prestige.py'
              ],
