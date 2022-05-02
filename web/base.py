@@ -53,7 +53,7 @@ class Request():
         def wrapper(*args, **kw):
             try:
                 return func(*args, **kw)
-            except cloudscraper.exceptions.CloudflareChallengeError as e:
+            except Exception as e:
                 logger.debug(f"无法通过CloudFlare检测: '{e}', 尝试退回常规的requests请求")
                 if func == self.scraper.get:
                     return requests.get(*args, **kw)

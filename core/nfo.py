@@ -52,9 +52,12 @@ def write_nfo(info: MovieInfo, nfo_file):
     if info.cid:
         nfo.append(E.uniqueid(info.cid, type='cid'))
 
+    # 选择要写入的genre数据源字段：将[]作为后备结果，以确保genre结果为None时后续不会抛出异常
+    for genre in (info.genre_norm, info.genre, []):
+        if genre:
+            break
     # 写入genre分类：优先使用genre_norm。在Jellyfin上，只有genre可以直接跳转，tag不可以
     # 也同时写入tag。TODO: 还没有研究tag和genre在Kodi上的区别
-    genre = info.genre_norm if info.genre_norm else info.genre
     for i in genre:
         nfo.append(E.genre(i))
     if cfg.NFO.add_genre_to_tag:

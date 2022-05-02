@@ -98,7 +98,7 @@ def parse_data(movie: MovieInfo):
     if '馬賽克破壞版' in movie.title or (movie.plot and '馬賽克破壞版' in movie.plot):
         movie.title = None
         movie.plot = None
-        movie.genre = None
+        movie.genre = []
 
 
 if __name__ == "__main__":
