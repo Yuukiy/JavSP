@@ -11,17 +11,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 from core.datatype import MovieInfo
 
 
-# 搜索抓取器并导入它们
-all_crawler = []
-exclude_files = ('base', 'proxyfree', 'fc2fan')
-for file in os.listdir('web'):
-    name, ext = os.path.splitext(file)
-    if ext == '.py' and name not in exclude_files:
-        all_crawler.append('web.' + name)
-for i in all_crawler:
-    __import__(i)
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -45,7 +34,10 @@ def compare(avid, scraper, file):
         online = MovieInfo(avid)
     else:
         online = MovieInfo(cid=avid)
-    parse_data = getattr(sys.modules[f'web.{scraper}'], 'parse_data')
+    # 导入抓取器模块
+    scraper_mod = 'web.' + scraper
+    __import__(scraper_mod)
+    parse_data = getattr(sys.modules[scraper_mod], 'parse_data')
     parse_data(online)
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
     local_vars = vars(local)
