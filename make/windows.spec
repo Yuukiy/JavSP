@@ -13,7 +13,7 @@ exclude_files = ('base', 'proxyfree', 'translate')
 for file in os.listdir('web'):
     name, ext = os.path.splitext(file)
     if ext == '.py' and name not in exclude_files:
-        all_crawlers.append('web/' + file)
+        all_crawlers.append('web.' + name)
 
 # workaround for a bug of PyInstaller since 5.0: https://github.com/pyinstaller/pyinstaller/issues/6759
 ico_file = os.path.abspath(os.path.join(SPECPATH, "../image/JavSP.ico"))
@@ -28,9 +28,7 @@ a = Analysis(['../JavSP.py'],
                  ("../data/*.*", "data"),
                  (ico_file, "image")
              ],
-             hiddenimports=[
-                 'core/config.py'
-             ] + all_crawlers,
+             hiddenimports=all_crawlers,
              hookspath=[],
              runtime_hooks=['ver_hook.py'],
              excludes=[],
