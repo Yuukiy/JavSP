@@ -73,4 +73,5 @@ def _get_javdb_urls() -> list:
 
 
 if __name__ == "__main__":
-    print(_get_javbus_urls())
+    print('javdb:\t', _get_javdb_urls())
+    print('javlib:\t', _get_javlib_urls())
