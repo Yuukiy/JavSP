@@ -7,6 +7,17 @@ block_cipher = None
 cloudscraper_dir = os.path.dirname(inspect.getfile(cloudscraper))
 cloudscraper_json = cloudscraper_dir + '/user_agent/browsers.json'
 
+# generate crawlers list
+all_crawlers = []
+exclude_files = ('base', 'proxyfree', 'translate')
+for file in os.listdir('web'):
+    name, ext = os.path.splitext(file)
+    if ext == '.py' and name not in exclude_files:
+        all_crawlers.append('web/' + file)
+
+# workaround for a bug of PyInstaller since 5.0: https://github.com/pyinstaller/pyinstaller/issues/6759
+ico_file = os.path.abspath(os.path.join(SPECPATH, "../image/JavSP.ico"))
+
 # pyinstaller locates path relative to the .spec file
 a = Analysis(['../JavSP.py'],
              pathex=['build'],
@@ -15,23 +26,11 @@ a = Analysis(['../JavSP.py'],
                  (cloudscraper_json, 'cloudscraper/user_agent'),
                  ("../core/config.ini", "."),
                  ("../data/*.*", "data"),
-                 ("../image/JavSP.ico", "image")
+                 (ico_file, "image")
              ],
              hiddenimports=[
-                 'core/config.py',
-                 'web/airav.py',
-                 'web/avsox.py',
-                 'web/fanza.py',
-                 'web/fc2.py',
-                 'web/fc2fan.py',
-                 'web/jav321.py',
-                 'web/javbus.py',
-                 'web/javdb.py',
-                 'web/javlib.py',
-                 'web/javmenu.py',
-                 'web/mgstage.py',
-                 'web/prestige.py'
-             ],
+                 'core/config.py'
+             ] + all_crawlers,
              hookspath=[],
              runtime_hooks=['ver_hook.py'],
              excludes=[],
@@ -55,4 +54,4 @@ exe = EXE(pyz,
           upx_exclude=[],
           runtime_tmpdir=None,
           console=True,
-          icon='../image/JavSP.ico')
+          icon=ico_file)
