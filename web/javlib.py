@@ -18,6 +18,7 @@ request = Request(use_scraper=True)
 
 logger = logging.getLogger(__name__)
 permanent_url = 'https://www.javlibrary.com'
+base_url = ''
 
 
 def init_network_cfg():
@@ -40,13 +41,13 @@ def init_network_cfg():
     logger.warning('无法绕开JavLib的反爬机制')
     return permanent_url
 
-base_url = init_network_cfg()
-
 
 # TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     global base_url
+    if not base_url:
+        base_url = init_network_cfg()
     url = new_url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
     resp = request.get(url)
     html = resp2html(resp)
