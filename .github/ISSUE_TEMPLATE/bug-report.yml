@@ -1,0 +1,59 @@
+name: 报告问题 (Bug)
+description: 报告你遇到的问题 (Bug)
+title: 用一句话描述这个问题
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        为了方便复现和排查问题，请按照下面的提示补充问题详情
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题详情
+      description: 描述这个bug的出现场景、现象等
+      placeholder: |
+        - 如果这个问题只在使用特定的配置时出现，请附上你配置文件中的相关项。
+        - 如果这个问题只在部分影片上出现，必须说明这些影片的完整文件名或者番号。
+    validations:
+      required: true
+  - type: dropdown
+    id: execute-method
+    attributes:
+      label: 运行方式
+      description: 你运行的是打包后的exe程序吗？
+      options:
+        - 我运行的是打包后的exe程序
+        - 我是从源代码运行的
+    validations:
+      required: true
+  - type: dropdown
+    id: proxy
+    attributes:
+      label: 代理
+      description: 是否启用了网络代理？
+      options:
+        - 是
+        - 否
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: 日志
+      description: 请将软件所在目录下的日志文件`JavSP.log`上传到这里
+      placeholder: 激活此输入框后，你可以直接将文件拖动到此输入框或者点击下面的“Attach files by dragging & dropping, selecting or pasting them”上传文件
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: 运行截图（可选）
+      description: 添加截图有助于定位和排查问题
+      placeholder: 激活此输入框后，你可以按“Ctrl+V”快速上传剪贴板中的截图，或者参考上传日志的方法上传图片文件
+  - type: checkboxes
+    id: promise
+    attributes:
+      label: 提交须知
+      description: 提交问题前，请确认你使用的是[最新版本](https://github.com/Yuukiy/JavSP/releases/latest)并且已经阅读过[Wiki帮助文档](https://github.com/Yuukiy/JavSP/wiki)
+      options:
+        - label: 我确认使用的是最新版本并且阅读过Wiki帮助文档
+          required: true
