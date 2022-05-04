@@ -100,8 +100,8 @@ def parse_data(movie: MovieInfo):
     """
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
     html = get_html_wrapper(f'{base_url}/search?q={movie.dvdid}')
-    ids = list(map(str.lower, html.xpath("//div[@id='videos']/div/div/a/div[@class='uid']/text()")))
-    movie_urls = html.xpath("//div[@id='videos']/div/div/a/@href")
+    ids = list(map(str.lower, html.xpath("//div[@class='video-title']/strong/text()")))
+    movie_urls = html.xpath("//div[@class='movie-list h cols-4']/div/a/@href")
     match_count = len([i for i in ids if i == movie.dvdid.lower()])
     if match_count == 0:
         logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
@@ -113,8 +113,8 @@ def parse_data(movie: MovieInfo):
         return False
 
     html = get_html_wrapper(new_url)
-    container = html.xpath("/html/body/section/div[@class='container']")[0]
-    info = container.xpath("div/div/div/nav")[0]
+    container = html.xpath("/html/body/section/div/div[@class='video-detail']")[0]
+    info = container.xpath("//nav[@class='panel movie-panel-info']")[0]
     title = container.xpath("h2/strong/text()")[0]
     cover = container.xpath("//img[@class='video-cover']/@src")[0]
     preview_pics = container.xpath("//a[@class='tile-item'][@data-fancybox='gallery']/@href")
@@ -158,7 +158,7 @@ def parse_data(movie: MovieInfo):
     all_actors = actors_tag.xpath("a/text()")
     genders = actors_tag.xpath("strong/text()")
     actress = [i for i in all_actors if genders[all_actors.index(i)] == '♀']
-    magnet = container.xpath("//td[@class='magnet-name']/a/@href")
+    magnet = container.xpath("//div[@class='magnet-name column is-four-fifths']/a/@href")
 
     movie.dvdid = dvdid
     movie.url = new_url.replace(base_url, permanent_url)
@@ -193,6 +193,6 @@ if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
     logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('FC2-718323')
+    movie = MovieInfo('IPX-177')
     parse_clean_data(movie)
     print(movie)
