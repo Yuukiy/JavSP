@@ -1,5 +1,6 @@
 """从airav抓取数据"""
 import os
+import re
 import sys
 import logging
 from html import unescape
@@ -57,14 +58,15 @@ def parse_data(movie: MovieInfo):
     # airav也提供简体，但是为了尽量保持女优名等与其他站点一致，抓取繁体的数据
     url = f'{base_url}/api/video/barcode/{movie.dvdid}?lng=zh-TW'
     resp = request.get(url).json()
-    if resp['count'] == 0:
+    # 只在番号是纯数字时，尝试进行搜索，否则可能导致搜索到错误的影片信息
+    if resp['count'] == 0 and re.match(r'\d{6}[-_]\d{2,3}', movie.dvdid):
         barcode = search_movie(movie.dvdid)
         if barcode:
             url = f'{base_url}/api/video/barcode/{barcode}?lng=zh-TW'
             resp = request.get(url).json()
-        else:
-            logger.debug(f"'{movie.dvdid}': airav无资源")
-            return
+    if resp['count'] == 0:
+        logger.debug(f"'{movie.dvdid}': airav无资源")
+        return
 
     # 从API返回的数据中提取需要的字段
     # TODO: 数据中含有更多信息（如女优的中文&日文名对照），可能有助于未来功能扩展
@@ -103,6 +105,6 @@ def parse_data(movie: MovieInfo):
 
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('012717_472')
+    movie = MovieInfo('RED-096')
     parse_data(movie)
     print(movie)
