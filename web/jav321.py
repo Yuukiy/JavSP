@@ -87,7 +87,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('DCV-137')
     try:
         parse_data(movie)
         print(movie)
