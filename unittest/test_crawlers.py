@@ -38,7 +38,10 @@ def compare(avid, scraper, file):
     scraper_mod = 'web.' + scraper
     __import__(scraper_mod)
     parse_data = getattr(sys.modules[scraper_mod], 'parse_data')
-    parse_data(online)
+    try:
+        parse_data(online)
+    except Exception as e:
+        logger.debug(e, exc_info=1)
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
     local_vars = vars(local)
     online_vars = vars(online)

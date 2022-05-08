@@ -6,6 +6,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
+from web.exceptions import *
 from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
@@ -37,7 +38,7 @@ def get_html_wrapper(url):
                 try:
                     cookies_pool = get_browsers_cookies()
                 except Exception as e:
-                    logger.warning('获取JavDB的登录凭据时出错，你可能使用的是绿色版、修改版等非官方Chrome系浏览器')
+                    logger.warning('获取JavDB的登录凭据时出错，你可能使用的是国内定制版等非官方Chrome系浏览器')
                     logger.debug(e, exc_info=True)
                     cookies_pool = []
             if len(cookies_pool) > 0:
@@ -49,16 +50,16 @@ def get_html_wrapper(url):
                 logger.debug(f'未携带有效Cookies而发生重定向，尝试更换Cookies为: {cookies_source}')
                 return get_html_wrapper(url)
             else:
-                raise Exception(f'JavDB: 所有浏览器Cookies均已过期')
+                raise CredentialError('JavDB: 所有浏览器Cookies均已过期')
         elif r.history and '/sfpay' in r.url:
-            raise Exception(f'JavDB: 资源被限制为仅VIP可见: {r.history[0].url}')
+            raise PermissionError(f"JavDB: 此资源被限制为仅VIP可见: '{r.history[0].url}'")
         else:
             html = resp2html(r)
             return html
     elif r.status_code in (403, 503):
-        raise Exception(f'JavDB: {r.status_code} 禁止访问: {url} （可能触发了反爬虫机制，请稍后再试）')
+        raise SiteBlocked(f'JavDB: {r.status_code} 禁止访问: {url}')
     else:
-        raise Exception(f'JavDB: {r.status_code} 非预期状态码: {url}')
+        raise WebsiteError(f'JavDB: {r.status_code} 非预期状态码: {url}')
 
 
 def get_user_info(site, cookies):
@@ -67,7 +68,8 @@ def get_user_info(site, cookies):
         request.cookies = cookies
         html = request.get_html(f'https://{site}/users/profile')
     except Exception as e:
-        logger.debug(repr(e))
+        logger.info('JavDB: 获取用户信息时出错')
+        logger.debug(e, exc_info=1)
         return
     # 扫描浏览器得到的Cookies对应的临时域名可能会过期，因此需要先判断域名是否仍然指向JavDB的站点
     if 'JavDB' in html.text:
@@ -75,7 +77,7 @@ def get_user_info(site, cookies):
         username = html.xpath("//div[@class='user-profile']/ul/li[2]/span/following-sibling::text()")[0].strip()
         return email, username
     else:
-        logger.debug('JavDB域名已过期: ' + site)
+        logger.debug('JavDB: 域名已过期: ' + site)
 
 
 def get_valid_cookies():
@@ -91,12 +93,8 @@ def get_valid_cookies():
 
 def parse_data(movie: MovieInfo):
     """从网页抓取并解析指定番号的数据
-
     Args:
         movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
-
-    Returns:
-        bool: True 表示解析成功，movie中携带有效数据；否则为 False
     """
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
     html = get_html_wrapper(f'{base_url}/search?q={movie.dvdid}')
@@ -104,13 +102,11 @@ def parse_data(movie: MovieInfo):
     movie_urls = html.xpath("//a[@class='box']/@href")
     match_count = len([i for i in ids if i == movie.dvdid.lower()])
     if match_count == 0:
-        logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))
-        return False
+        raise MovieNotFoundError(movie.dvdid, __name__, ids)
     elif match_count == 1:
         new_url = movie_urls[ids.index(movie.dvdid.lower())]
     else:
-        logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，为避免误处理，已全部忽略")
-        return False
+        raise MovieDuplicateError(movie.dvdid, match_count)
 
     html = get_html_wrapper(new_url)
     container = html.xpath("/html/body/section/div/div[@class='video-detail']")[0]
@@ -171,14 +167,14 @@ def parse_data(movie: MovieInfo):
     movie.genre_id = genre_id
     movie.actress = actress
     movie.magnet = [i.replace('[javdb.com]','') for i in magnet]
-    return True
 
 
 def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
-    success = parse_data(movie)
-    if not success:
-        return
+    try:
+        parse_data(movie)
+    except SiteBlocked:
+        logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
     movie.genre_norm = genre_map.map(movie.genre_id)
     movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
     # 将此功能放在各个抓取器以保持数据的一致，避免影响转换（写入nfo时的信息来自多个抓取器的汇总，数据来源一致性不好）
@@ -192,7 +188,11 @@ def parse_clean_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('IPX-177')
-    parse_clean_data(movie)
-    print(movie)
+    logger.root.handlers[1].level = logging.DEBUG
+
+    movie = MovieInfo('FC2-718323')
+    try:
+        parse_clean_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e)

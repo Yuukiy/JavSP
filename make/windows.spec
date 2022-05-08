@@ -7,12 +7,11 @@ block_cipher = None
 cloudscraper_dir = os.path.dirname(inspect.getfile(cloudscraper))
 cloudscraper_json = cloudscraper_dir + '/user_agent/browsers.json'
 
-# generate crawlers list
+# generate crawlers list (exlcude list is not needed here)
 all_crawlers = []
-exclude_files = ('base', 'proxyfree', 'translate')
 for file in os.listdir('web'):
     name, ext = os.path.splitext(file)
-    if ext == '.py' and name not in exclude_files:
+    if ext == '.py':
         all_crawlers.append('web.' + name)
 
 # workaround for a bug of PyInstaller since 5.0: https://github.com/pyinstaller/pyinstaller/issues/6759
