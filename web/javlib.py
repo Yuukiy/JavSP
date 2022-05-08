@@ -24,6 +24,7 @@ base_url = ''
 
 def init_network_cfg():
     """设置合适的代理模式和base_url"""
+    request.timeout = 5
     proxy_free_url = get_proxy_free_url('javlib')
     urls = [cfg.ProxyFree.javlib, permanent_url]
     if proxy_free_url and proxy_free_url not in urls:
@@ -33,13 +34,17 @@ def init_network_cfg():
     for proxies in proxy_cfgs:
         request.proxies = proxies
         for url in urls:
+            if proxies == {} and url == permanent_url:
+                continue
             try:
                 resp = request.get(url, delay_raise=True)
                 if resp.status_code == 200:
+                    request.timeout = cfg.Network.timeout
                     return url
-            except ConnectionError as e:
+            except Exception as e:
                 logger.debug(f"Fail to connect to '{url}': {e}")
     logger.warning('无法绕开JavLib的反爬机制')
+    request.timeout = cfg.Network.timeout
     return permanent_url
 
 
@@ -49,6 +54,7 @@ def parse_data(movie: MovieInfo):
     global base_url
     if not base_url:
         base_url = init_network_cfg()
+        logger.debug(f"JavLib网络配置: {base_url}, proxy={request.proxies}")
     url = new_url = f'{base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
     resp = request.get(url)
     html = resp2html(resp)
@@ -132,7 +138,8 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('MIDV-010')
+    base_url = permanent_url
+    movie = MovieInfo('IPX-177')
     try:
         parse_data(movie)
         print(movie)
