@@ -10,13 +10,12 @@ class CrawlerError(Exception):
 class MovieNotFoundError(CrawlerError):
     """表示某个站点没有抓取到某部影片"""
     # 保持异常消息的简洁，同时又支持使用'logger.info(e, exc_info=True)'记录完整信息
-
-    def __init__(self, avid, *args) -> None:
-        super().__init__(avid, *args)
-        self.avid = avid
+    def __init__(self, mod, avid, *args) -> None:
+        msg = f"{mod}: 未找到影片: '{avid}'"
+        super().__init__(msg, avid, *args)
 
     def __str__(self):
-        return f"{__name__}: 未找到影片: '{self.avid}'"
+        return self.args[0]
 
 
 class MovieDuplicateError(CrawlerError):

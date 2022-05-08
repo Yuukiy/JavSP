@@ -68,6 +68,21 @@ class ColoredFormatter(logging.Formatter):
         color = self.COLOR_MAP.get(record.levelno, self.NO_STYLE)
         return color + raw + self.NO_STYLE
 
+
+class DetailedFormatter(logging.Formatter):
+    """如果日志记录包含异常信息，则将传递给异常的参数一起记录下来"""
+    def __init__(self, fmt='%(asctime)s %(name)s:%(lineno)d %(levelname)s: %(message)s',
+                 datefmt='%Y-%m-%d %H:%M:%S', *args) -> None:
+        super().__init__(fmt, datefmt, *args)
+    def formatException(self, ei):
+        s = super().formatException(ei)
+        # ei[1] 是异常的实例，从中提取除了异常的message外的其他参数
+        if len(ei[1].args) > 1:
+            args = ei[1].args[1:]
+            s += "\nArguments: \n  " + str(args).strip('(),')
+        return s
+
+
 # 添加到root的filter无法对root的子logger生效（真是反直觉的设计），因此将filter添加到每一个handler
 # https://docs.python.org/3/library/logging.html#filter-objects
 root_logger = logging.getLogger()
@@ -76,8 +91,7 @@ file_handler = logging.FileHandler(
     filename=rel_path_from_exe('JavSP.log'), mode='a', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.addFilter(filter=log_filter)
-file_handler.setFormatter(logging.Formatter(
-    fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+file_handler.setFormatter(DetailedFormatter())
 root_logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)

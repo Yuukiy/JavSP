@@ -102,7 +102,7 @@ def parse_data(movie: MovieInfo):
     movie_urls = html.xpath("//a[@class='box']/@href")
     match_count = len([i for i in ids if i == movie.dvdid.lower()])
     if match_count == 0:
-        raise MovieNotFoundError(movie.dvdid, __name__, ids)
+        raise MovieNotFoundError(__name__, movie.dvdid, ids)
     elif match_count == 1:
         new_url = movie_urls[ids.index(movie.dvdid.lower())]
     else:
@@ -195,4 +195,4 @@ if __name__ == "__main__":
         parse_clean_data(movie)
         print(movie)
     except CrawlerError as e:
-        logger.error(e)
+        logger.error(e, exc_info=1)
