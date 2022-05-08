@@ -496,6 +496,8 @@ def sys_exit(code):
 if __name__ == "__main__":
     colorama.init(autoreset=True)
     # 检查更新
+    version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
+    logger.debug(version_info.center(60, '='))
     check_update(cfg.Other.check_update, cfg.Other.auto_update)
     root = get_scan_dir(cfg.File.scan_dir)
     error_exit(root, '未选择要扫描的文件夹')
