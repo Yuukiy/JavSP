@@ -8,6 +8,7 @@ from requests.exceptions import ConnectionError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
+from web.exceptions import *
 from web.proxyfree import get_proxy_free_url
 from core.config import cfg
 from core.datatype import MovieInfo
@@ -69,13 +70,12 @@ def parse_data(movie: MovieInfo):
             tag_dvdid = tag.xpath("div[@class='id']/text()")[0]
             if tag_dvdid.upper() == movie.dvdid.upper():
                 pre_choose.append(tag)
+        pre_choose_urls = [i.get('href') for i in pre_choose]
         match_count = len(pre_choose)
         if match_count == 0:
-            logger.debug(f"'{movie.dvdid}': 无法获取到影片结果")
-            return
+            raise MovieNotFoundError(__name__, movie.dvdid)
         elif match_count == 1:
-            new_url = pre_choose[0].get('href')
-            logger.debug(f"'{movie.dvdid}': 遇到多个搜索结果，已自动选择: {new_url}")
+            new_url = pre_choose_urls[0]
         elif match_count == 2:
             no_blueray = []
             for tag in pre_choose:
@@ -86,12 +86,11 @@ def parse_data(movie: MovieInfo):
                 new_url = no_blueray[0].get('href')
                 logger.debug(f"'{movie.dvdid}': 存在{match_count}个同番号搜索结果，已自动选择封面比例正确的一个: {new_url}")
             else:
-                logger.error(f"'{movie.dvdid}': 存在{match_count}个搜索结果，为避免误处理，已全部忽略")
-                return
+                # 两个结果中没有谁是蓝光影片，说明影片番号重复了
+                raise MovieDuplicateError(__name__, movie.dvdid, match_count, pre_choose_urls)
         else:
             # 存在不同影片但是番号相同的情况，如MIDV-010
-            logger.error(f"'{movie.dvdid}': 出现{match_count}个完全匹配目标番号的搜索结果，为避免误处理，已全部忽略")
-            return
+            raise MovieDuplicateError(__name__, movie.dvdid, match_count, pre_choose_urls)
         # 重新抓取网页
         html = request.get_html(new_url)
     container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
@@ -131,7 +130,11 @@ def parse_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('AbW-001')
-    parse_data(movie)
-    print(movie)
+    logger.root.handlers[1].level = logging.DEBUG
+
+    movie = MovieInfo('MIDV-010')
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

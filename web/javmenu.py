@@ -5,6 +5,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
+from web.exceptions import *
 from core.datatype import MovieInfo
 
 
@@ -18,17 +19,14 @@ def parse_data(movie: MovieInfo):
     """从网页抓取并解析指定番号的数据
     Args:
         movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
-    Returns:
-        bool: True 表示解析成功，movie中携带有效数据；否则为 False
     """
     # JavMenu网页做得不怎么走心，将就了
     url = f'{base_url}/{movie.dvdid}'
     r = request.get(url)
-    if r.status_code != 200:
-        return False
-    elif r.history:
-        logger.debug(f"'{movie.dvdid}': JavMenu无资源")
-        return False
+    if r.history:
+        # 被重定向到主页说明找不到影片资源
+        raise MovieNotFoundError(__name__, movie.dvdid)
+
     html = resp2html(r)
     container = html.xpath("//div[@class='col-md-8 px-0']")[0]
     title = container.xpath("div[@class='col-12 mb-3']/h1/strong/text()")[0]
@@ -69,14 +67,16 @@ def parse_data(movie: MovieInfo):
     movie.genre = genre
     movie.genre_id = genre_id
     movie.actress = actress
-    return True
 
 
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('082713-417')
-    if parse_data(movie):
+    try:
+        parse_data(movie)
         print(movie)
-    else:
-        print('未抓取到数据: ' + repr(movie))
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

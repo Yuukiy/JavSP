@@ -106,7 +106,7 @@ def parse_data(movie: MovieInfo):
     elif match_count == 1:
         new_url = movie_urls[ids.index(movie.dvdid.lower())]
     else:
-        raise MovieDuplicateError(movie.dvdid, match_count)
+        raise MovieDuplicateError(__name__, movie.dvdid, match_count)
 
     html = get_html_wrapper(new_url)
     container = html.xpath("/html/body/section/div/div[@class='video-detail']")[0]

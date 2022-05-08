@@ -1,13 +1,16 @@
 """从avsox抓取数据"""
 import os
 import sys
+import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html
+from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
 
 
+logger = logging.getLogger(__name__)
 base_url = cfg.ProxyFree.avsox
 
 
@@ -18,11 +21,10 @@ def parse_data(movie: MovieInfo):
     ids = html.xpath("//div[@class='photo-info']/span/date[1]/text()")
     urls = html.xpath("//a[contains(@class, 'movie-box')]/@href")
     ids_lower = list(map(str.lower, ids))
-    try:
+    if movie.dvdid.lower() in ids_lower:
         url = urls[ids_lower.index(movie.dvdid.lower())]
-    except ValueError:
-        # ValueError 表明找不到这部影片，直接返回
-        return
+    else:
+        raise MovieNotFoundError(__name__, movie.dvdid, ids)
 
     # 提取影片信息
     html = get_html(url)
@@ -53,6 +55,13 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('130614-KEIKO')
-    parse_data(movie)
-    print(movie)
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

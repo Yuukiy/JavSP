@@ -8,6 +8,7 @@ import lxml.html
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -20,8 +21,7 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     html_file = f'{base_path}/{movie.dvdid}.html'
     if not os.path.exists(html_file):
-        logger.debug(f"未找到fc2fan镜像网页: '{html_file}'")
-        return
+        raise MovieNotFoundError(__name__, movie.dvdid, html_file)
 
     html = lxml.html.parse(html_file)
     container = html.xpath("//div[@class='col-sm-8']")[0]
@@ -54,6 +54,13 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('FC2-1000967')
-    parse_data(movie)
-    print(movie)
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

@@ -7,7 +7,8 @@ import logging
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import Request
+from web.base import Request, resp2html
+from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -23,10 +24,15 @@ request.headers['Accept-Language'] = 'ja,en-US;q=0.9'
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = f'{base_url}/digital/videoa/-/detail/=/cid={movie.cid}/'
-    html = request.get_html(url)
+    resp = request.get(url, delay_raise=True)
+    # 404错误表明没有这部影片的数据
+    if resp.status_code == 404:
+        raise MovieNotFoundError(__name__, movie.cid)
+    resp.raise_for_status()
+    html = resp2html(resp)
     if 'not available in your region' in html.text_content():
-        logger.error('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
-        return
+        raise SiteBlocked('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
+
     title = html.xpath("//h1[@id='title']/text()")[0]
     # 注意: 浏览器在渲染时会自动加上了'tbody'字段，但是原始html网页中并没有，因此xpath解析时还是要按原始网页的来
     container = html.xpath("//table[@class='mg-b12']/tr/td")[0]
@@ -101,7 +107,11 @@ def parse_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.setLevel(logging.DEBUG)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo(cid='sqte00300')
-    parse_data(movie)
-    print(movie)
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

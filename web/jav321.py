@@ -7,6 +7,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import post_html
+from web.exceptions import *
 from core.datatype import MovieInfo
 
 
@@ -22,7 +23,7 @@ def parse_data(movie: MovieInfo):
     cid = page_url.split('/')[-1]   # /video/ipx00177
     # 如果从URL匹配到的cid是'search'，说明还停留在搜索页面，找不到这部影片
     if cid == 'search':
-        return
+        raise MovieNotFoundError(__name__, movie.dvdid)
     title = html.xpath("//div[@class='panel-heading']/h3/text()")[0]
     info = html.xpath("//div[@class='col-md-9']")[0]
     # jav321的不同信息字段间没有明显分隔，只能通过url来匹配目标标签
@@ -82,6 +83,13 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('IPX-177')
-    parse_data(movie)
-    print(movie)
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

@@ -12,7 +12,7 @@ class MovieNotFoundError(CrawlerError):
     # 保持异常消息的简洁，同时又支持使用'logger.info(e, exc_info=True)'记录完整信息
     def __init__(self, mod, avid, *args) -> None:
         msg = f"{mod}: 未找到影片: '{avid}'"
-        super().__init__(msg, avid, *args)
+        super().__init__(msg, *args)
 
     def __str__(self):
         return self.args[0]
@@ -20,10 +20,12 @@ class MovieNotFoundError(CrawlerError):
 
 class MovieDuplicateError(CrawlerError):
     """影片重复"""
+    def __init__(self, mod, avid, dup_count, *args) -> None:
+        msg = f"{mod}: '{avid}': 存在{dup_count}个完全匹配目标番号的搜索结果"
+        super().__init__(msg, *args)
 
-    def __init__(self, avid, dup_count) -> None:
-        msg = f"'{avid}': 出现{dup_count}个完全匹配目标番号的搜索结果"
-        super().__init__(msg)
+    def __str__(self):
+        return self.args[0]
 
 
 class SiteBlocked(CrawlerError):

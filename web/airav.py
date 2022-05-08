@@ -8,6 +8,7 @@ from html import unescape
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request
+from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -40,7 +41,7 @@ def search_movie(dvdid):
             break
     # 如果什么都没搜索到，直接返回
     if not result:
-        return
+        raise MovieNotFoundError(__name__, dvdid)
     # 排序，以优先选择更符合预期的结果（如'012717_472'对应的'1pondo_012717_472'和'_1pondo_012717_472'）
     result.sort(key=lambda x:x['barcode'])
     # 从所有搜索结果中选择最可能的番号，返回它的URL
@@ -50,7 +51,7 @@ def search_movie(dvdid):
         barcode = item['barcode'].replace('-', '_')
         if target in barcode:
             return item['barcode']
-    return
+    raise MovieNotFoundError(__name__, dvdid, result)
 
 
 def parse_data(movie: MovieInfo):
@@ -65,8 +66,7 @@ def parse_data(movie: MovieInfo):
             url = f'{base_url}/api/video/barcode/{barcode}?lng=zh-TW'
             resp = request.get(url).json()
     if resp['count'] == 0:
-        logger.debug(f"'{movie.dvdid}': airav无资源")
-        return
+        raise MovieNotFoundError(__name__, movie.dvdid, resp)
 
     # 从API返回的数据中提取需要的字段
     # TODO: 数据中含有更多信息（如女优的中文&日文名对照），可能有助于未来功能扩展
@@ -104,7 +104,13 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    logger.setLevel(logging.DEBUG)
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('RED-096')
-    parse_data(movie)
-    print(movie)
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

@@ -7,6 +7,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
+from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -24,8 +25,8 @@ def parse_data(movie: MovieInfo):
     resp = request.get(url)
     # url不存在时会被重定向至主页。history非空时说明发生了重定向
     if resp.history:
-        logger.debug(f"'{movie.dvdid}': mgstage无资源")
-        return
+        raise MovieNotFoundError(__name__, movie.dvdid)
+
     html = resp2html(resp)
     # mgstage的文本中含有大量的空白字符（'\n \t'），需要使用strip去除
     title = html.xpath("//div[@class='common_detail_cover']/h1/text()")[0].strip()
@@ -103,6 +104,11 @@ def parse_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('SIRO-4718')
-    parse_data(movie)
-    print(movie)
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

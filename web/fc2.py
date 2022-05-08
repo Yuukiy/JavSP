@@ -6,6 +6,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html, request_get
+from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -60,11 +61,11 @@ def parse_data(movie: MovieInfo):
     # 抓取网页
     url = f'{base_url}/article/{fc2_id}/'
     html = get_html(url)
-    try:
-        container = html.xpath("//div[@class='items_article_left']")[0]
-    except IndexError:
-        logger.debug('无影片: ' + movie.dvdid)
-        return
+    container = html.xpath("//div[@class='items_article_left']")
+    if len(container) > 0:
+        container = container[0]
+    else:
+        raise MovieNotFoundError(__name__, movie.dvdid)
     title = container.xpath("//div[@class='items_article_headerInfo']/h3/text()")[0]
     thumb_tag = container.xpath("//div[@class='items_article_MainitemThumb']")[0]
     thumb_pic = thumb_tag.xpath("span/img/@src")[0]
@@ -109,7 +110,13 @@ def parse_data(movie: MovieInfo):
 
 
 if __name__ == "__main__":
-    logger.setLevel(logging.DEBUG)
-    movie = MovieInfo('FC2-718323')
-    parse_data(movie)
-    print(movie)
+    import pretty_errors
+    pretty_errors.configure(display_link=True)
+    logger.root.handlers[1].level = logging.DEBUG
+
+    movie = MovieInfo('FC2-12345')
+    try:
+        parse_data(movie)
+        print(movie)
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)

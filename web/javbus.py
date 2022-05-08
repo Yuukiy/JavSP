@@ -6,6 +6,7 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
+from web.exceptions import *
 from core.func import *
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
@@ -22,41 +23,16 @@ else:
 
 def parse_data(movie: MovieInfo):
     """从网页抓取并解析指定番号的数据
-
     Args:
         movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
-
-    Returns:
-        bool: True 表示解析成功，movie中携带有效数据；否则为 False
     """
     url = f'{base_url}/{movie.dvdid}'
-    html = None
-    for _ in range(cfg.Network.retry):
-        try:
-            resp = request_get(url, delay_raise=True)
-            # 404错误表明没有这部影片的数据，不是网络问题，因此不再重试
-            if resp.status_code == 404:
-                logger.debug('JavBus无影片: ' + repr(movie))
-                break
-            else:
-                resp.raise_for_status()
-                html = resp2html(resp)
-                break
-        except Exception as e:
-            logger.debug(repr(e))
-    if html is not None:
-        try:
-            parse_data_raw(movie, html)
-            # 生成url时始终使用永久域名，因为免代理域名可能会失效
-            movie.url = f'{permanent_url}/{movie.dvdid}'
-            return True
-        except Exception as e:
-            logger.error('解析网页数据时出现异常: ' + repr(e))
-    return False
+    resp = request_get(url, delay_raise=True)
+    if resp.status_code == 404:
+        raise MovieNotFoundError(__name__, movie.dvdid)
+    resp.raise_for_status()
+    html = resp2html(resp)
 
-
-def parse_data_raw(movie: MovieInfo, html):
-    """解析指定番号的影片数据"""
     container = html.xpath("/html/body/div[@class='container']")[0]
     title = container.xpath("h3/text()")[0]
     cover = container.xpath("//a[@class='bigImage']/img/@src")[0]
@@ -99,6 +75,7 @@ def parse_data_raw(movie: MovieInfo, html):
         if not pic_url.endswith('nowprinting.gif'):     # 略过默认的头像
             actress_pics[name] = pic_url
     # 整理数据并更新movie的相应属性
+    movie.url = f'{permanent_url}/{movie.dvdid}'
     movie.dvdid = dvdid
     movie.title = title.replace(dvdid, '').strip()
     movie.cover = cover
@@ -115,9 +92,7 @@ def parse_data_raw(movie: MovieInfo, html):
 
 def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
-    success = parse_data(movie)
-    if not success:
-        return
+    parse_data(movie)
     movie.genre_norm = genre_map.map(movie.genre_id)
     movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（暗示已经完成转换）
     # 将此功能放在各个抓取器以保持数据的一致，避免影响转换（写入nfo时的信息来自多个抓取器的汇总，数据来源一致性不好）
@@ -126,15 +101,16 @@ def parse_clean_data(movie: MovieInfo):
         if new_title != movie.title:
             movie.ori_title = movie.title
             movie.title = new_title
-    return success
 
 
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.setLevel(logging.DEBUG)
+    logger.root.handlers[1].level = logging.DEBUG
+
     movie = MovieInfo('130614-KEIKO')
-    if parse_clean_data(movie):
+    try:
+        parse_clean_data(movie)
         print(movie)
-    else:
-        print('解析出错: ' + repr(movie))
+    except CrawlerError as e:
+        logger.error(e, exc_info=1)
