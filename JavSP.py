@@ -36,6 +36,7 @@ from core.func import *
 from core.image import *
 from core.datatype import Movie, MovieInfo
 from web.base import download
+from web.exceptions import *
 from web.translate import translate_movie_info
 
 
@@ -73,18 +74,27 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         for cnt in range(retry):
             try:
                 parser(info)
-                logger.debug(f'{task_info}: 抓取成功')
+                movie_id = info.dvdid or info.cid
+                logger.debug(f"{crawler_name}: 抓取成功: '{movie_id}'")
+                setattr(info, 'success', True)
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 抓取完成')
                 break
+            except MovieNotFoundError as e:
+                logger.debug(e)
+                break
+            except MovieDuplicateError as e:
+                logger.exception(e)
+                break
+            except (SiteBlocked, PermissionError, CredentialError) as e:
+                logger.error(e)
+                break
             except requests.exceptions.RequestException as e:
-                logger.debug(f'{task_info}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{repr(e)}')
+                logger.debug(f'{crawler_name}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{repr(e)}')
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
             except Exception as e:
-                logger.error(e)
-                logger.debug(e, exc_info=True)
-                break
+                logger.exception(e)
 
     # 根据影片的数据源获取对应的抓取器
     crawler_mods = cfg.CrawlerSelect[movie.data_src]
@@ -122,6 +132,10 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             movie.data_src = 'normal'
             movie.cid = None
             all_info = {k: v for k, v in all_info.items() if k not in cfg.CrawlerSelect['cid']}
+    # 删除抓取失败的站点对应的数据
+    all_info = {k:v for k,v in all_info.items() if hasattr(v, 'success')}
+    for info in all_info.values():
+        del info.success
     # 删除all_info中键名中的'web.'
     all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info
@@ -193,7 +207,7 @@ def info_summary(movie: Movie, all_info):
     # 检查是否所有必需的字段都已经获得了值
     for attr in cfg.Crawler.required_keys:
         if not getattr(final_info, attr, None):
-            logger.error(f"所有爬虫均未获取到字段: '{attr}'，抓取失败")
+            logger.error(f"所有抓取器均未获取到字段: '{attr}'，抓取失败")
             return False
     # 必需字段均已获得了值：将最终的数据附加到movie
     movie.info = final_info
@@ -359,7 +373,7 @@ def RunNormalMode(all_movies):
         if result:
             inner_bar.update()
         else:
-            raise Exception(msg)
+            raise Exception(msg + '\n')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     total_step = 7 if cfg.Translate.engine else 6
@@ -372,7 +386,8 @@ def RunNormalMode(all_movies):
             # 依次执行各个步骤
             inner_bar.set_description(f'启动并发任务')
             all_info = parallel_crawler(movie, inner_bar)
-            check_step(all_info)
+            msg = f'为其配置的{len(cfg.CrawlerSelect[movie.data_src])}个抓取器均未获取到影片信息'
+            check_step(all_info, msg)
 
             inner_bar.set_description('汇总数据')
             has_required_keys = info_summary(movie, all_info)
@@ -432,8 +447,8 @@ def RunNormalMode(all_movies):
 
             logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
         except Exception as e:
-            logger.error(f'整理失败: {e}')
             logger.debug(e, exc_info=True)
+            logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
 
