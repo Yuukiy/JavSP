@@ -60,7 +60,7 @@ def remove_trail_actor_in_title(title:str, actors:list) -> str:
     # 使用match而不是sub是为了将替换掉的部分写入日志
     match = re.match(pattern, title)
     if match:
-        logger.debug(f"移除标题尾部的女优名: '{match.group(1)}'[{match.group(2)}]")
+        logger.debug(f"移除标题尾部的女优名: '{match.group(1)}' [{match.group(2)}]")
         return match.group(1)
     else:
         return title

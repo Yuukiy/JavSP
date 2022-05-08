@@ -43,25 +43,54 @@ def gen_backup_path(path):
 def log_filter(record):
     """只接受JavSP自身的日志，排除所依赖的库的日志"""
     rname = record.name
-    if rname in ['main', '__main__'] or rname.startswith(('core.', 'web.')):
-        return True
-    else:
-        return False
+    return rname in ('main', '__main__') or rname.startswith(('core.', 'web.'))
 
 
+class ColoredFormatter(logging.Formatter):
+    """为不同level的日志着色"""
+    NO_STYLE = '\033[0m'
+    COLOR_MAP = {
+        logging.DEBUG:    '\033[1;30m',  # grey
+        logging.WARNING:  '\033[1;33m',  # light yellow
+        logging.ERROR:    '\033[1;31m',  # light red
+        logging.CRITICAL: '\033[0;31m',  # red
+    }
+
+    def __init__(self, fmt='%(levelname)-8s:%(message)s',
+                 datefmt='%Y-%m-%d %H:%M:%S', style='%', validate=True) -> None:
+        super().__init__(fmt=fmt, datefmt=datefmt, style=style, validate=validate)
+
+    def format(self, record):
+        # 清除exc_info异常信息，保持终端输出的整洁
+        record.exc_info = None
+        record.exc_text = None
+        raw = super().format(record)
+        color = self.COLOR_MAP.get(record.levelno, self.NO_STYLE)
+        return color + raw + self.NO_STYLE
+
+# 添加到root的filter无法对root的子logger生效（真是反直觉的设计），因此将filter添加到每一个handler
+# https://docs.python.org/3/library/logging.html#filter-objects
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(filename=rel_path_from_exe('JavSP.log'), mode='a', encoding='utf-8')
+file_handler = logging.FileHandler(
+    filename=rel_path_from_exe('JavSP.log'), mode='a', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_handler.addFilter(filter=log_filter)
 file_handler.setFormatter(logging.Formatter(
     fmt='%(asctime)s %(name)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 root_logger.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+stream_handler.addFilter(filter=log_filter)
+stream_handler.setFormatter(ColoredFormatter(fmt='%(message)s'))
+root_logger.addHandler(stream_handler)
 
 filemove_logger = logging.getLogger('filemove')
-file_handler2 = logging.FileHandler(filename=rel_path_from_exe('FileMove.log'), mode='a', encoding='utf-8')
-file_handler2.addFilter(filter=lambda r:r.name == 'filemove')
-file_handler2.setFormatter(logging.Formatter(fmt='%(asctime)s\t%(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+file_handler2 = logging.FileHandler(filename=rel_path_from_exe('FileMove.log'),
+                                    mode='a', encoding='utf-8')
+file_handler2.addFilter(filter=lambda r: r.name == 'filemove')
+file_handler2.setFormatter(logging.Formatter(
+    fmt='%(asctime)s\t%(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 filemove_logger.addHandler(file_handler2)
 
 logger = logging.getLogger(__name__)

@@ -18,15 +18,13 @@ pretty_errors.configure(display_link=True)
 
 from core.print import TqdmOut
 from core.baidu_aip import aip_crop_poster
-from core.datatype import ColoredFormatter
 
 
-# 配置 logging StreamHandler
+# 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
 root_logger = logging.getLogger()
-console_handler = logging.StreamHandler(stream=TqdmOut)
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(ColoredFormatter(fmt='%(message)s'))
-root_logger.addHandler(console_handler)
+for handler in root_logger.handlers:
+    if type(handler) == logging.StreamHandler:
+        handler.stream = TqdmOut
 
 logger = logging.getLogger('main')
 
