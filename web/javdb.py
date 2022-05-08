@@ -101,7 +101,7 @@ def parse_data(movie: MovieInfo):
     # JavDB搜索番号时会有多个搜索结果，从中查找匹配番号的那个
     html = get_html_wrapper(f'{base_url}/search?q={movie.dvdid}')
     ids = list(map(str.lower, html.xpath("//div[@class='video-title']/strong/text()")))
-    movie_urls = html.xpath("//div[@class='movie-list h cols-4']/div/a/@href")
+    movie_urls = html.xpath("//a[@class='box']/@href")
     match_count = len([i for i in ids if i == movie.dvdid.lower()])
     if match_count == 0:
         logger.debug(f'搜索结果中未找到目标影片({movie.dvdid}): ' + ', '.join(ids))

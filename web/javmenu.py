@@ -57,7 +57,7 @@ def parse_data(movie: MovieInfo):
     magnet_table = container.xpath("//div[@id='download-tab']//tbody")
     if magnet_table:
         magnet_links = magnet_table[0].xpath("tr/td/a/@href")
-        # 它的FC2数据是从JavDB抓的，不知道后面是否能正常更新
+        # 它的FC2数据是从JavDB抓的，JavDB更换图片服务器后它也跟上了，似乎数据更新频率还可以
         movie.magnet = [i.replace('[javdb.com]','') for i in magnet_links]
     preview_pics = container.xpath("//a[@data-fancybox='gallery']/@href")
 
