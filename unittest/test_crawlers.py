@@ -41,7 +41,7 @@ def compare(avid, scraper, file):
     try:
         parse_data(online)
     except Exception as e:
-        logger.debug(e, exc_info=1)
+        logger.exception(e)
     # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
     local_vars = vars(local)
     online_vars = vars(online)
