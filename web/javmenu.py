@@ -31,7 +31,8 @@ def parse_data(movie: MovieInfo):
     container = html.xpath("//div[@class='col-md-8 px-0']")[0]
     title = container.xpath("div[@class='col-12 mb-3']/h1/strong/text()")[0]
     cover_tag = container.xpath("//div[@class='single-video']")[0]
-    if video_tag := cover_tag.find('video'):
+    video_tag = cover_tag.find('video')
+    if video_tag is not None:
         # URL首尾竟然也有空格……
         movie.cover = video_tag.get('data-poster').strip()
         movie.preview_video = video_tag.find('source').get('src').strip()
