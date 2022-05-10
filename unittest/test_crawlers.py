@@ -40,12 +40,9 @@ def compare(avid, scraper, file):
     parse_data = getattr(sys.modules[scraper_mod], 'parse_data')
     try:
         parse_data(online)
-    except Exception as e:
-        logger.exception(e)
-    # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
-    local_vars = vars(local)
-    online_vars = vars(online)
-    try:
+        # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
+        local_vars = vars(local)
+        online_vars = vars(online)
         for k, v in online_vars.items():
             # 部分字段可能随时间变化，因此只要这些字段不是一方有值一方无值就行
             if k in ['score', 'magnet']:
@@ -76,4 +73,5 @@ def compare(avid, scraper, file):
         if not os.getenv('GITHUB_ACTIONS'):
             online.dump(file)
         raise
-
+    except Exception as e:
+        logger.error(e)

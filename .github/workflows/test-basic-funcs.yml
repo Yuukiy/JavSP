@@ -17,6 +17,7 @@ jobs:
     runs-on: windows-latest
     env:
       PYTHONIOENCODING: "utf-8"
+      PYTEST_ADDOPTS: "-rA --color=yes"
 
     steps:
     - uses: actions/checkout@v2
@@ -40,7 +41,7 @@ jobs:
         chcp 65001
     - name: Test avid.py
       run: |
-        pytest -rA unittest/test_avid.py
+        pytest unittest/test_avid.py
     - name: Test file.py
       run: |
         pytest unittest/test_file.py

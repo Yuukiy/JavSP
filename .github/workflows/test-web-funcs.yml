@@ -20,6 +20,7 @@ jobs:
     runs-on: windows-latest
     env:
       PYTHONIOENCODING: "utf-8"
+      PYTEST_ADDOPTS: "-rA --color=yes"
 
     steps:
     - uses: actions/checkout@v2
