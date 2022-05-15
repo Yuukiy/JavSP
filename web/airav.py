@@ -101,6 +101,10 @@ def parse_data(movie: MovieInfo):
         movie.title = None
         movie.plot = None
         movie.genre = []
+    if '馬賽克破解版' in movie.title or (movie.plot and '馬賽克破解版' in movie.plot):
+        movie.title = None
+        movie.plot = None
+        movie.genre = []
 
 
 if __name__ == "__main__":
