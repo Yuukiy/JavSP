@@ -82,7 +82,7 @@ def parse_data(movie: MovieInfo):
     movie.preview_pics = preview_pics
     if publish_date != '0000-00-00':    # 丢弃无效的发布日期
         movie.publish_date = publish_date
-    movie.duration = duration
+    movie.duration = duration if int(duration) else None
     movie.producer = producer
     movie.genre = genre
     movie.genre_id = genre_id
