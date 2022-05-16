@@ -96,15 +96,16 @@ def parse_data(movie: MovieInfo):
             # TODO: 发现部分影片（如080719-976）的传统格式预览片错误
             movie.preview_video = resp['data'].get('url')
 
-    # airav上部分影片会被标记为'馬賽克破壞版'，这些影片的title、plot和genre都不再准确
-    if '馬賽克破壞版' in movie.title or (movie.plot and '馬賽克破壞版' in movie.plot):
-        movie.title = None
-        movie.plot = None
-        movie.genre = []
-    if '馬賽克破解版' in movie.title or (movie.plot and '馬賽克破解版' in movie.plot):
-        movie.title = None
-        movie.plot = None
-        movie.genre = []
+    # airav上部分影片会被标记为'馬賽克破壞版'等，这些影片的title、plot和genre都不再准确
+    for keyword in ('馬賽克破壞版', '馬賽克破解版', '無碼流出版'):
+        if movie.title and keyword in movie.title:
+            movie.title = None
+            movie.genre = []
+        if movie.plot and keyword in movie.plot:
+            movie.plot = None
+            movie.genre = []
+        if not any(movie.title, movie.plot, movie.genre):
+            break
 
 
 if __name__ == "__main__":
@@ -112,7 +113,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('RED-096')
+    movie = MovieInfo('DSAD-938')
     try:
         parse_data(movie)
         print(movie)
