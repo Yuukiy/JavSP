@@ -20,6 +20,14 @@ from core.print import TqdmOut
 from core.baidu_aip import aip_crop_poster
 
 
+# python版本检查
+import platform 
+version = float(platform.python_version[:3])
+if version < 3.8:
+    print('Python版本需要大于等于3.8')
+    exit(1)
+
+
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
 root_logger = logging.getLogger()
 for handler in root_logger.handlers:
