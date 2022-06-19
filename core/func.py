@@ -11,8 +11,14 @@ import logging
 import subprocess
 from datetime import datetime
 from packaging import version
-from tkinter import filedialog, Tk
 from colorama import Fore, Style
+
+# 判断系统是否可以使用tk
+USEGUI = True
+try:
+    from tkinter import filedialog, Tk
+except:
+    USEGUI = False
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
@@ -29,6 +35,9 @@ logger = logging.getLogger(__name__)
 
 def select_folder(default_dir=''):
     """使用文件对话框提示用户选择一个文件夹"""
+    if not USEGUI:
+        logger.error("无法打开窗口，请通过命令行的方式输入扫描路径")
+        exit(1)
     window = Tk()
     window.withdraw()
     window.iconbitmap(mei_path('image/JavSP.ico'))
