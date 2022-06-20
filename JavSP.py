@@ -20,14 +20,6 @@ from core.print import TqdmOut
 from core.baidu_aip import aip_crop_poster
 
 
-# python版本检查
-import platform 
-version = float(platform.python_version[:3])
-if version < 3.8:
-    print('Python版本需要大于等于3.8')
-    exit(1)
-
-
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
 root_logger = logging.getLogger()
 for handler in root_logger.handlers:
@@ -518,6 +510,11 @@ def sys_exit(code):
 
 if __name__ == "__main__":
     colorama.init(autoreset=True)
+    # python版本检查
+    import platform
+    from packaging import version
+    py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
+    error_exit(py_version_ok, '请使用3.8及以上版本的Python')
     # 检查更新
     version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
     logger.debug(version_info.center(60, '='))
