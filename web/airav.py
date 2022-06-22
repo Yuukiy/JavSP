@@ -104,7 +104,7 @@ def parse_data(movie: MovieInfo):
         if movie.plot and keyword in movie.plot:
             movie.plot = None
             movie.genre = []
-        if not any(movie.title, movie.plot, movie.genre):
+        if not any([movie.title, movie.plot, movie.genre]):
             break
 
 

@@ -57,7 +57,17 @@ def get_html_wrapper(url):
             html = resp2html(r)
             return html
     elif r.status_code in (403, 503):
-        raise SiteBlocked(f'JavDB: {r.status_code} 禁止访问: {url}')
+        html = resp2html(r)
+        code_tag = html.xpath("//span[@class='code-label']/span")
+        error_code = code_tag[0].text if code_tag else None
+        if error_code:
+            if error_code == '1020':
+                block_msg = f'JavDB: {r.status_code} 禁止访问: 站点屏蔽了来自日本地区的IP地址，请使用其他地区的代理服务器'
+            else:
+                block_msg = f'JavDB: {r.status_code} 禁止访问: {url} (Error code: {error_code})'
+        else:
+            block_msg = f'JavDB: {r.status_code} 禁止访问: {url}'
+        raise SiteBlocked(block_msg)
     else:
         raise WebsiteError(f'JavDB: {r.status_code} 非预期状态码: {url}')
 
@@ -174,6 +184,7 @@ def parse_clean_data(movie: MovieInfo):
     try:
         parse_data(movie)
     except SiteBlocked:
+        raise
         logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
     movie.genre_norm = genre_map.map(movie.genre_id)
     movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
