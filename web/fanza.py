@@ -9,6 +9,7 @@ import logging
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
 from web.exceptions import *
+from core.func import remove_trail_actor_in_title
 from core.config import cfg
 from core.datatype import MovieInfo
 
@@ -103,6 +104,19 @@ def parse_data(movie: MovieInfo):
     movie.preview_pics = preview_pics
     movie.uncensored = False    # 服务器在日本且面向日本国内公开发售，不会包含无码片
 
+def parse_clean_data(movie: MovieInfo):
+    """解析指定番号的影片数据并进行清洗"""
+    try:
+        parse_data(movie)
+    except SiteBlocked:
+        raise
+        logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
+    # 将此功能放在各个抓取器以保持数据的一致，避免影响转换（写入nfo时的信息来自多个抓取器的汇总，数据来源一致性不好）
+    if cfg.Crawler.title__remove_actor:
+        new_title = remove_trail_actor_in_title(movie.title, movie.actress)
+        if new_title != movie.title:
+            movie.ori_title = movie.title
+            movie.title = new_title
 
 if __name__ == "__main__":
     import pretty_errors
@@ -111,7 +125,7 @@ if __name__ == "__main__":
 
     movie = MovieInfo(cid='sqte00300')
     try:
-        parse_data(movie)
+        parse_clean_data(movie)
         print(movie)
     except CrawlerError as e:
         logger.error(e, exc_info=1)

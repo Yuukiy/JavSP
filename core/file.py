@@ -27,10 +27,22 @@ def scan_movies(root: str) -> List[Movie]:
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # avid: [abspath1, abspath2...]
     for dirpath, dirnames, filenames in os.walk(root):
-        for name in dirnames:
-            if name.startswith('.') or name in cfg.File.ignore_folder:
-                dirnames.remove(name)
+        if dirpath.startswith('.'):
+            # 特殊文件夹排除
+            logger.debug(f"文件夹[{dirpath}]已被忽略11111。")
+            continue
+        dir_is_ignore = False
+        for cif in cfg.File.ignore_folder:
+            # 根目录被忽略或者是被忽略目录的子目录都排除
+            if dirpath == cif or dirpath.find(cif) >= 0:
+                dir_is_ignore = True
+                break
+        if dir_is_ignore is True:
+            logger.debug(f"文件夹[{dirpath}]已被忽略222222。")
+            continue
+        logger.debug(f"文件夹[{dirpath}]没有被忽略。")
         for file in filenames:
+            logger.debug(f"文件[{file}]开始处理")
             ext = os.path.splitext(file)[1].lower()
             if ext in cfg.File.media_ext:
                 fullpath = os.path.join(dirpath, file)

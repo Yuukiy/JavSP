@@ -5,7 +5,7 @@ import time
 import logging
 import requests
 import threading
-from shutil import copyfile
+from shutil import copyfile, move
 
 import colorama
 import pretty_errors
@@ -108,7 +108,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             all_info[i] = MovieInfo(movie.dvdid)
     thread_pool = []
     for mod, info in all_info.items():
-        parser = getattr(sys.modules[mod], 'parse_data')
+        parser = getattr(sys.modules[mod], 'parse_clean_data')
         # 将all_info中的info实例传递给parser，parser抓取完成后，info实例的值已经完成更新
         # TODO: 抓取器如果带有parse_data_raw，说明它已经自行进行了重试处理，此时将重试次数设置为1
         if hasattr(sys.modules[mod], 'parse_data_raw'):
@@ -247,7 +247,15 @@ def generate_names(movie: Movie):
     # 生成nfo文件中的影片标题
     nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
     setattr(info, 'nfo_title', nfo_title)
-
+    if cfg.NamingRule.enable_file_move is False:
+        # 如果不整理文件，则保存抓取的数据到当前目录
+        movie.save_dir = os.path.dirname(movie.files[0])
+        movie.basename = os.path.basename(movie.files[0])
+        # ext = os.path.splitext(movie.files[0])[1]
+        movie.nfo_file = os.path.join(movie.save_dir, f'{movie.basename}.nfo')
+        movie.fanart_file = os.path.join(movie.save_dir, f'{movie.basename}-fanart.nfo')
+        movie.poster_file = os.path.join(movie.save_dir, f'{movie.basename}-poster.jpg')
+        return
     # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
     cdx = '' if len(movie.files) <= 1 else '-CD1'
     if hasattr(info, 'title_break'):
@@ -316,7 +324,11 @@ def postStep_MultiMoviePoster(movie: Movie):
     # Jellyfin将多分片影片视作CD1的附加部分，nfo文件名、fanart均使用的CD1的文件名，
     # 只有poster是为各个分片创建的
     for i, _ in enumerate(movie.files[1:], start=2):
-        cdx_poster = os.path.join(movie.save_dir, f'{movie.basename}-CD{i}-poster.jpg')
+        if cfg.NamingRule.enable_file_move:
+            cdx_poster = os.path.join(movie.save_dir, f'{movie.basename}-CD{i}-poster.jpg')
+        else:
+            basename = os.path.basename(movie.files[i])
+            cdx_poster = os.path.join(movie.save_dir, f'{basename}-poster.jpg')
         copyfile(movie.poster_file, cdx_poster)
 
 
@@ -397,7 +409,6 @@ def RunNormalMode(all_movies):
                 inner_bar.set_description('翻译影片信息')
                 success = translate_movie_info(movie.info)
                 check_step(success)
-
             generate_names(movie)
             check_step(movie.save_dir, '无法按命名规则生成目标文件夹')
             if not os.path.exists(movie.save_dir):
@@ -442,10 +453,10 @@ def RunNormalMode(all_movies):
             check_step(True)
 
             inner_bar.set_description('移动影片文件')
-            movie.rename_files()
-            check_step(True)
+            # movie.rename_files()
+            # check_step(True)
 
-            logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+            # logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
         except Exception as e:
             logger.debug(e, exc_info=True)
             logger.error(f'整理失败: {e}')
@@ -539,7 +550,6 @@ if __name__ == "__main__":
         recognize_fail = []
     error_exit(movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    print('')
 
     if args.manual == 'all':
         reviewMovieID(recognized, root)

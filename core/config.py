@@ -250,6 +250,7 @@ def norm_boolean(cfg: Config):
             ('Crawler', 'respect_site_avid'),
             ('Crawler', 'title__remove_actor'),
             ('Crawler', 'title__chinese_first'),
+            ('NamingRule', 'enable_file_move'),
             ('Picture', 'use_big_cover'),
             ('Picture', 'use_ai_crop'),
             ('NFO', 'add_genre_to_tag'),
