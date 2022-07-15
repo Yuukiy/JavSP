@@ -250,11 +250,12 @@ def generate_names(movie: Movie):
     if cfg.NamingRule.enable_file_move is False:
         # 如果不整理文件，则保存抓取的数据到当前目录
         movie.save_dir = os.path.dirname(movie.files[0])
-        movie.basename = os.path.basename(movie.files[0])
-        # ext = os.path.splitext(movie.files[0])[1]
-        movie.nfo_file = os.path.join(movie.save_dir, f'{movie.basename}.nfo')
-        movie.fanart_file = os.path.join(movie.save_dir, f'{movie.basename}-fanart.nfo')
-        movie.poster_file = os.path.join(movie.save_dir, f'{movie.basename}-poster.jpg')
+        ext = os.path.splitext(movie.files[0])[1]
+        movie.basename = os.path.spli(movie.files[0])
+        file_basename = movie.basename.replace(ext, '')
+        movie.nfo_file = os.path.join(movie.save_dir, f'{file_basename}.nfo')
+        movie.fanart_file = os.path.join(movie.save_dir, f'{file_basename}-fanart.nfo')
+        movie.poster_file = os.path.join(movie.save_dir, f'{file_basename}-poster.jpg')
         return
     # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
     cdx = '' if len(movie.files) <= 1 else '-CD1'
@@ -328,7 +329,9 @@ def postStep_MultiMoviePoster(movie: Movie):
             cdx_poster = os.path.join(movie.save_dir, f'{movie.basename}-CD{i}-poster.jpg')
         else:
             basename = os.path.basename(movie.files[i])
-            cdx_poster = os.path.join(movie.save_dir, f'{basename}-poster.jpg')
+            ext = os.path.splitext(movie.files[i])[1]
+            file_basename = basename.replace(ext, '')
+            cdx_poster = os.path.join(movie.save_dir, f'{file_basename}-poster.jpg')
         copyfile(movie.poster_file, cdx_poster)
 
 
@@ -453,10 +456,12 @@ def RunNormalMode(all_movies):
             check_step(True)
 
             inner_bar.set_description('移动影片文件')
-            # movie.rename_files()
-            # check_step(True)
-
-            # logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+            if cfg.NamingRule.enable_file_move:
+                movie.rename_files()
+                check_step(True)
+                logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+            else:
+                logger.info(f'数据抓取完成，相关文件已保存到: {movie.nfo_file}\n')
         except Exception as e:
             logger.debug(e, exc_info=True)
             logger.error(f'整理失败: {e}')
