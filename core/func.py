@@ -9,6 +9,7 @@ import shutil
 import zipfile
 import logging
 import subprocess
+import platform
 from datetime import datetime
 from packaging import version
 from colorama import Fore, Style
@@ -55,8 +56,11 @@ def get_scan_dir(cfg_scan_dir):
         else:
             logger.error(f"配置的待整理文件夹无效：'{cfg_scan_dir}'")
     else:
-        print('请选择要整理的文件夹：', end='')
-        root = select_folder()
+        if platform.system().lower() == 'windows':
+            print('请选择要整理的文件夹：', end='')
+            root = select_folder()
+        else:
+            root = input('请选择要整理的文件夹路径，必须是绝对路径: ')
         print(root)
         return root
 
