@@ -250,8 +250,8 @@ def generate_names(movie: Movie):
     if cfg.NamingRule.enable_file_move is False:
         # 如果不整理文件，则保存抓取的数据到当前目录
         movie.save_dir = os.path.dirname(movie.files[0])
-        ext = os.path.splitext(movie.files[0])[1]
-        movie.basename = os.path.spli(movie.files[0])
+        movie.basename = os.path.basename(movie.files[0])
+        ext = os.path.splitext(movie.basename)[1]
         file_basename = movie.basename.replace(ext, '')
         movie.nfo_file = os.path.join(movie.save_dir, f'{file_basename}.nfo')
         movie.fanart_file = os.path.join(movie.save_dir, f'{file_basename}-fanart.nfo')
