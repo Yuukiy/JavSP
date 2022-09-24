@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import requests
 from urllib.parse import urlsplit
 
 
@@ -42,6 +43,8 @@ def compare(avid, scraper, file):
     try:
         parse_data(online)
     except CrawlerError as e:
+        logger.info(e)
+    except requests.exceptions.ReadTimeout as e:
         logger.info(e)
     try:
         # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
