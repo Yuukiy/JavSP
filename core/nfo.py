@@ -72,7 +72,7 @@ def write_nfo(info: MovieInfo, nfo_file):
         nfo.append(E.set(E.name(info.serial)))
 
     if info.director:
-        nfo.append(E.directr(info.director))
+        nfo.append(E.director(info.director))
 
     # 发行日期。文档中关于'year'字段的说明: Do not use. Use <premiered> instead
     if info.publish_date:
