@@ -27,7 +27,7 @@ def scan_movies(root: str) -> List[Movie]:
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # avid: [abspath1, abspath2...]
     for dirpath, dirnames, filenames in os.walk(root):
-        for name in dirnames:
+        for name in dirnames.copy():
             if name.startswith('.') or name in cfg.File.ignore_folder:
                 dirnames.remove(name)
         for file in filenames:
