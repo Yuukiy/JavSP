@@ -188,12 +188,6 @@ def parse_clean_data(movie: MovieInfo):
         logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
     movie.genre_norm = genre_map.map(movie.genre_id)
     movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
-    # 将此功能放在各个抓取器以保持数据的一致，避免影响转换（写入nfo时的信息来自多个抓取器的汇总，数据来源一致性不好）
-    if cfg.Crawler.title__remove_actor:
-        new_title = remove_trail_actor_in_title(movie.title, movie.actress)
-        if new_title != movie.title:
-            movie.ori_title = movie.title
-            movie.title = new_title
 
 
 if __name__ == "__main__":
