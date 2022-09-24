@@ -9,6 +9,7 @@ data_dir = os.path.join(file_dir, 'data')
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 
 from core.datatype import MovieInfo
+from web.exceptions import CrawlerError
 
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,9 @@ def compare(avid, scraper, file):
     parse_data = getattr(sys.modules[scraper_mod], 'parse_data')
     try:
         parse_data(online)
+    except CrawlerError as e:
+        logger.info(e)
+    try:
         # 解包数据再进行比较，以便测试不通过时快速定位不相等的键值
         local_vars = vars(local)
         online_vars = vars(online)
@@ -75,3 +79,4 @@ def compare(avid, scraper, file):
         raise
     except Exception as e:
         logger.error(e)
+        raise
