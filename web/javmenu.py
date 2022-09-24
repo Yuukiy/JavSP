@@ -20,7 +20,7 @@ def parse_data(movie: MovieInfo):
     Args:
         movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
     """
-    # JavMenu网页做得不怎么走心，将就了
+    # JavMenu网页做得很不走心，将就了
     url = f'{base_url}/{movie.dvdid}'
     r = request.get(url)
     if r.history:
@@ -30,14 +30,19 @@ def parse_data(movie: MovieInfo):
     html = resp2html(r)
     container = html.xpath("//div[@class='col-md-8 px-0']")[0]
     title = container.xpath("div[@class='col-12 mb-3']/h1/strong/text()")[0]
+    # 竟然还在标题里插广告，真的疯了。要不是我已经写了抓取器，才懒得维护这个破站
+    title = title.replace('  | JAV目錄大全 | 每日更新', '')
     cover_tag = container.xpath("//div[@class='single-video']")[0]
     video_tag = cover_tag.find('video')
     if video_tag is not None:
         # URL首尾竟然也有空格……
         movie.cover = video_tag.get('data-poster').strip()
-        movie.preview_video = video_tag.find('source').get('src').strip()
+        # 预览影片改为blob了，无法获取
+        # movie.preview_video = video_tag.find('source').get('src').strip()
     else:
-        movie.cover = container.xpath("//img[@class='lazy rounded']/@data-src")[0].strip()
+        cover_img_tag = container.xpath("//img[@class='lazy rounded']/@data-src")
+        if cover_img_tag:
+            movie.cover = cover_img_tag[0].strip()
     info = container.xpath("//div[@class='card-body']")[0]
     publish_date = info.xpath("div/span[contains(text(), '日期:')]")[0].getnext().text
     duration = info.xpath("div/span[contains(text(), '時長:')]")[0].getnext().text.replace('分鐘', '')
@@ -75,7 +80,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('082713-417')
+    movie = MovieInfo('FC2-718323')
     try:
         parse_data(movie)
         print(movie)
