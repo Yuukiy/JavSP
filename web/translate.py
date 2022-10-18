@@ -142,7 +142,7 @@ def bing_translate(texts, to='zh-Hans'):
 def deepl_translate(texts, to='zh'):
     """使用Deepl翻译文本（默认翻译为简体中文）"""
     api_url = "https://api-free.deepl.com/v2/translate"
-    params = {'text': texts, 'target_lang': to}
+    params = {'text': texts, 'target_lang': to, 'source_lang': 'ja'}
     headers = {
         'Authorization': f"DeepL-Auth-Key {cfg.Translate.deepl_key}"
     }
