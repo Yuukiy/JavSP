@@ -289,6 +289,8 @@ def validate_translation(cfg: Config):
     trans.baidu_appid = os.getenv('JAVSP_BAIDU_APPID', trans.baidu_appid)
     trans.baidu_key = os.getenv('JAVSP_BAIDU_KEY', trans.baidu_key)
     trans.bing_key = os.getenv('JAVSP_BING_KEY', trans.bing_key)
+    trans.deepl_key = os.getenv('JAVSP_DEEPL_KEY', trans.deepl_key)
+
     # 先获取访问凭据再判断翻译引擎，这样的话即使配置文件中未启用翻译也可以调试翻译功能
     if trans.engine == '':
         return
@@ -307,6 +309,11 @@ def validate_translation(cfg: Config):
             logger.error('启用必应翻译时，key不能留空')
     elif engine_name == 'google':
         cfg.Translate.engine = engine_name
+    elif engine_name == 'deepl':
+        if trans.deepl_key:
+            cfg.Translate.engine = engine_name
+        else:
+            logger.error('启用Deepl翻译时，key不能留空')
     else:
         logger.error('无效的翻译引擎: ' + engine_name)
 

@@ -105,6 +105,17 @@ def translate(texts, engine='google', actress=[]):
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+    elif engine == 'deepl':
+        try:
+            result = deepl_translate(texts)
+            if 'translations' in result:
+                paragraphs = [i['text'] for i in result['translations']]
+                rtn = {'trans': '\n'.join(paragraphs)}
+            else:
+                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
+        except Exception as e:
+            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+
     # else:
         # 配置文件中已经检查过翻译引擎，这里不再检查，因此如果使用不在列表中的翻译引擎，会出错
     # 如果err_msg非空，说明发生了错误，返回错误消息
@@ -125,6 +136,17 @@ def bing_translate(texts, to='zh-Hans'):
     }
     body = [{'text': texts}]
     r = requests.post(api_url, params=params, headers=headers, json=body)
+    result = r.json()
+    return result
+
+def deepl_translate(texts, to='zh'):
+    """使用Deepl翻译文本（默认翻译为简体中文）"""
+    api_url = "https://api-free.deepl.com/v2/translate"
+    params = {'text': texts, 'target_lang': to, 'source_lang': "ja"}
+    headers = {
+        'Authorization': f"DeepL-Auth-Key {cfg.Translate.deepl_key}:fx"
+    }
+    r = requests.post(api_url, params=params, headers=headers)
     result = r.json()
     return result
 
