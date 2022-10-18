@@ -1,6 +1,7 @@
 """定义数据类型和一些通用性的对数据类型的操作"""
 import os
 import csv
+import re
 import sys
 import json
 import logging
@@ -138,6 +139,26 @@ class Movie:
             logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
             # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
             filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
+        def find_move_subs(src_dir:str):
+            """移动（重命名）字幕并记录信息到日志"""
+            sub = None
+            for file in os.listdir(src_dir):
+                if re.match(r".*\.(ass|srt)$",file):
+                    if self.basename.lower() in file.lower():
+                        sub = file
+                        break
+            if sub:
+                sub_src = os.path.join(src_dir,sub)
+                ext = os.path.splitext(sub_src)[1]
+                newpath = os.path.join(self.save_dir, self.basename + ext)
+                abs_dst = os.path.abspath(newpath)
+                os.rename(sub_src, abs_dst)
+                src_rel = os.path.relpath(sub_src)
+                dst_name = os.path.basename(newpath)
+                logger.info(f"重命名字幕文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+                # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
+                filemove_logger.debug(f'移动（重命名）字幕文件: \n  原路径: "{sub_src}"\n  新路径: "{abs_dst}"')
+
 
         new_paths = []
         if len(self.files) == 1:
@@ -145,6 +166,7 @@ class Movie:
             ext = os.path.splitext(fullpath)[1]
             newpath = os.path.join(self.save_dir, self.basename + ext)
             move_file(fullpath, newpath)
+            find_move_subs(os.path.dirname(fullpath))
             new_paths.append(newpath)
         else:
             for i, fullpath in enumerate(self.files, start=1):
