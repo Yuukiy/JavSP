@@ -147,7 +147,10 @@ def deepl_translate(texts, to='zh'):
         'Authorization': f"DeepL-Auth-Key {cfg.Translate.deepl_key}"
     }
     r = requests.post(api_url, params=params, headers=headers)
-    result = r.json()
+    if r.status_code == 200:
+        result = r.json()
+    else:
+        result = {'error_code': r.status_code, 'error_msg': r.text}
     return result
 
 
