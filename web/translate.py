@@ -144,7 +144,7 @@ def deepl_translate(texts, to='zh'):
     api_url = "https://api-free.deepl.com/v2/translate"
     params = {'text': texts, 'target_lang': to, 'source_lang': "ja"}
     headers = {
-        'Authorization': f"DeepL-Auth-Key {cfg.Translate.deepl_key}:fx"
+        'Authorization': f"DeepL-Auth-Key {cfg.Translate.deepl_key}"
     }
     r = requests.post(api_url, params=params, headers=headers)
     result = r.json()
