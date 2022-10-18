@@ -159,6 +159,10 @@ def google_trans(texts, to='zh_CN'):
     r = requests.get(url)
     if r.status_code == 200:
         result = r.json()
+    elif r.status_code == 429:
+        time.sleep(1)
+        logger.error('Google翻译请求过多，等待1s重试')
+        return google_trans(texts,to)
     else:
         result = {'error_code': r.status_code, 'error_msg': r.reason}
     return result
