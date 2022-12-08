@@ -1,6 +1,6 @@
 altgraph==0.17
 baidu-aip==2.2.18.0
-certifi==2020.12.5
+certifi==2022.12.7
 chardet==4.0.0
 cloudscraper==1.2.58
 colorama==0.4.4
