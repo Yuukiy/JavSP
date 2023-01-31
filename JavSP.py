@@ -360,7 +360,7 @@ def reviewMovieID(all_movies, root):
 
 def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
     """包装各种海报裁剪方法，提供统一的调用"""
-    if cfg.Picture.ai_engine == 'baidu':
+    if method == 'baidu':
         try:
             aip_crop_poster(fanart_file, poster_file)
         except Exception as e:
