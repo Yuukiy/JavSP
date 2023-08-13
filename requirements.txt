@@ -13,7 +13,7 @@ Pillow==9.3.0
 pretty-errors==1.2.19
 pycryptodome==3.10.1
 PySocks==1.7.1
-requests==2.25.1
+requests==2.31.0
 tqdm==4.59.0
 urllib3==1.26.5
 pywin32==303
