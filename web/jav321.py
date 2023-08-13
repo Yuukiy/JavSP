@@ -29,6 +29,7 @@ def parse_data(movie: MovieInfo):
     # jav321的不同信息字段间没有明显分隔，只能通过url来匹配目标标签
     producer = info.xpath("a[contains(@href,'/company/')]/text()")[0]
     # actress, actress_pics
+    # jav321现在连女优信息都没有了，首页通过女优栏跳转过去也全是空白
     actress, actress_pics = [], {}
     actress_tags = html.xpath("//div[@class='thumbnail']/a[contains(@href,'/star/')]/img")
     for tag in actress_tags:

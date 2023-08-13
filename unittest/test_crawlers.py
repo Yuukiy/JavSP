@@ -39,7 +39,11 @@ def compare(avid, scraper, file):
     # 导入抓取器模块
     scraper_mod = 'web.' + scraper
     __import__(scraper_mod)
-    parse_data = getattr(sys.modules[scraper_mod], 'parse_data')
+    mod = sys.modules[scraper_mod]
+    if hasattr(mod, 'parse_clean_data'):
+        parse_data = getattr(mod, 'parse_clean_data')
+    else:
+        parse_data = getattr(mod, 'parse_data')
     try:
         parse_data(online)
     except CrawlerError as e:
@@ -70,7 +74,10 @@ def compare(avid, scraper, file):
             # 对顺序没有要求的list型字段，比较时也应该忽略顺序信息
             elif k in ['genre', 'genre_id', 'genre_norm', 'actress']:
                 if isinstance(v, list):
-                    assert sorted(v) == sorted(local_vars.get(k, []))
+                    loc_v = local_vars.get(k)
+                    if loc_v is None:
+                        loc_v = []
+                    assert sorted(v) == sorted(loc_v)
                 else:
                     assert v == local_vars.get(k, None)
             else:
