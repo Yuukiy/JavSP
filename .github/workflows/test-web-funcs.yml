@@ -9,8 +9,8 @@ on:
   pull_request:
     branches: [ master ]
   schedule:
-  # Web crawlers might be outdated because of website updating, so run every day to follow the changes
-  - cron:  '9 9 * * *'
+  # Web crawlers might be outdated because of website updating, so run periodically to follow the changes
+  - cron: '9 9 * * 3,6,0'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
