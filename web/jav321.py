@@ -27,7 +27,9 @@ def parse_data(movie: MovieInfo):
     title = html.xpath("//div[@class='panel-heading']/h3/text()")[0]
     info = html.xpath("//div[@class='col-md-9']")[0]
     # jav321的不同信息字段间没有明显分隔，只能通过url来匹配目标标签
-    producer = info.xpath("a[contains(@href,'/company/')]/text()")[0]
+    company_tags = info.xpath("a[contains(@href,'/company/')]/text()")
+    if company_tags:
+        movie.producer = company_tags[0]
     # actress, actress_pics
     # jav321现在连女优信息都没有了，首页通过女优栏跳转过去也全是空白
     actress, actress_pics = [], {}
@@ -66,6 +68,9 @@ def parse_data(movie: MovieInfo):
     if plot_tag:
         movie.plot = plot_tag[0]
     preview_pics = html.xpath("//div[@class='col-xs-12 col-md-12']/p/a/img[@class='img-responsive']/@src")
+    if len(preview_pics) == 0:
+        # 尝试搜索另一种布局下的封面，需要使用onerror过滤掉明明没有封面时网站往里面塞的默认URL
+        preview_pics = html.xpath("//div/div/div[@class='col-md-3']/img[@onerror and @class='img-responsive']/@src")
     # 磁力和ed2k链接是依赖js脚本加载的，无法通过静态网页来解析
 
     movie.url = page_url
@@ -74,13 +79,13 @@ def parse_data(movie: MovieInfo):
     movie.title = title
     movie.actress = actress
     movie.actress_pics = actress_pics
-    movie.producer = producer
     movie.genre = genre
     movie.genre_id = genre_id
     movie.publish_date = publish_date
     # preview_pics的第一张图始终是封面，剩下的才是预览图
-    movie.cover = preview_pics[0]
-    movie.preview_pics = preview_pics[1:]
+    if len(preview_pics) > 0:
+        movie.cover = preview_pics[0]
+        movie.preview_pics = preview_pics[1:]
 
 
 if __name__ == "__main__":
@@ -88,7 +93,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('DCV-137')
+    movie = MovieInfo('SCUTE-1177')
     try:
         parse_data(movie)
         print(movie)
