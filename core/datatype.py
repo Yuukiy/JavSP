@@ -4,6 +4,7 @@ import csv
 import sys
 import json
 import logging
+from functools import cached_property
 
 
 logger = logging.getLogger(__name__)
@@ -119,6 +120,35 @@ class Movie:
         self.nfo_file = None            # nfo文件的路径
         self.fanart_file = None         # fanart文件的路径
         self.poster_file = None         # poster文件的路径
+        self.hard_sub = False           # 影片文件带有内嵌字幕
+        self.uncensored = False         # 影片文件是无码流出/无码破解版本（很多种子并不严格区分这两种，故这里也不进一步细分）
+
+    def extract_attr(self) -> None:
+        # 暂不支持多分片的影片
+        if len(self.files) != 1:
+            return
+        basename = os.path.splitext(os.path.basename(self.files[0]))[0]
+        uc_name = basename.upper()
+        postfix = uc_name.split('-')[-1]
+        if len(postfix) > 2:
+            return
+        if 'U' in postfix:
+            self.uncensored = True
+        if 'C' in postfix:
+            self.hard_sub = True
+
+    @cached_property
+    def attr_str(self) -> str:
+        """用来标示影片文件的额外属性的字符串(空字符串/-U/-C/-UC)"""
+        self.extract_attr()
+        s = ''
+        if self.uncensored:
+            s += 'U'
+        if self.hard_sub:
+            s += 'C'
+        if s != '':
+            s = '-' + s
+        return s
 
     def __repr__(self) -> str:
         if self.cid and self.data_src == 'cid':

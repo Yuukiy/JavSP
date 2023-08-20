@@ -267,6 +267,7 @@ def generate_names(movie: Movie):
         copyd['rawtitle'] = replace_illegal_chars(''.join(ori_title_break[:end]).strip())
         for sub_end in range(len(title_break), 0, -1):
             copyd['title'] = replace_illegal_chars(''.join(title_break[:sub_end]).strip())
+            copyd['num'] = copyd['num'] + movie.attr_str
             save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
             basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd).strip())
             fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
