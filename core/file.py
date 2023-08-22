@@ -6,7 +6,7 @@ import logging
 from sys import platform
 from typing import List
 
-__all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_illegal_chars', 'get_failed_when_scan']
+__all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_illegal_chars', 'get_failed_when_scan', 'find_subtitle_in_dir']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -162,6 +162,26 @@ def get_fmt_size(file_or_size) -> str:
         if abs(size) < 1023.995:
             return f"{size:3.2f} {unit}B"
         size /= 1024.0
+
+
+_sub_files = {}
+SUB_EXTENSIONS = ('.srt', '.ass')
+def find_subtitle_in_dir(folder: str, dvdid: str):
+    """在folder内寻找是否有匹配dvdid的字幕"""
+    folder_data = _sub_files.get(folder)
+    if folder_data is None:
+        # 此文件夹从未检查过时
+        folder_data = {}
+        for dirpath, dirnames, filenames in os.walk(folder):
+            for file in filenames:
+                basename, ext = os.path.splitext(file)
+                if ext in SUB_EXTENSIONS:
+                    match_id = get_id(basename)
+                    if match_id:
+                        folder_data[match_id.upper()] = os.path.join(dirpath, file)
+        _sub_files[folder] = folder_data
+    sub_file = folder_data.get(dvdid.upper())
+    return sub_file
 
 
 if __name__ == "__main__":
