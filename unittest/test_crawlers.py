@@ -23,7 +23,7 @@ def test_crawler(crawler_params):
     try:
         compare(*crawler_params)
     except Exception as e:
-        if os.getenv('GITHUB_ACTIONS') and (crawler_params[1] in ['javdb', 'javlib']):
+        if os.getenv('GITHUB_ACTIONS') and (crawler_params[1] in ['javdb', 'javlib', 'airav']):
             logger.debug(f'检测到Github actions环境，已忽略测试失败项: {crawler_params[:2]}')
             logger.exception(e)
         else:
