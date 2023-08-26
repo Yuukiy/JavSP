@@ -67,6 +67,8 @@ def get_scan_dir(cfg_scan_dir):
 
 def remove_trail_actor_in_title(title:str, actors:list) -> str:
     """寻找并移除标题尾部的女优名"""
+    if not actors:
+        return title
     # 目前使用分隔符白名单来做检测（担心按Unicode范围匹配误伤太多），考虑尽可能多的分隔符
     delimiters = '-xX &·,;　＆・，；'
     pattern = f"^(.*?)([{delimiters}]{{1,3}}({'|'.join(actors)}))+$"
