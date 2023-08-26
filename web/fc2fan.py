@@ -5,9 +5,11 @@ import re
 import sys
 import logging
 import lxml.html
+import requests
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from web.base import resp2html
 from web.exceptions import *
 from core.config import cfg
 from core.datatype import MovieInfo
@@ -15,15 +17,20 @@ from core.datatype import MovieInfo
 
 logger = logging.getLogger(__name__)
 base_path = cfg.Crawler.fc2fan_local_path
+use_local_mirror = os.path.exists(base_path)
 
 
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
-    html_file = f'{base_path}/{movie.dvdid}.html'
-    if not os.path.exists(html_file):
-        raise MovieNotFoundError(__name__, movie.dvdid, html_file)
-
-    html = lxml.html.parse(html_file)
+    if use_local_mirror:
+        html_file = f'{base_path}/{movie.dvdid}.html'
+        if not os.path.exists(html_file):
+            raise MovieNotFoundError(__name__, movie.dvdid, html_file)
+        html = lxml.html.parse(html_file)
+    else:
+        url = f"https://fc2club.top/html/{movie.dvdid}.html"
+        r = requests.get(url)
+        html = resp2html(r)
     container = html.xpath("//div[@class='col-sm-8']")[0]
     title = container.xpath("h3/text()")[0]
     score_str = container.xpath("h5/strong[text()='影片评分']")[0].tail.strip()
@@ -41,7 +48,8 @@ def parse_data(movie: MovieInfo):
     genre = container.xpath("h5/strong[text()='影片标签']/../a/text()")
     actress = container.xpath("h5/strong[text()='女优名字']/../a/text()")
     preview_pics = container.xpath("//ul[@class='slides']/li/img/@src")
-    preview_pics = [os.path.normpath(os.path.join(base_path, i)) for i in preview_pics]
+    if use_local_mirror:
+        preview_pics = [os.path.normpath(os.path.join(base_path, i)) for i in preview_pics]
     # big_preview = container.xpath("//img[@id='thumbpic']/../@href")[0]    # 影片真实截图，目前暂时用不到
 
     movie.title = title
