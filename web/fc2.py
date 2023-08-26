@@ -8,31 +8,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from web.base import get_html, request_get
 from web.exceptions import *
 from core.config import cfg
-from core.datatype import MovieInfo
+from core.datatype import MovieInfo, strftime_to_minutes
 
 
 logger = logging.getLogger(__name__)
 base_url = 'https://adult.contents.fc2.com'
-
-
-def strftime_to_minutes(s):
-    """将HH:MM:SS或MM:SS的时长转换为分钟数返回
-
-    Args:
-        s (str): HH:MM:SS or MM:SS
-
-    Returns:
-        [int]: 取整后的分钟数
-    """
-    items = list(map(int, s.split(':')))
-    if len(items) == 2:
-        minutes = items[0] + round(items[1]/60)
-    elif len(items) == 3:
-        minutes = items[0] * 60 + items[1] + round(items[2]/60)
-    else:
-        logger.error(f"无法将字符串'{s}'转换为分钟")
-        return
-    return minutes
 
 
 def get_movie_score(fc2_id):

@@ -205,3 +205,23 @@ class GenreMap(dict):
         mapped = [self.get(i, i) for i in ls]
         cleaned = [i for i in mapped if i]  # 译文为空表示此genre应当被删除
         return cleaned
+
+
+def strftime_to_minutes(s):
+    """将HH:MM:SS或MM:SS的时长转换为分钟数返回
+
+    Args:
+        s (str): HH:MM:SS or MM:SS
+
+    Returns:
+        [int]: 取整后的分钟数
+    """
+    items = list(map(int, s.split(':')))
+    if len(items) == 2:
+        minutes = items[0] + round(items[1]/60)
+    elif len(items) == 3:
+        minutes = items[0] * 60 + items[1] + round(items[2]/60)
+    else:
+        logger.error(f"无法将字符串'{s}'转换为分钟")
+        return
+    return minutes
