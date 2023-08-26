@@ -18,6 +18,13 @@ logger = logging.getLogger(__name__)
 failed_items = []
 
 
+_special_chars_map = {i: '\\' + chr(i) for i in b'()[]{}?*+|^$\\.'}
+def re_escape(s: str) -> str:
+    """用来对字符串进行转义，以将转义后的字符串用于构造正则表达式"""
+    pattern = s.translate(_special_chars_map)
+    return pattern
+
+
 def scan_movies(root: str) -> List[Movie]:
     """获取文件夹内的所有影片的列表（自动探测同一文件夹内的分片）"""
     # 由于实现的限制: 
@@ -63,24 +70,34 @@ def scan_movies(root: str) -> List[Movie]:
         # 提取分片信息（如果正则替换成功，只会剩下单个小写字符）。相关变量都要使用同样的列表生成顺序
         basenames = [os.path.basename(i) for i in files]
         prefix = os.path.commonprefix(basenames)
-        pattern = re.compile(prefix + r'\s*([a-z\d])\s*\.\w+$', flags=re.I)
+        try:
+            pattern_expr = re_escape(prefix) + r'\s*([a-z\d])\s*'
+            pattern = re.compile(pattern_expr, flags=re.I)
+        except re.error:
+            logger.debug(f"正则识别影片分片信息时出错: '{pattern_expr}'")
+            del dic[avid]
+            continue
         remaining = [pattern.sub(r'\1', i).lower() for i in basenames]
-        # 如果remaining中的项长度不为1，说明有文件名不符合正则表达式条件（没有发生替换或不带分片信息）
-        if (any([len(i) != 1 for i in remaining]) 
+        postfixes = [i[1:] for i in remaining]
+        slices = [i[0] for i in remaining]
+        # 如果有不同的后缀，说明有文件名不符合正则表达式条件（没有发生替换或不带分片信息）
+        if (len(set(postfixes)) != 1
             # remaining为初步提取的分片信息，不允许有重复值
-            or len(remaining) != len(set(remaining))):
+            or len(slices) != len(set(slices))):
+            logger.debug(f"无法识别分片信息: {prefix=}, {remaining=}")
             non_slice_dup[avid] = files
             del dic[avid]
             continue
         # 影片编号必须从 0/1/a 开始且编号连续
-        slices = sorted(remaining)
-        first, last = slices[0], slices[-1]
-        if (first not in ('0', '1', 'a')) or (ord(last) != (ord(first)+len(slices)-1)):
+        sorted_slices = sorted(slices)
+        first, last = sorted_slices[0], sorted_slices[-1]
+        if (first not in ('0', '1', 'a')) or (ord(last) != (ord(first)+len(sorted_slices)-1)):
+            logger.debug(f"无效的分片起始编号或分片编号不连续: {sorted_slices=}")
             non_slice_dup[avid] = files
             del dic[avid]
             continue
         # 生成最终的分片信息
-        mapped_files = [files[remaining.index(i)] for i in slices]
+        mapped_files = [files[slices.index(i)] for i in sorted_slices]
         dic[avid] = mapped_files
 
     # 汇总输出错误提示信息

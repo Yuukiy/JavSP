@@ -142,7 +142,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     return all_info
 
 
-def info_summary(movie: Movie, all_info: Dict[MovieInfo]):
+def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     """汇总多个来源的在线数据生成最终数据"""
     final_info = MovieInfo(movie)
     ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
