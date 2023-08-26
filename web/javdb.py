@@ -51,7 +51,7 @@ def get_html_wrapper(url):
                 return get_html_wrapper(url)
             else:
                 raise CredentialError('JavDB: 所有浏览器Cookies均已过期')
-        elif r.history and '/sfpay' in r.url:
+        elif r.history and 'pay' in r.url.split('/')[-1]:
             raise PermissionError(f"JavDB: 此资源被限制为仅VIP可见: '{r.history[0].url}'")
         else:
             html = resp2html(r)
