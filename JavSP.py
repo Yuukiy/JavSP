@@ -52,9 +52,9 @@ def import_crawlers(cfg):
         for name in mods:
             try:
                 # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
-                if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
-                    logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
-                    continue
+                # if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
+                #     logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
+                #     continue
                 import_name = 'web.' + name
                 __import__(import_name)
                 valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用

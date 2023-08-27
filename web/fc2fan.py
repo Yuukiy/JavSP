@@ -30,6 +30,8 @@ def parse_data(movie: MovieInfo):
     else:
         url = f"https://fc2club.top/html/{movie.dvdid}.html"
         r = requests.get(url)
+        if r.status_code == 404:
+            raise MovieNotFoundError(__name__, movie.dvdid)
         html = resp2html(r)
     container = html.xpath("//div[@class='col-sm-8']")[0]
     title = container.xpath("h3/text()")[0]
@@ -44,7 +46,9 @@ def parse_data(movie: MovieInfo):
     elif '有码' in resource_info:
         movie.uncensored = False
     # FC2没有制作商和发行商的区分，作为个人市场，卖家更接近于制作商
-    producer = container.xpath("h5/strong[text()='卖家信息']")[0].getnext().text.strip()
+    producer = container.xpath("h5/strong[text()='卖家信息']")[0].getnext().text
+    if producer:
+        movie.producer = producer.strip()
     genre = container.xpath("h5/strong[text()='影片标签']/../a/text()")
     actress = container.xpath("h5/strong[text()='女优名字']/../a/text()")
     preview_pics = container.xpath("//ul[@class='slides']/li/img/@src")
@@ -55,7 +59,6 @@ def parse_data(movie: MovieInfo):
     movie.title = title
     movie.genre = genre
     movie.actress = actress
-    movie.producer = producer
     if preview_pics:
         movie.preview_pics = preview_pics
         movie.cover = preview_pics[0]
@@ -66,7 +69,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-1000967')
+    movie = MovieInfo('FC2-1879420')
     try:
         parse_data(movie)
         print(movie)
