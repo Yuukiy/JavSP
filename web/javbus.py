@@ -44,7 +44,9 @@ def parse_data(movie: MovieInfo):
     director_tag = info.xpath("p/span[text()='導演:']")
     if director_tag:    # xpath没有匹配时将得到空列表
         movie.director = director_tag[0].getnext().text.strip()
-    producer = info.xpath("p/span[text()='製作商:']")[0].getnext().text.strip()
+    producer_tag = info.xpath("p/span[text()='製作商:']")
+    if producer_tag:
+        movie.producer = producer_tag[0].getnext().text.strip()
     publisher_tag = info.xpath("p/span[text()='發行商:']")
     if publisher_tag:
         movie.publisher = publisher_tag[0].getnext().text.strip()
@@ -83,7 +85,6 @@ def parse_data(movie: MovieInfo):
     if publish_date != '0000-00-00':    # 丢弃无效的发布日期
         movie.publish_date = publish_date
     movie.duration = duration if int(duration) else None
-    movie.producer = producer
     movie.genre = genre
     movie.genre_id = genre_id
     movie.actress = actress
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('130614-KEIKO')
+    movie = MovieInfo('KING-048')
     try:
         parse_clean_data(movie)
         print(movie)

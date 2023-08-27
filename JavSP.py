@@ -149,6 +149,8 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # genre
     if 'javdb' in all_info:
         final_info.genre = all_info['javdb'].genre
+    if not final_info.genre:
+        final_info.genre = []
     if movie.hard_sub:
         final_info.genre.append('内嵌字幕')
     if movie.uncensored:
