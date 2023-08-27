@@ -149,6 +149,10 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # genre
     if 'javdb' in all_info:
         final_info.genre = all_info['javdb'].genre
+    if movie.hard_sub:
+        final_info.genre.append('内嵌字幕')
+    if movie.uncensored:
+        final_info.genre.append('无码流出/破解')
 
     ########## 移除所有抓取器数据中，标题尾部的女优名 ##########
     if cfg.Crawler.title__remove_actor:

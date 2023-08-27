@@ -4,7 +4,7 @@ import re
 import sys
 
 
-__all__ = ['mei_path']
+__all__ = ['re_escape', 'mei_path', 'strftime_to_minutes', 'detect_special_attr']
 
 
 _special_chars_map = {i: '\\' + chr(i) for i in b'()[]{}?*+|^$\\.'}
@@ -40,3 +40,29 @@ def strftime_to_minutes(s: str) -> int:
         logger.error(f"无法将字符串'{s}'转换为分钟")
         return
     return minutes
+
+
+_PATTERN = re.compile(r'(uncensor(ed)?[- _\s]*leak(ed)?|[无無][码碼](流出|破解))', flags=re.I)
+def detect_special_attr(filepath: str) -> str:
+    """通过文件名检测影片是否有特殊属性（内嵌字幕、无码流出/破解）
+
+    Returns:
+        [str]: '', 'U', 'C', 'UC'
+    """
+    result = ''
+    base = os.path.splitext(os.path.basename(filepath))[0].upper()
+    # 尝试使用正则匹配
+    match = _PATTERN.search(base)
+    if match:
+        result += 'U'
+    # 尝试匹配-C/-U/-UC后缀的影片
+    postfix = base.split('-')[-1]
+    if postfix in ('U', 'C', 'UC'):
+        result += postfix
+    # 最终格式化
+    result = ''.join(sorted(result, reverse=True))
+    return result
+
+
+if __name__ == "__main__":
+    print(detect_special_attr('STARS-225_UNCENSORED_LEAKED.mp4'))
