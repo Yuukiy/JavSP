@@ -57,23 +57,25 @@ def parse_data(movie: MovieInfo):
     if duration_tag:
         movie.duration = str(strftime_to_minutes(duration_tag[0]))
 
-    publish_date = info.xpath("a[@class='mv_createDate']/text()")[0]
-    producer = info.xpath("a[@class='mv_writer']/text()")[0]
+    publish_date = info.xpath("a[@class='mv_createDate']/text()")
+    if publish_date:
+        movie.publish_date = publish_date[0]
+    producer = info.xpath("a[@class='mv_writer']/text()")
+    if producer:
+        movie.producer = producer[0]
 
     movie.url = r.url
     movie.title = title.replace(avid, '').strip()
     movie.genre = [i.strip() for i in genre]
     movie.actress = actress
     movie.actress_pics = actress_pics
-    movie.publish_date = publish_date
-    movie.producer = producer
 
 
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
 
-    movie = MovieInfo('FC2-626157')
+    movie = MovieInfo('FC2-238629')
     try:
         parse_data(movie)
         print(movie)
