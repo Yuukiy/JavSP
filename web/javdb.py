@@ -114,12 +114,25 @@ def parse_data(movie: MovieInfo):
     if match_count == 0:
         raise MovieNotFoundError(__name__, movie.dvdid, ids)
     elif match_count == 1:
-        new_url = movie_urls[ids.index(movie.dvdid.lower())]
+        index = ids.index(movie.dvdid.lower())
+        new_url = movie_urls[index]
+        try:
+            html2 = get_html_wrapper(new_url)
+        except PermissionError:
+            # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
+            box = html.xpath("//a[@class='box']")[index]
+            movie.url = new_url
+            movie.title = box.get('title')
+            movie.cover = box.xpath("div/img/@src")[0]
+            score_str = box.xpath("div[@class='score']/span/span")[0].tail
+            score = re.search(r'([\d.]+)分', score_str).group(1)
+            movie.score = "{:.2f}".format(float(score)*2)
+            movie.publish_date = box.xpath("div[@class='meta']/text()")[0].strip()
+            return
     else:
         raise MovieDuplicateError(__name__, movie.dvdid, match_count)
 
-    html = get_html_wrapper(new_url)
-    container = html.xpath("/html/body/section/div/div[@class='video-detail']")[0]
+    container = html2.xpath("/html/body/section/div/div[@class='video-detail']")[0]
     info = container.xpath("//nav[@class='panel movie-panel-info']")[0]
     title = container.xpath("h2/strong[@class='current-title']/text()")[0]
     cover = container.xpath("//img[@class='video-cover']/@src")[0]
@@ -186,8 +199,9 @@ def parse_clean_data(movie: MovieInfo):
     except SiteBlocked:
         raise
         logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
-    movie.genre_norm = genre_map.map(movie.genre_id)
-    movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
+    if movie.genre_id:
+        movie.genre_norm = genre_map.map(movie.genre_id)
+        movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
 
 
 if __name__ == "__main__":
@@ -195,7 +209,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('FC2-3189680')
     try:
         parse_clean_data(movie)
         print(movie)

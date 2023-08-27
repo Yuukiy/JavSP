@@ -61,7 +61,9 @@ def convert_chrome_utc(chrome_utc):
     """将Chrome存储的UTC时间转换为UNIX的UTC时间格式"""
     # Chrome's cookies timestamp's epoch starts 1601-01-01T00:00:00Z
     second = int(chrome_utc / 1e6)
-    unix_utc = datetime.fromtimestamp(second - 11644473600)
+    if second > 0:  # 考虑chrome_utc为0的情况
+        second = second - 11644473600
+    unix_utc = datetime.fromtimestamp(second)
     return unix_utc
 
 
