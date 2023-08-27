@@ -76,7 +76,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             try:
                 parser(info)
                 movie_id = info.dvdid or info.cid
-                logger.debug(f"{crawler_name}: 抓取成功: '{movie_id}'")
+                logger.debug(f"{crawler_name}: 抓取成功: '{movie_id}': '{info.url}'")
                 setattr(info, 'success', True)
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 抓取完成')

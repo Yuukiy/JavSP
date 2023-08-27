@@ -66,6 +66,8 @@ def parse_data(movie: MovieInfo):
         movie.magnet = [i.replace('[javdb.com]','') for i in magnet_links]
     preview_pics = container.xpath("//a[@data-fancybox='gallery']/@href")
 
+    if (not movie.cover) and preview_pics:
+        movie.cover = preview_pics[0]
     movie.url = url
     movie.title = title.replace(movie.dvdid, '').strip()
     movie.preview_pics = preview_pics
@@ -81,7 +83,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-718323')
+    movie = MovieInfo('FC2-2764073')
     try:
         parse_data(movie)
         print(movie)
