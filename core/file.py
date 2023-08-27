@@ -11,18 +11,12 @@ __all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_ill
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.avid import *
+from core.lib import re_escape
 from core.config import cfg
 from core.datatype import Movie
 
 logger = logging.getLogger(__name__)
 failed_items = []
-
-
-_special_chars_map = {i: '\\' + chr(i) for i in b'()[]{}?*+|^$\\.'}
-def re_escape(s: str) -> str:
-    """用来对字符串进行转义，以将转义后的字符串用于构造正则表达式"""
-    pattern = s.translate(_special_chars_map)
-    return pattern
 
 
 def scan_movies(root: str) -> List[Movie]:

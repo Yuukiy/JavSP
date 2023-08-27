@@ -8,7 +8,8 @@ import requests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
 from web.exceptions import *
-from core.datatype import MovieInfo, strftime_to_minutes
+from core.lib import strftime_to_minutes
+from core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)

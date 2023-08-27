@@ -15,15 +15,15 @@ from packaging import version
 from colorama import Fore, Style
 
 # 判断系统是否可以使用tk
-USEGUI = True
+USE_GUI = True
 try:
     from tkinter import filedialog, Tk
-except:
-    USEGUI = False
+except ImportError:
+    USE_GUI = False
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
-from core.datatype import mei_path
+from core.lib import mei_path
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 def select_folder(default_dir=''):
     """使用文件对话框提示用户选择一个文件夹"""
-    if not USEGUI:
+    if not USE_GUI:
         logger.error("无法打开窗口，请通过命令行的方式输入扫描路径")
         exit(1)
     window = Tk()
