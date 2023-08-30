@@ -135,6 +135,9 @@ def parse_data(movie: MovieInfo):
     container = html2.xpath("/html/body/section/div/div[@class='video-detail']")[0]
     info = container.xpath("//nav[@class='panel movie-panel-info']")[0]
     title = container.xpath("h2/strong[@class='current-title']/text()")[0]
+    show_orig_title = container.xpath("//a[contains(@class, 'meta-link') and not(contains(@style, 'display: none'))]")
+    if show_orig_title:
+        movie.ori_title = container.xpath("h2/span[@class='origin-title']/text()")[0]
     cover = container.xpath("//img[@class='video-cover']/@src")[0]
     preview_pics = container.xpath("//a[@class='tile-item'][@data-fancybox='gallery']/@href")
     preview_video_tag = container.xpath("//video[@id='preview-video']/source/@src")
@@ -209,7 +212,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-3189680')
+    movie = MovieInfo('STARS-256')
     try:
         parse_clean_data(movie)
         print(movie)

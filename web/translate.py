@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
     # 翻译标题
-    if info.title and cfg.Translate.translate_title:
+    if info.title and cfg.Translate.translate_title and info.ori_title is None:
         result = translate(info.title, cfg.Translate.engine, info.actress)
         if 'trans' in result:
             info.ori_title = info.title
