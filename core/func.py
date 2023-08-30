@@ -23,7 +23,7 @@ except ImportError:
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import *
-from core.lib import mei_path
+from core.lib import mei_path, re_escape
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
@@ -71,7 +71,8 @@ def remove_trail_actor_in_title(title:str, actors:list) -> str:
         return title
     # 目前使用分隔符白名单来做检测（担心按Unicode范围匹配误伤太多），考虑尽可能多的分隔符
     delimiters = '-xX &·,;　＆・，；'
-    pattern = f"^(.*?)([{delimiters}]{{1,3}}({'|'.join(actors)}))+$"
+    actor_ls = [re_escape(i) for i in actors if i]
+    pattern = f"^(.*?)([{delimiters}]{{1,3}}({'|'.join(actor_ls)}))+$"
     # 使用match而不是sub是为了将替换掉的部分写入日志
     match = re.match(pattern, title)
     if match:
