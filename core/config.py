@@ -223,7 +223,7 @@ def norm_int(cfg: Config):
     cfg.Network.retry = cfg.getint('Network', 'retry')
     cfg.Network.timeout = cfg.getint('Network', 'timeout')
     cfg.NamingRule.max_path_len = min(cfg.getint('NamingRule', 'max_path_len'), 256)
-    cfg.NamingRule.max_acctress_count = max(cfg.getint('NamingRule', 'max_acctress_count'), 1)
+    cfg.NamingRule.max_actress_count = max(cfg.getint('NamingRule', 'max_actress_count'), 1)
 
 
 def norm_tuples(cfg: Config):
@@ -257,6 +257,13 @@ def norm_boolean(cfg: Config):
             ('Other', 'auto_update')
         ]:
         cfg._sections[sec][key] = cfg.getboolean(sec, key)
+    # 特殊转换
+    sec, key = 'NamingRule', 'calc_path_len_by_byte'
+    try:
+        cfg._sections[sec][key] = cfg.getboolean(sec, key)
+    except ValueError:
+        # 当配置为auto时会转换失败，此时保留auto配置以待后面根据文件系统来作更新
+        cfg._sections[sec][key] = cfg._sections[sec][key].lower()
 
 
 def norm_ignore_pattern(cfg: Config):

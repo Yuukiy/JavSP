@@ -233,9 +233,9 @@ def generate_names(movie: Movie):
     d['num'] = info.dvdid or info.cid
     d['title'] = info.title or cfg.NamingRule.null_for_title
     d['rawtitle'] = info.ori_title or d['title']
-    if info.actress and len(info.actress) > cfg.NamingRule.max_acctress_count:
+    if info.actress and len(info.actress) > cfg.NamingRule.max_actress_count:
         logging.debug('女优人数过多，按配置保留了其中的前n个: ' + ','.join(info.actress))
-        actress = info.actress[:cfg.NamingRule.max_acctress_count] + ['…']
+        actress = info.actress[:cfg.NamingRule.max_actress_count] + ['…']
     else:
         actress = info.actress
     d['actress'] = ','.join(actress) if actress else cfg.NamingRule.null_for_actress
@@ -296,7 +296,7 @@ def generate_names(movie: Movie):
         copyd['title'] = copyd['title'][:remaining]
         copyd['rawtitle'] = copyd['rawtitle'][:remaining]
         if (copyd['title'] == '' and '$title' in templates) or (copyd['rawtitle'] == '' and '$rawtitle' in templates):
-            logger.error("命名规则导致标题被截断至空，请增大'max_path_len'或减小'max_acctress_count'配置项后重试")
+            logger.error("命名规则导致标题被截断至空，请增大'max_path_len'或减小'max_actress_count'配置项后重试")
             logger.debug((d, templates, cfg.NamingRule.max_path_len))
             return
         save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
