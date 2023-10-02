@@ -31,9 +31,17 @@ def parse_data(movie: MovieInfo):
     if resp.status_code == 404:
         raise MovieNotFoundError(__name__, movie.dvdid)
     resp.raise_for_status()
-    html = resp2html(resp)
+    # 疑似JavBus检测到类似爬虫的行为时会要求登录，不过发现目前不需要登录也可以从重定向前的网页中提取信息
+    if resp.history and resp.history[0].status_code == 302:
+        html = resp2html(resp.history[0])
+    else:
+        html = resp2html(resp)
+    # 引入登录验证后状态码不再准确，因此还要额外通过检测标题来确认是否发生了404
+    page_title = html.xpath('/html/head/title/text()')
+    if page_title and page_title[0].startswith('404 Page Not Found!'):
+        raise MovieNotFoundError(__name__, movie.dvdid)
 
-    container = html.xpath("/html/body/div[@class='container']")[0]
+    container = html.xpath("//div[@class='container']")[0]
     title = container.xpath("h3/text()")[0]
     cover = container.xpath("//a[@class='bigImage']/img/@src")[0]
     preview_pics = container.xpath("//div[@id='sample-waterfall']/a/@href")
