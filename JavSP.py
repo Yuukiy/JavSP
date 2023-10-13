@@ -12,14 +12,12 @@ import colorama
 import pretty_errors
 from colorama import Fore, Style
 from tqdm import tqdm
-
+from zhconv import convert
 
 pretty_errors.configure(display_link=True)
 
-
 from core.print import TqdmOut
 from core.baidu_aip import aip_crop_poster
-
 
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
 root_logger = logging.getLogger()
@@ -28,7 +26,6 @@ for handler in root_logger.handlers:
         handler.stream = TqdmOut
 
 logger = logging.getLogger('main')
-
 
 from core.nfo import write_nfo
 from core.config import cfg, args
@@ -47,7 +44,7 @@ def import_crawlers(cfg):
     for typ, cfg_str in cfg.CrawlerSelect.items():
         mods = cfg_str.split(',')
         if 'airav' in mods:
-            mods.sort(key=lambda x:x=='airav', reverse=cfg.Crawler.title__chinese_first)
+            mods.sort(key=lambda x: x == 'airav', reverse=cfg.Crawler.title__chinese_first)
         valid_mods = []
         for name in mods:
             try:
@@ -59,7 +56,7 @@ def import_crawlers(cfg):
                 __import__(import_name)
                 valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
             except ModuleNotFoundError:
-                unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
+                unknown_mods.append(name)  # 抓取器无效: 仅使用模块名，便于显示
         cfg._sections['CrawlerSelect'][typ] = tuple(valid_mods)
     if unknown_mods:
         logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
@@ -68,6 +65,7 @@ def import_crawlers(cfg):
 # 爬虫是IO密集型任务，可以通过多线程提升效率
 def parallel_crawler(movie: Movie, tqdm_bar=None):
     """使用多线程抓取不同网站的数据"""
+
     def wrapper(parser, info: MovieInfo, retry):
         """对抓取器函数进行包装，便于更新提示信息和自动重试"""
         crawler_name = threading.current_thread().name
@@ -91,7 +89,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                 logger.error(e)
                 break
             except requests.exceptions.RequestException as e:
-                logger.debug(f'{crawler_name}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{repr(e)}')
+                logger.debug(f'{crawler_name}: 网络错误，正在重试 ({cnt + 1}/{retry}): \n{repr(e)}')
                 if isinstance(tqdm_bar, tqdm):
                     tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
             except Exception as e:
@@ -134,11 +132,11 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             movie.cid = None
             all_info = {k: v for k, v in all_info.items() if k not in cfg.CrawlerSelect['cid']}
     # 删除抓取失败的站点对应的数据
-    all_info = {k:v for k,v in all_info.items() if hasattr(v, 'success')}
+    all_info = {k: v for k, v in all_info.items() if hasattr(v, 'success')}
     for info in all_info.values():
         del info.success
     # 删除all_info中键名中的'web.'
-    all_info = {k[4:]:v for k,v in all_info.items()}
+    all_info = {k[4:]: v for k, v in all_info.items()}
     return all_info
 
 
@@ -196,7 +194,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                     id_weight.setdefault(data.cid, []).append(name)
         # 根据权重选择最终番号
         if id_weight:
-            id_weight = {k:v for k, v in sorted(id_weight.items(), key=lambda x:len(x[1]), reverse=True)}
+            id_weight = {k: v for k, v in sorted(id_weight.items(), key=lambda x: len(x[1]), reverse=True)}
             final_id = list(id_weight.keys())[0]
             if movie.dvdid:
                 final_info.dvdid = final_id
@@ -220,10 +218,29 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         if not getattr(final_info, attr, None):
             logger.error(f"所有抓取器均未获取到字段: '{attr}'，抓取失败")
             return False
+
+    # 繁简转换
+    if cfg.Crawler.t2s:
+        if final_info.title:
+            final_info.title = t2s(final_info.title)
+        if final_info.plot:
+            final_info.plot = t2s(final_info.plot)
+        if final_info.genre:
+            final_info.genre = [t2s(i) for i in final_info.genre]
+        if final_info.actress:
+            final_info.actress = [t2s(i) for i in final_info.actress]
+
     # 必需字段均已获得了值：将最终的数据附加到movie
     movie.info = final_info
     return True
 
+
+def t2s(text):
+    """如不包含日语，尝试将内容转为简体"""
+    if re.search(u"[\u30a0-\u30ff\u3040-\u309f]+", text):
+        return text
+    else:
+        return convert(text, 'zh-cn')
 
 def generate_names(movie: Movie):
     """按照模板生成相关文件的文件名"""
@@ -340,7 +357,7 @@ def reviewMovieID(all_movies, root):
         id = repr(movie)[7:-2]
         print(f'[{i}/{count}]\t{Fore.LIGHTMAGENTA_EX}{id}{Style.RESET_ALL}, 对应文件:')
         relpaths = [os.path.relpath(i, root) for i in movie.files]
-        print('\n'.join(['  '+i for i in relpaths]))
+        print('\n'.join(['  ' + i for i in relpaths]))
         s = input("回车确认当前番号，或直接输入更正后的番号（如'ABC-123'或'cid:sqte00300'）")
         if not s:
             logger.info(f"已确认影片番号: {','.join(relpaths)}: {id}")
@@ -359,7 +376,7 @@ def reviewMovieID(all_movies, root):
                 new_movie = Movie(s)
                 new_movie.data_src = 'normal'
                 new_movie.files = movie.files
-            all_movies[i-1] = new_movie
+            all_movies[i - 1] = new_movie
             new_id = repr(new_movie)[7:-2]
             logger.info(f"已更正影片番号: {','.join(relpaths)}: {id} -> {new_id}")
         print()
@@ -380,6 +397,7 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
 
 def RunNormalMode(all_movies):
     """普通整理模式"""
+
     def check_step(result, msg='步骤错误'):
         """检查一个整理步骤的结果，并负责更新tqdm的进度"""
         if result:
@@ -499,7 +517,7 @@ def download_cover(covers, fanart_path, big_covers=[]):
             except Exception as e:
                 logger.debug(e, exc_info=True)
     logger.error(f"下载封面图片失败")
-    logger.debug('big_covers:'+str(big_covers) + ', covers'+str(covers))
+    logger.debug('big_covers:' + str(big_covers) + ', covers' + str(covers))
     return None
 
 
@@ -525,6 +543,7 @@ if __name__ == "__main__":
     # python版本检查
     import platform
     from packaging import version
+
     py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
     error_exit(py_version_ok, '请使用3.8及以上版本的Python')
     # 检查更新
