@@ -131,7 +131,7 @@ def bing_translate(texts, to='zh-Hans'):
 
 def baidu_translate(texts, to='zh'):
     """使用百度翻译文本（默认翻译为简体中文）"""
-    api_url = "https://fanyi-api.baidu.com/api/trans/vip/translate"
+    api_url = "https://api.fanyi.baidu.com/api/trans/vip/translate"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     appid = cfg.Translate.baidu_appid
     appkey = cfg.Translate.baidu_key
