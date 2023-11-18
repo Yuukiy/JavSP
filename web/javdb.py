@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from web.base import Request, resp2html
 from web.exceptions import *
 from core.func import *
+from core.avid import guess_av_type
 from core.config import cfg
 from core.datatype import MovieInfo, GenreMap
 from core.chromium import get_browsers_cookies
@@ -152,7 +153,11 @@ def parse_data(movie: MovieInfo):
     director_tag = info.xpath("div/strong[text()='導演:']")
     if director_tag:
         movie.director = director_tag[0].getnext().text_content().strip()
-    producer_tag = info.xpath("div/strong[text()='片商:']")
+    av_type = guess_av_type(movie.dvdid)
+    if av_type != 'fc2':
+        producer_tag = info.xpath("div/strong[text()='片商:']")
+    else:
+        producer_tag = info.xpath("div/strong[text()='賣家:']")
     if producer_tag:
         movie.producer = producer_tag[0].getnext().text_content().strip()
     publisher_tag = info.xpath("div/strong[text()='發行:']")
@@ -202,7 +207,7 @@ def parse_clean_data(movie: MovieInfo):
     except SiteBlocked:
         raise
         logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
-    if movie.genre_id:
+    if movie.genre_id and (not movie.genre_id[0].startswith('fc2?')):
         movie.genre_norm = genre_map.map(movie.genre_id)
         movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
 
@@ -212,7 +217,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('STARS-256')
+    movie = MovieInfo('FC2-3189680')
     try:
         parse_clean_data(movie)
         print(movie)
