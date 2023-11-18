@@ -32,6 +32,8 @@ def parse_data(movie: MovieInfo):
         r = requests.get(url)
         if r.status_code == 404:
             raise MovieNotFoundError(__name__, movie.dvdid)
+        elif r.text == '':
+            raise WebsiteError(f'fc2fan: 站点不可用 (HTTP {r.status_code}): {url}')
         html = resp2html(r)
     container = html.xpath("//div[@class='col-sm-8']")[0]
     title = container.xpath("h3/text()")[0]
