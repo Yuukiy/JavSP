@@ -32,7 +32,7 @@ def parse_data(movie: MovieInfo):
     title = container.xpath("div[@class='col-12 mb-3']/h1/strong/text()")[0]
     # 竟然还在标题里插广告，真的疯了。要不是我已经写了抓取器，才懒得维护这个破站
     title = title.replace('  | JAV目錄大全 | 每日更新', '')
-    title = title.replace('  免費在線看', '')
+    title = title.replace(' 免費在線看', '').replace(' 免費AV在線看', '')
     cover_tag = container.xpath("//div[@class='single-video']")[0]
     video_tag = cover_tag.find('video')
     if video_tag is not None:
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-2764073')
+    movie = MovieInfo('IPX-177')
     try:
         parse_data(movie)
         print(movie)

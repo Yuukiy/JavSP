@@ -21,10 +21,13 @@ def test_crawler(crawler_params):
     # crawler_params: ('ABC-123', 'javlib', 'path_to_local_json')
     # TODO: 在Github actions环境中总是无法通过Cloudflare的检测，因此暂时忽略需要过验证站点的失败项
     try:
+        site, params = crawler_params[1], crawler_params[:2]
         compare(*crawler_params)
+    except requests.exceptions.ReadTimeout:
+        logger.warning(f"{site} 连接超时: {params}")
     except Exception as e:
-        if os.getenv('GITHUB_ACTIONS') and (crawler_params[1] in ['javdb', 'javlib', 'airav']):
-            logger.debug(f'检测到Github actions环境，已忽略测试失败项: {crawler_params[:2]}')
+        if os.getenv('GITHUB_ACTIONS') and (site in ['javdb', 'javlib', 'airav']):
+            logger.debug(f'检测到Github actions环境，已忽略测试失败项: {params}')
             logger.exception(e)
         else:
             raise
