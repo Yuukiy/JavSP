@@ -60,7 +60,7 @@ def parse_data(movie: MovieInfo):
     # if label_tag:
     #     label = label_tag[0].strip()
     # fanza会把促销信息也写进genre……因此要根据tag指向的链接类型进行筛选
-    genre_tags = container.xpath("//td[text()='ジャンル：']/following-sibling::td/a[contains(@href,'article=keyword')]")
+    genre_tags = container.xpath("//td[text()='ジャンル：']/following-sibling::td/a[contains(@href,'?keyword=')]")
     genre, genre_id = [], []
     for tag in genre_tags:
         genre.append(tag.text.strip())
