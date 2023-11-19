@@ -74,6 +74,14 @@ class DetailedFormatter(logging.Formatter):
     def __init__(self, fmt='%(asctime)s %(name)s:%(lineno)d %(levelname)s: %(message)s',
                  datefmt='%Y-%m-%d %H:%M:%S', *args) -> None:
         super().__init__(fmt, datefmt, *args)
+        username = os.getlogin()
+        self.anonymize = re.compile(r'([\\/]*)' + username + '([\\/]*)', flags=re.I)
+
+    def format(self, record):
+        raw = super().format(record)
+        s = self.anonymize.sub(r'\1javsp\2', raw)
+        return s
+
     def formatException(self, ei):
         s = super().formatException(ei)
         # ei[1] 是异常的实例，从中提取除了异常的message外的其他参数
