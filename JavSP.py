@@ -87,7 +87,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             except MovieDuplicateError as e:
                 logger.exception(e)
                 break
-            except (SiteBlocked, PermissionError, CredentialError) as e:
+            except (SiteBlocked, SitePermissionError, CredentialError) as e:
                 logger.error(e)
                 break
             except requests.exceptions.RequestException as e:

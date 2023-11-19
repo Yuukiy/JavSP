@@ -38,6 +38,10 @@ def get_html_wrapper(url):
             if 'cookies_pool' not in globals():
                 try:
                     cookies_pool = get_browsers_cookies()
+                except (PermissionError, OSError) as e:
+                    logger.warning('无法从浏览器Cookies文件获取JavDB的登录凭据（可能是安全软件在保护浏览器Cookies文件）')
+                    logger.debug(e, exc_info=True)
+                    cookies_pool = []
                 except Exception as e:
                     logger.warning('获取JavDB的登录凭据时出错，你可能使用的是国内定制版等非官方Chrome系浏览器')
                     logger.debug(e, exc_info=True)
@@ -53,7 +57,7 @@ def get_html_wrapper(url):
             else:
                 raise CredentialError('JavDB: 所有浏览器Cookies均已过期')
         elif r.history and 'pay' in r.url.split('/')[-1]:
-            raise PermissionError(f"JavDB: 此资源被限制为仅VIP可见: '{r.history[0].url}'")
+            raise SitePermissionError(f"JavDB: 此资源被限制为仅VIP可见: '{r.history[0].url}'")
         else:
             html = resp2html(r)
             return html
@@ -119,7 +123,7 @@ def parse_data(movie: MovieInfo):
         new_url = movie_urls[index]
         try:
             html2 = get_html_wrapper(new_url)
-        except PermissionError:
+        except (SitePermissionError, CredentialError):
             # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
             box = html.xpath("//a[@class='box']")[index]
             movie.url = new_url
@@ -217,7 +221,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-3189680')
+    movie = MovieInfo('FC2-238629')
     try:
         parse_clean_data(movie)
         print(movie)

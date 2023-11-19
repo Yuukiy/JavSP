@@ -1,6 +1,6 @@
 """网页抓取相关的异常"""
 __all__ = ['CrawlerError', 'MovieNotFoundError', 'MovieDuplicateError', 'SiteBlocked',
-           'PermissionError', 'CredentialError', 'WebsiteError', 'OtherError']
+           'SitePermissionError', 'CredentialError', 'WebsiteError', 'OtherError']
 
 
 class CrawlerError(Exception):
@@ -32,7 +32,7 @@ class SiteBlocked(CrawlerError):
     """由于IP段或者触发反爬机制等原因导致用户被站点封锁"""
 
 
-class PermissionError(CrawlerError):
+class SitePermissionError(CrawlerError):
     """由于缺少权限而无法访问影片资源"""
 
 
