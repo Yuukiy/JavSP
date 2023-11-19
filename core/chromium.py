@@ -1,17 +1,24 @@
 """解析Chromium系浏览器Cookies的相关函数"""
 import os
+import sys
 import json
 import base64
 import sqlite3
+import logging
 from glob import glob
 from shutil import copyfile
 from datetime import datetime
 
+__all__ = ['get_browsers_cookies']
+
+
 import win32crypt
 from Crypto.Cipher import AES
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import core.config   # to init the logging module
 
-__all__ = ['get_browsers_cookies']
+logger = logging.getLogger(__name__)
 
 
 class Decrypter():
@@ -39,6 +46,7 @@ def get_browsers_cookies():
     }
     LocalAppDataDir = os.getenv('LOCALAPPDATA')
     all_browser_cookies = []
+    exceptions = []
     for brw, path in user_data_dirs.items():
         user_dir = LocalAppDataDir + path
         cookies_files = glob(user_dir+'/*/Cookies') + glob(user_dir+'/*/Network/Cookies')
@@ -48,12 +56,19 @@ def get_browsers_cookies():
             decrypter = Decrypter(key)
             for file in cookies_files:
                 profile = brw + ": " + file.split('User Data')[1].split(os.sep)[1]
-                records = get_cookies(file, decrypter)
-                if records:
-                    # 将records转换为便于使用的格式
-                    for site, cookies in records.items():
-                        entry = {'profile': profile, 'site': site, 'cookies': cookies}
-                        all_browser_cookies.append(entry)
+                file = os.path.normpath(file)
+                try:
+                    records = get_cookies(file, decrypter)
+                    if records:
+                        # 将records转换为便于使用的格式
+                        for site, cookies in records.items():
+                            entry = {'profile': profile, 'site': site, 'cookies': cookies}
+                            all_browser_cookies.append(entry)
+                except Exception as e:
+                    exceptions.append(e)
+                    logger.debug(f"无法解析Cookies文件({e}): {file}", exc_info=True)
+    if len(all_browser_cookies) == 0 and len(exceptions) > 0:
+        raise exceptions[0]
     return all_browser_cookies
 
 

@@ -164,7 +164,7 @@ def get_remaining_path_len(path):
     # Windows: If the length exceeds ~256 characters, you will be able to see the path/files via Windows/File Explorer, but may not be able to delete/move/rename these paths/files
     if cfg.NamingRule.calc_path_len_by_byte == 'auto':
         is_remote = is_remote_drive(path)
-        logger.debug(f"目标路径{['是', '不是'][is_remote]}远程文件系统")
+        logger.debug(f"目标路径{['不是', '是'][is_remote]}远程文件系统")
         cfg.NamingRule.calc_path_len_by_byte = is_remote
     length = len(fullpath.encode('utf-8')) if cfg.NamingRule.calc_path_len_by_byte else len(fullpath)
     remaining = cfg.NamingRule.max_path_len - length

@@ -39,12 +39,10 @@ def get_html_wrapper(url):
                 try:
                     cookies_pool = get_browsers_cookies()
                 except (PermissionError, OSError) as e:
-                    logger.warning('无法从浏览器Cookies文件获取JavDB的登录凭据（可能是安全软件在保护浏览器Cookies文件）')
-                    logger.debug(e, exc_info=True)
+                    logger.warning(f"无法从浏览器Cookies文件获取JavDB的登录凭据({e})，可能是安全软件在保护浏览器Cookies文件", exc_info=True)
                     cookies_pool = []
                 except Exception as e:
-                    logger.warning('获取JavDB的登录凭据时出错，你可能使用的是国内定制版等非官方Chrome系浏览器')
-                    logger.debug(e, exc_info=True)
+                    logger.warning(f"获取JavDB的登录凭据时出错({e})，你可能使用的是国内定制版等非官方Chrome系浏览器", exc_info=True)
                     cookies_pool = []
             if len(cookies_pool) > 0:
                 item = cookies_pool.pop()
