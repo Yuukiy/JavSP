@@ -271,6 +271,7 @@ def generate_names(movie: Movie):
     else:
         ori_title_break = split_by_punc(d['rawtitle'])
     copyd = d.copy()
+    copyd['num'] = copyd['num'] + movie.attr_str
     for end in range(len(ori_title_break), 0, -1):
         copyd['rawtitle'] = replace_illegal_chars(''.join(ori_title_break[:end]).strip())
         for sub_end in range(len(title_break), 0, -1):
