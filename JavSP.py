@@ -395,8 +395,6 @@ def add_to_pic(poster_file, mark):
         poster_img_pic.paste(mark_img_subt, (pos[3]['x'], pos[3]['y']), mask=a)
     poster_img_pic.save(poster_file, quality=95)
     
-    print(222)
-
 def add_poster_mark(poster_file, hard_sub, uncensored):
     if hard_sub:
         add_to_pic(poster_file, 1)
