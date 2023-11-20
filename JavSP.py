@@ -368,11 +368,14 @@ def reviewMovieID(all_movies, root):
 #1：字幕 2：破解
 def add_to_pic(poster_file, mark):
     if mark == 1:
-        pngpath = "image\\SUB.png"
+        pngpath = "image/SUB.png"
     elif mark == 2:
-        pngpath = "image\\HACK.png"
-        
-    mark_pic_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), pngpath)
+        pngpath = "image/HACK.png"
+
+    if hasattr(sys, '_MEIPASS') and os.path.isfile(os.path.join(getattr(sys, '_MEIPASS'), pngpath)):
+        mark_pic_path = os.path.join(getattr(sys, '_MEIPASS'), pngpath)
+    elif os.path.isfile(os.path.join(os.path.dirname(os.path.realpath(__file__)), pngpath)):
+        mark_pic_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), pngpath) 
     
     poster_img_pic = Image.open(poster_file)
     mark_img_subt = Image.open(mark_pic_path)
