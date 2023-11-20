@@ -12,6 +12,7 @@ import colorama
 import pretty_errors
 from colorama import Fore, Style
 from tqdm import tqdm
+from PIL import Image
 
 
 pretty_errors.configure(display_link=True)
@@ -364,6 +365,43 @@ def reviewMovieID(all_movies, root):
             logger.info(f"已更正影片番号: {','.join(relpaths)}: {id} -> {new_id}")
         print()
 
+#1：字幕 2：破解
+def add_to_pic(poster_file, mark):
+    if mark == 1:
+        pngpath = "image\\SUB.png"
+    elif mark == 2:
+        pngpath = "image\\HACK.png"
+        
+    mark_pic_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), pngpath)
+    
+    poster_img_pic = Image.open(poster_file)
+    mark_img_subt = Image.open(mark_pic_path)
+    
+    scroll_high = int(poster_img_pic.height / 9)
+    scroll_wide = int(scroll_high * mark_img_subt.width / mark_img_subt.height)
+    mark_img_subt = mark_img_subt.resize((scroll_wide, scroll_high), Image.LANCZOS)
+    r, g, b, a = mark_img_subt.split()  # 获取颜色通道，保持png的透明性
+    
+    #水印放到左上 右上 右下 左下位置
+    pos = [
+        {'x': 0, 'y': 0},
+        {'x': poster_img_pic.width - scroll_wide, 'y': 0},
+        {'x': poster_img_pic.width - scroll_wide, 'y': poster_img_pic.height - scroll_high},
+        {'x': 0, 'y': poster_img_pic.height - scroll_high},
+    ]
+    if mark == 1:
+        poster_img_pic.paste(mark_img_subt, (pos[2]['x'], pos[2]['y']), mask=a)
+    if mark == 2:
+        poster_img_pic.paste(mark_img_subt, (pos[3]['x'], pos[3]['y']), mask=a)
+    poster_img_pic.save(poster_file, quality=95)
+    
+    print(222)
+
+def add_poster_mark(poster_file, hard_sub, uncensored):
+    if hard_sub:
+        add_to_pic(poster_file, 1)
+    if uncensored:
+        add_to_pic(poster_file, 2)
 
 def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
     """包装各种海报裁剪方法，提供统一的调用"""
@@ -403,6 +441,7 @@ def RunNormalMode(all_movies):
 
             inner_bar.set_description('汇总数据')
             has_required_keys = info_summary(movie, all_info)
+            
             check_step(has_required_keys)
 
             if cfg.Translate.engine:
@@ -443,7 +482,10 @@ def RunNormalMode(all_movies):
                 method = 'normal'
             crop_poster_wrapper(movie.fanart_file, movie.poster_file, method)
             check_step(True)
-
+            # 添加水印
+            if movie.hard_sub or movie.uncensored:
+                add_poster_mark(movie.poster_file, movie.hard_sub, movie.uncensored)
+            
             if 'video_station' in cfg.NamingRule.media_servers:
                 postStep_videostation(movie)
             if len(movie.files) > 1:
