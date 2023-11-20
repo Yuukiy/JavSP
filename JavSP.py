@@ -498,6 +498,10 @@ def RunNormalMode(all_movies):
             check_step(True)
 
             logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+            
+            if movie.dvdid != all_movies[-1].dvdid and int(cfg.Other.sleep) != 0:
+                time.sleep(int(cfg.Other.sleep))
+            
         except Exception as e:
             logger.debug(e, exc_info=True)
             logger.error(f'整理失败: {e}')
