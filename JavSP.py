@@ -150,6 +150,12 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # genre
     if 'javdb' in all_info:
         final_info.genre = all_info['javdb'].genre
+    else:
+        for name, data in all_info.items():
+            if data.genre != None:
+                final_info.genre = all_info[name].genre
+                break
+                  
     if not final_info.genre:
         final_info.genre = []
     if movie.hard_sub:
@@ -365,12 +371,12 @@ def reviewMovieID(all_movies, root):
             logger.info(f"已更正影片番号: {','.join(relpaths)}: {id} -> {new_id}")
         print()
 
-#1：字幕 2：破解
+#1：字幕 2：无码
 def add_to_pic(poster_file, mark):
     if mark == 1:
         pngpath = "image/SUB.png"
     elif mark == 2:
-        pngpath = "image/HACK.png"
+        pngpath = "image/UNCENSORED.png"
 
     if hasattr(sys, '_MEIPASS') and os.path.isfile(os.path.join(getattr(sys, '_MEIPASS'), pngpath)):
         mark_pic_path = os.path.join(getattr(sys, '_MEIPASS'), pngpath)
@@ -383,7 +389,7 @@ def add_to_pic(poster_file, mark):
     scroll_high = int(poster_img_pic.height / 9)
     scroll_wide = int(scroll_high * mark_img_subt.width / mark_img_subt.height)
     mark_img_subt = mark_img_subt.resize((scroll_wide, scroll_high), Image.LANCZOS)
-    r, g, b, a = mark_img_subt.split()  # 获取颜色通道，保持png的透明性
+    #r, g, b, a = mark_img_subt.split()  # 获取颜色通道，保持png的透明性
     
     #水印放到左上 右上 右下 左下位置
     pos = [
@@ -393,9 +399,9 @@ def add_to_pic(poster_file, mark):
         {'x': 0, 'y': poster_img_pic.height - scroll_high},
     ]
     if mark == 1:
-        poster_img_pic.paste(mark_img_subt, (pos[2]['x'], pos[2]['y']), mask=a)
+        poster_img_pic.paste(mark_img_subt, (pos[2]['x'], pos[2]['y']))
     if mark == 2:
-        poster_img_pic.paste(mark_img_subt, (pos[3]['x'], pos[3]['y']), mask=a)
+        poster_img_pic.paste(mark_img_subt, (pos[3]['x'], pos[3]['y']))
     poster_img_pic.save(poster_file, quality=95)
     
 def add_poster_mark(poster_file, hard_sub, uncensored):

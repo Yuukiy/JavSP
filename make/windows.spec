@@ -17,7 +17,7 @@ for file in os.listdir('web'):
 # workaround for a bug of PyInstaller since 5.0: https://github.com/pyinstaller/pyinstaller/issues/6759
 ico_file = os.path.abspath(os.path.join(SPECPATH, "../image/JavSP.ico"))
 sub_pic = os.path.abspath(os.path.join(SPECPATH, "../image/SUB.png"))
-hack_file = os.path.abspath(os.path.join(SPECPATH, "../image/HACK.png"))
+uncensored_pic = os.path.abspath(os.path.join(SPECPATH, "../image/UNCENSORED.png"))
 
 # pyinstaller locates path relative to the .spec file
 a = Analysis(['../JavSP.py'],
@@ -29,7 +29,7 @@ a = Analysis(['../JavSP.py'],
                  ("../data/*.*", "data"),
                  (ico_file, "image"),
                  (sub_pic, "image"),
-                 (hack_file, "image")
+                 (uncensored_pic, "image")
              ],
              hiddenimports=all_crawlers,
              hookspath=[],
