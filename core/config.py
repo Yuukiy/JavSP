@@ -230,7 +230,7 @@ def norm_int(cfg: Config):
     """转换所有的整数类型配置"""
     cfg.Network.retry = cfg.getint('Network', 'retry')
     cfg.Network.timeout = cfg.getint('Network', 'timeout')
-    cfg.NamingRule.max_path_len = min(cfg.getint('NamingRule', 'max_path_len'), 256)
+    cfg.NamingRule.max_path_len = min(cfg.getint('NamingRule', 'max_path_len'), 512)
     cfg.NamingRule.max_actress_count = max(cfg.getint('NamingRule', 'max_actress_count'), 1)
 
 
