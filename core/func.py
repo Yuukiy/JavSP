@@ -73,8 +73,10 @@ def remove_trail_actor_in_title(title:str, actors:list) -> str:
     delimiters = '-xX &·,;　＆・，；'
     actor_ls = [re_escape(i) for i in actors if i]
     pattern = f"^(.*?)([{delimiters}]{{1,3}}({'|'.join(actor_ls)}))+$"
-    # 使用match而不是sub是为了将替换掉的部分写入日志
-    match = re.match(pattern, title)
+    # 使用match而不是sub是为了将替换掉的部分写入日志、
+    match = None
+    if title != None:
+        match = re.match(pattern, title)
     if match:
         logger.debug(f"移除标题尾部的女优名: '{match.group(1)}' [{match.group(2)}]")
         return match.group(1)
