@@ -91,3 +91,8 @@
 - 用户在使用本软件时，请遵守当地法律法规
 
 - 禁止将本软件用于商业用途
+
+
+---
+
+![Star History Chart](https://api.star-history.com/svg?repos=Yuukiy/JavSP&type=Date)
