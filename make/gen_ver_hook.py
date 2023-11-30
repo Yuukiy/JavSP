@@ -2,14 +2,17 @@ import sys
 import platform
 import subprocess
 
-run = subprocess.run(['git', 'describe', '--tags'], capture_output=True, encoding='utf-8')
+run = subprocess.run(['git', 'describe', '--tags', '--long'], capture_output=True, encoding='utf-8')
 if run.returncode == 0:
     desc = run.stdout.strip()
-    if '-' in desc:
-        major, minor, _ = desc.split('-')
-        auto_ver = major + '.' + minor
-    else:   # means current commit exactly matches the tag
-        auto_ver = desc
+    tag_name, minor, _ = desc.split('-')
+    if int(minor) == 0: # means current commit exactly matches the tag
+        auto_ver = tag_name
+    else:
+        if tag_name.count('.') == 1:
+            auto_ver = tag_name + '.0.' + minor
+        else:
+            auto_ver = tag_name + '.' + minor
 else:
     auto_ver = "v0.unknown"
 
