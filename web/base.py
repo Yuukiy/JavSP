@@ -120,10 +120,10 @@ def get_resp_text(resp: Response, encoding=None):
     return resp.text
 
 
-def get_html(url):
+def get_html(url, encoding='utf-8'):
     """使用get方法访问指定网页并返回经lxml解析后的document"""
     resp = request_get(url)
-    text = get_resp_text(resp, encoding='utf-8')
+    text = get_resp_text(resp, encoding=encoding)
     html = lxml.html.fromstring(text)
     html.make_links_absolute(url, resolve_base_href=True)
     # 清理功能仅应在需要的时候用来调试网页（如prestige），否则可能反过来影响调试（如JavBus）
