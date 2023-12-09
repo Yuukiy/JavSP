@@ -26,6 +26,11 @@ def get_id(filepath: str) -> str:
         match = re.search(r'(heydouga)[-_]*(\d{4})[-_]0?(\d{3,5})', filename, re.I)
         if match:
             return '-'.join(match.groups())
+    elif 'getchu' in filename_lc:
+        match = re.search(r'getchu-(\d+)', filename, re.I)
+        if match:
+            a = 'GETCHU-' + match.group(1)
+            return 'GETCHU-' + match.group(1)
     else:
         # 先尝试移除可疑域名进行匹配，如果匹配不到再使用原始文件名进行匹配
         no_domain = re.sub(r'\w{3,10}\.(com|net|app|xyz)', '', filename, flags=re.I)
@@ -107,6 +112,9 @@ def guess_av_type(avid: str) -> str:
     match = re.match(r'^FC2-\d{5,7}$', avid, re.I)
     if match:
         return 'fc2'
+    match = re.match(r'^GETCHU-(\d+)',avid,re.I)
+    if match:
+        return 'getchu'
     # 如果传入的avid完全匹配cid的模式，则将影片归类为cid
     cid = get_cid(avid)
     if cid == avid:

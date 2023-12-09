@@ -131,3 +131,5 @@ dmypy.json
 ver_hook.py
 # cached data
 *.cache.json
+
+.idea
