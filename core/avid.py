@@ -27,9 +27,8 @@ def get_id(filepath: str) -> str:
         if match:
             return '-'.join(match.groups())
     elif 'getchu' in filename_lc:
-        match = re.search(r'getchu-(\d+)', filename, re.I)
+        match = re.search(r'getchu[-_]*(\d+)', filename, re.I)
         if match:
-            a = 'GETCHU-' + match.group(1)
             return 'GETCHU-' + match.group(1)
     else:
         # 先尝试移除可疑域名进行匹配，如果匹配不到再使用原始文件名进行匹配

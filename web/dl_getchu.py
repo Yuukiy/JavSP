@@ -4,10 +4,8 @@ import sys
 import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html, request_get
+from web.base import resp2html, request_get
 from web.exceptions import *
-from core.config import cfg
-from core.lib import strftime_to_minutes
 from core.datatype import MovieInfo
 
 logger = logging.getLogger(__name__)
@@ -61,49 +59,44 @@ def parse_data(movie: MovieInfo):
     getchu_id = id_uc.replace('GETCHU-', '')
     # 抓取网页
     url = f'{base_url}/i/item{getchu_id}'
-    html = get_html(url, base_encode)
+    r = request_get(url, delay_raise=True)
+    if r.status_code == 404:
+        raise MovieNotFoundError(__name__, movie.dvdid)
+    html = resp2html(r, base_encode)
     container = html.xpath("//form[@action='https://dl.getchu.com/cart/']/div/table[3]")
     if len(container) > 0:
         container = container[0]
-    rows = container.xpath('.//tr')
-
-    producer = ''
-    actress = []
-    publish_date = ''  # 2015/08/13
-    genre = []
-    plot = ''
-    for row in rows:
-        cell_texts = []
-        for cell in row.xpath('.//td'):
-            # 获取单元格文本内容
-            cell_text = None
-            if cell.text:
-                cell_text = cell.text.strip()
-            # 是否包含a标签
-            # 有的属性是用<a>表示的，不是text
-            has_a_link = cell.find('.//a') is not None
-            if has_a_link:
-                cell_text = cell.xpath('.//a/text()')
-            if cell_text is None:
-                continue
-            cell_texts.append(cell_text)
-        if len(cell_texts) != 2:
-            continue
-
-        key = cell_texts[0]
-        value = cell_texts[1]
-
-        if 'サークル' in key:
-            producer = str(value)
-        elif '作者' in key:
-            actress.append(value)
-        elif '配信開始日' in key:
-            publish_date = str(value)
-            publish_date = publish_date.replace('/', '-')
-        elif '趣向' in key:
+    # 将表格提取为键值对
+    rows = container.xpath('.//table/tr')
+    kv_rows = [i for i in rows if len(i) == 2]
+    data = {}
+    for row in kv_rows:
+        # 获取单元格文本内容
+        key = row.xpath("td[@class='bluetext']/text()")[0]
+        # 是否包含a标签: 有的属性是用<a>表示的，不是text
+        a_tags = row.xpath("td[2]/a")
+        if a_tags:
+            value = [i.text for i in a_tags]
+        else:
+            # 获取第2个td标签的内容（下标从1开始计数）
+            value = row.xpath("td[2]/text()")
+            if len(value) > 0:
+                value = value[0].strip()
+        data[key] = value
+    for key, value in data.items():
+        if key == 'サークル':
+            producer = value[0]
+        elif key == '作者':
+            actress = value
+        elif key == '画像数&ページ数':
+            duration = value.replace('分', '')
+        elif key == '配信開始日':
+            publish_date = value.replace('/', '-')
+        elif key == '趣向':
             genre = value
-        elif '作品内容' in key:
+        elif key == '作品内容':
             plot = value
+
     movie.title = get_movie_title(html)
     movie.cover = get_movie_img(html, getchu_id)
     movie.preview_pics = get_movie_preview(html, getchu_id)
@@ -111,6 +104,7 @@ def parse_data(movie: MovieInfo):
     movie.url = url
     movie.producer = producer
     movie.actress = actress
+    movie.duration = duration
     movie.publish_date = publish_date
     movie.genre = genre
     movie.plot = plot

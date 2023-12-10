@@ -7,6 +7,7 @@ import configparser
 from shutil import copyfile
 from string import Template
 
+from .lib import re_escape
 
 __all__ = ['cfg', 'args', 'is_url']
 
@@ -75,7 +76,7 @@ class DetailedFormatter(logging.Formatter):
                  datefmt='%Y-%m-%d %H:%M:%S', *args) -> None:
         super().__init__(fmt, datefmt, *args)
         username = os.getlogin()
-        self.anonymize = re.compile(r'([\\/]*)' + username + '([\\/]*)', flags=re.I)
+        self.anonymize = re.compile(r'([\\/]*)' + re_escape(username) + '([\\/]*)', flags=re.I)
 
     def format(self, record):
         raw = super().format(record)
