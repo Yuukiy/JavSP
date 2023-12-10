@@ -151,12 +151,20 @@ def baidu_translate(texts, to='zh'):
     return result
 
 
+_google_trans_wait = 60
 def google_trans(texts, to='zh_CN'):
     """使用Google翻译文本（默认翻译为简体中文）"""
     # API: https://www.jianshu.com/p/ce35d89c25c3
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
+    global _google_trans_wait
     url = f"http://translate.google.com/translate_a/single?client=at&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q=" + texts
-    r = requests.get(url)
+    r = requests.get(url, proxies=cfg.Network.proxy)
+    while r.status_code == 429:
+        logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
+        time.sleep(_google_trans_wait)
+        r = requests.get(url, proxies=cfg.Network.proxy)
+        if r.status_code == 429:
+            _google_trans_wait += random.randint(60, 90)
     if r.status_code == 200:
         result = r.json()
     else:
@@ -167,9 +175,6 @@ def google_trans(texts, to='zh_CN'):
 if __name__ == "__main__":
     import json
     orig = "Hello World! World Hello!"
-    res = translate(orig, 'bing')
-    print(json.dumps(res, indent=2, ensure_ascii=False))
-    res = translate(orig, 'baidu')
-    print(json.dumps(res, indent=2, ensure_ascii=False))
-    res = translate(orig, 'google')
-    print(json.dumps(res, indent=2, ensure_ascii=False))
+    for engine in ('google', 'bing', 'baidu'):
+        res = translate(orig, engine)
+        print(f"{engine}: ", json.dumps(res, indent=2, ensure_ascii=False))
