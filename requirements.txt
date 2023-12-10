@@ -2,7 +2,7 @@ altgraph==0.17
 baidu-aip==2.2.18.0
 certifi==2023.7.22
 chardet==4.0.0
-cloudscraper==1.2.58
+cloudscraper==1.2.71
 colorama==0.4.4
 future==0.18.3
 idna==2.10
