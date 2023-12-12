@@ -83,11 +83,14 @@ def parse_data(movie: MovieInfo):
             if len(value) > 0:
                 value = value[0].strip()
         data[key] = value
+
+    actress = []
     for key, value in data.items():
         if key == 'サークル':
             producer = value[0]
         elif key == '作者':
-            actress = value
+            # TODO: getchu没有找到2个actress以上的片子，如果有2个actress，还需要分割字符串
+            actress.append(value)
         elif key == '画像数&ページ数':
             duration = value.replace('分', '')
         elif key == '配信開始日':
