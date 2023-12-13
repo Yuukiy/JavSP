@@ -18,7 +18,9 @@
   "ori_title": null,
   "magnet": null,
   "serial": null,
-  "actress": "丹雫ひよ",
+  "actress": [
+    "丹雫ひよ"
+  ],
   "actress_pics": null,
   "director": null,
   "duration": "67",
