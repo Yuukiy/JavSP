@@ -38,9 +38,15 @@ def scan_movies(root: str) -> List[Movie]:
                 fullpath = os.path.join(dirpath, file)
                 dvdid = get_id(fullpath)
                 cid = get_cid(fullpath)
+                # 按文件大小条件判断文件是否有效
+                file_on = True
+                file_size = os.path.getsize(fullpath) / 1024 / 1024
+                if file_size < float(cfg.File.file_size) and float(cfg.File.file_size) != 0:
+                    file_on = False
+                    logger.debug(f"跳过文件: '{fullpath}'")
                 # 如果文件名能匹配到cid，那么将cid视为有效id，因为此时dvdid多半是错的
                 avid = cid if cid else dvdid
-                if avid:
+                if avid and file_on:
                     if avid in dic:
                         dic[avid].append(fullpath)
                     else:
