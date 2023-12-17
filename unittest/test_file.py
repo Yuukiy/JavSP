@@ -19,13 +19,14 @@ def prepare_files(files):
     Args:
         files (list of tuple): 文件列表，仅接受相对路径
     """
-    for i in files:
-        path = os.path.join(tmp_folder, i)
+    if not isinstance(files, dict):
+        files = {i:1024 for i in files}
+    for name, size in files.items():
+        path = os.path.join(tmp_folder, name)
         folder = os.path.split(path)[0]
         if folder and (not os.path.exists(folder)):
             os.makedirs(folder)
-        with open(path, 'wt', encoding='utf-8') as f:
-            f.write(path)
+        os.system(f'fsutil file createnew "{path}" {size}')
     yield
     rmtree(tmp_folder)
     return
@@ -172,3 +173,33 @@ def test_scan_movies__mix_data(prepare_files):
     basenames = [os.path.basename(i) for i in movies[0].files]
     assert basenames[0] == 'movie.mp4'
 
+
+# 文件夹以番号命名，文件夹内同时有带番号的影片和广告
+@pytest.mark.parametrize('files', [{'ABC-123/ABC-123.mp4': 1, 'ABC-123/广告1.mp4': 1024, 'ABC-123/广告2.mp4': 1048576, 'ABC-123/Advertisement.mp4': 243269631}])
+def test_scan_movies__1_video_with_ad(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 1
+    assert movies[0].dvdid == 'ABC-123'
+    assert len(movies[0].files) == 1
+
+
+# 文件夹以番号命名，文件夹内同时有带番号的影片和超出阈值的广告
+@pytest.mark.parametrize('files', [{'ABC-123/ABC-123.mp4': 1, 'ABC-123/广告1.mp4': 1024, 'ABC-123/广告2.mp4': 1048576, 'ABC-123/Advertisement.mp4': 2**30}])
+def test_scan_movies__1_video_with_large_ad(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 1
+    assert movies[0].dvdid == 'ABC-123'
+    assert len(movies[0].files) == 1
+    import core.file
+    failed = core.file.failed_items
+    assert len(failed) == 1 and len(failed[0].files) == 1
+    assert os.path.basename(failed[0].files[0]) == 'Advertisement.mp4'
+
+
+# 文件夹内同时有多部带番号的影片和广告
+@pytest.mark.parametrize('files', [{'ABC-123.mp4': 1, 'DEF-456.mp4': 1, '广告1.mp4': 1024, '广告2.mp4': 1048576, 'Advertisement.mp4': 243269631}])
+def test_scan_movies__n_video_with_ad(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 2
+    assert movies[0].dvdid == 'ABC-123' and movies[1].dvdid == 'DEF-456'
+    assert all(len(i.files) == 1 for i in movies)

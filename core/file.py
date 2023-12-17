@@ -28,28 +28,50 @@ def scan_movies(root: str) -> List[Movie]:
 
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # avid: [abspath1, abspath2...]
+    failed_path_ls = []
     for dirpath, dirnames, filenames in os.walk(root):
         for name in dirnames.copy():
             if name.startswith('.') or name in cfg.File.ignore_folder:
                 dirnames.remove(name)
+        match_videos, unmatch_videos = {}, {}
         for file in filenames:
             ext = os.path.splitext(file)[1].lower()
             if ext in cfg.File.media_ext:
                 fullpath = os.path.join(dirpath, file)
-                dvdid = get_id(fullpath)
+                dvdid = get_id(file)
                 cid = get_cid(fullpath)
                 # 如果文件名能匹配到cid，那么将cid视为有效id，因为此时dvdid多半是错的
                 avid = cid if cid else dvdid
                 if avid:
-                    if avid in dic:
-                        dic[avid].append(fullpath)
-                    else:
-                        dic[avid] = [fullpath]
+                    match_videos[fullpath] = avid
+                    dic.setdefault(avid, []).append(fullpath)
                 else:
-                    fail = Movie('无法识别番号')
-                    fail.files = [fullpath]
-                    failed_items.append(fail)
+                    unmatch_videos[fullpath] = None
+        # 如果一个文件夹内有视频能匹配到番号，同时也有视频无法匹配到番号，则后者很可能是广告
+        match_cnt, unmatch_cnt = len(match_videos), len(unmatch_videos)
+        if match_cnt == 0:
+            # 所有视频都没有匹配到番号，则尝试从文件夹寻找番号并作为所有视频的结果
+            dvdid = get_id(dirpath)
+            if dvdid:
+                for fullpath in unmatch_videos.keys():
+                    dic.setdefault(dvdid, []).append(fullpath)
+            else:
+                for fullpath in unmatch_videos.keys():
+                    failed_path_ls.append(fullpath)
                     logger.error(f"无法提取影片番号: '{fullpath}'")
+        else:
+            if unmatch_cnt > 0:
+                for fullpath in unmatch_videos.keys():
+                    filesize = os.path.getsize(fullpath)
+                    if filesize < cfg.File.ignore_video_file_less_than:
+                        logger.debug(f"忽略匹配不到番号的小文件: '{fullpath}'")
+                    else:
+                        failed_path_ls.append(fullpath)
+                        logger.error(f"无法提取影片番号: '{fullpath}'")
+    for fullpath in failed_path_ls:
+        fail = Movie('无法识别番号')
+        fail.files = [fullpath]
+        failed_items.append(fail)
     # 检查是否有多部影片对应同一个番号
     non_slice_dup = {}  # avid: [abspath1, abspath2...]
     for avid, files in dic.copy().items():

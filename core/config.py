@@ -233,6 +233,7 @@ def norm_int(cfg: Config):
     cfg.Network.timeout = cfg.getint('Network', 'timeout')
     cfg.NamingRule.max_path_len = min(cfg.getint('NamingRule', 'max_path_len'), 256)
     cfg.NamingRule.max_actress_count = max(cfg.getint('NamingRule', 'max_actress_count'), 1)
+    cfg.File.ignore_video_file_less_than = int(cfg.getfloat('File', 'ignore_video_file_less_than') * 2**20)
 
 
 def norm_tuples(cfg: Config):
