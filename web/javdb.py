@@ -167,7 +167,7 @@ def parse_data(movie: MovieInfo):
         movie.publisher = publisher_tag[0].getnext().text_content().strip()
     serial_tag = info.xpath("div/strong[text()='系列:']")
     if serial_tag:
-        movie.serial = serial_tag[0].getnext().text
+        movie.serial = serial_tag[0].getnext().text_content().strip()
     score_tag = info.xpath("//span[@class='score-stars']")
     if score_tag:
         score_str = score_tag[0].tail
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-238629')
+    movie = MovieInfo('JUQ-471')
     try:
         parse_clean_data(movie)
         print(movie)
