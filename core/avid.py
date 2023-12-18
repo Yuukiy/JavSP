@@ -79,8 +79,9 @@ def get_id(filepath: str) -> str:
     # 如果最后仍然匹配不了番号，则尝试使用文件所在文件夹的名字去匹配
     if os.path.isfile(filepath):
         norm = os.path.normpath(filepath)
-        folder = norm.split(os.sep)[-2]
-        return get_id(folder)
+        if os.sep in norm:
+            folder = norm.split(os.sep)[-2]
+            return get_id(folder)
     return ''
 
 

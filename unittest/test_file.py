@@ -1,15 +1,16 @@
 import os
 import sys
-import uuid
+import random
+import string
 import pytest
 from shutil import rmtree
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.file import *
+from core.file import failed_items, scan_movies
 
 
-tmp_folder = 'tmp_' + uuid.uuid4().hex[:8]
+tmp_folder = 'TMP_' + ''.join(random.choices(string.ascii_uppercase, k=6))
 
 
 @pytest.fixture
@@ -121,6 +122,25 @@ def test_scan_movies__0x123(prepare_files):
     assert basenames[2] == 'ABC-123.03.mp4'
 
 
+# 无效: 没有可以匹配到番号的文件
+@pytest.mark.parametrize('files', [('什么也没有.mp4',)])
+def test_scan_movies__nothing(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 0
+
+
+# 无效: 在CWD下没有可以匹配到番号的文件
+@pytest.mark.parametrize('files', [('什么也没有.mp4',)])
+def test_scan_movies__nothing_in_cwd(prepare_files):
+    cwd = os.getcwd()
+    os.chdir(tmp_folder)
+    try:
+        movies = scan_movies('.')
+    finally:
+        os.chdir(cwd)
+    assert len(movies) == 0
+
+
 # 无效：多个分片命名杂乱
 @pytest.mark.parametrize('files', [('ABC-123-1.mp4','ABC-123-第2部分.mp4','ABC-123-3.mp4')])
 def test_scan_movies__strange_names(prepare_files):
@@ -186,12 +206,13 @@ def test_scan_movies__1_video_with_ad(prepare_files):
 # 文件夹以番号命名，文件夹内同时有带番号的影片和超出阈值的广告
 @pytest.mark.parametrize('files', [{'ABC-123/ABC-123.mp4': 1, 'ABC-123/广告1.mp4': 1024, 'ABC-123/广告2.mp4': 1048576, 'ABC-123/Advertisement.mp4': 2**30}])
 def test_scan_movies__1_video_with_large_ad(prepare_files):
+    before = failed_items.copy()
     movies = scan_movies(tmp_folder)
+    after = failed_items.copy()
+    failed = [i for i in after if i not in before]
     assert len(movies) == 1
     assert movies[0].dvdid == 'ABC-123'
     assert len(movies[0].files) == 1
-    import core.file
-    failed = core.file.failed_items
     assert len(failed) == 1 and len(failed[0].files) == 1
     assert os.path.basename(failed[0].files[0]) == 'Advertisement.mp4'
 
