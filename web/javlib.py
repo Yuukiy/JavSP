@@ -82,21 +82,11 @@ def parse_data(movie: MovieInfo):
             raise MovieNotFoundError(__name__, movie.dvdid)
         elif match_count == 1:
             new_url = pre_choose_urls[0]
-        elif match_count == 2:
-            no_blueray = []
-            for tag in pre_choose:
-                if 'ブルーレイディスク' not in tag.get('title'):    # Blu-ray Disc
-                    no_blueray.append(tag)
-            no_blueray_count = len(no_blueray)
-            if no_blueray_count == 1:
-                new_url = no_blueray[0].get('href')
-                logger.debug(f"'{movie.dvdid}': 存在{match_count}个同番号搜索结果，已自动选择封面比例正确的一个: {new_url}")
-            else:
-                # 两个结果中没有谁是蓝光影片，说明影片番号重复了
-                raise MovieDuplicateError(__name__, movie.dvdid, match_count, pre_choose_urls)
         else:
-            # 存在不同影片但是番号相同的情况，如MIDV-010
-            raise MovieDuplicateError(__name__, movie.dvdid, match_count, pre_choose_urls)
+            logger.info("多个同名番号, 请手动选择url")
+            logger.info(pre_choose_urls)
+            index = input('请手动输入刮削url序号:')
+            new_url = pre_choose_urls[int(index)]
         # 重新抓取网页
         html = request.get_html(new_url)
     container = html.xpath("/html/body/div/div[@id='rightcolumn']")[0]
@@ -139,7 +129,7 @@ if __name__ == "__main__":
     logger.root.handlers[1].level = logging.DEBUG
 
     base_url = permanent_url
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('GS-300')
     try:
         parse_data(movie)
         print(movie)

@@ -133,7 +133,25 @@ def parse_data(movie: MovieInfo):
             movie.publish_date = box.xpath("div[@class='meta']/text()")[0].strip()
             return
     else:
-        raise MovieDuplicateError(__name__, movie.dvdid, match_count)
+        logger.info("多个同名番号, 请手动选择url")
+        logger.info(movie_urls)
+        index = input('请手动输入刮削url序号:')
+        new_url = movie_urls[int(index)]
+        try:
+            html2 = get_html_wrapper(new_url)
+        except (SitePermissionError, CredentialError):
+            # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
+            box = html.xpath("//a[@class='box']")[index]
+            movie.url = new_url
+            movie.title = box.get('title')
+            movie.cover = box.xpath("div/img/@src")[0]
+            score_str = box.xpath("div[@class='score']/span/span")[0].tail
+            score = re.search(r'([\d.]+)分', score_str).group(1)
+            movie.score = "{:.2f}".format(float(score)*2)
+            movie.publish_date = box.xpath("div[@class='meta']/text()")[0].strip()
+            return
+        
+        #raise MovieDuplicateError(__name__, movie.dvdid, match_count)
 
     container = html2.xpath("/html/body/section/div/div[@class='video-detail']")[0]
     info = container.xpath("//nav[@class='panel movie-panel-info']")[0]
@@ -219,7 +237,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-238629')
+    movie = MovieInfo('ABF-003')
     try:
         parse_clean_data(movie)
         print(movie)
