@@ -149,6 +149,12 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # genre
     if 'javdb' in all_info:
         final_info.genre = all_info['javdb'].genre
+    else:
+        for name, data in all_info.items():
+            if data.genre != None:
+                final_info.genre = all_info[name].genre
+                break
+
     if not final_info.genre:
         final_info.genre = []
     if movie.hard_sub:
