@@ -5,9 +5,13 @@ name: "Unit Test: web-based functions"
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - master
+    - premerge
   pull_request:
-    branches: [ master ]
+    branches:
+    - master
+    - premerge
   schedule:
   # Web crawlers might be outdated because of website updating, so run periodically to follow the changes
   - cron: '9 9 * * 3,6,0'
