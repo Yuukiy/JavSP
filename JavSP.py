@@ -149,7 +149,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # genre
     if 'javdb' in all_info:
         final_info.genre = all_info['javdb'].genre
-        if cfg.NFO.add_producer_publisher_to_tag:
+        if cfg.NFO.add_producer_publisher_to_genre:
             if all_info['javdb'].publisher:            
                 final_info.genre.append("发行:{}".format(all_info['javdb'].publisher))
             if all_info['javdb'].producer:     
@@ -158,7 +158,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         for name, data in all_info.items():
             if data.genre != None:
                 final_info.genre = all_info[name].genre
-                if cfg.NFO.add_producer_publisher_to_tag:
+                if cfg.NFO.add_producer_publisher_to_genre:
                     if all_info[name].publisher:            
                         final_info.genre.append("发行:{}".format(all_info[name].publisher))
                     if all_info[name].producer:     
