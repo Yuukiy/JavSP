@@ -149,10 +149,20 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # genre
     if 'javdb' in all_info:
         final_info.genre = all_info['javdb'].genre
+        if cfg.NFO.add_producer_publisher_to_genre:
+            if all_info['javdb'].publisher:            
+                final_info.genre.append("发行:{}".format(all_info['javdb'].publisher))
+            if all_info['javdb'].producer:     
+                final_info.genre.append("片商:{}".format(all_info['javdb'].producer))
     else:
         for name, data in all_info.items():
             if data.genre != None:
                 final_info.genre = all_info[name].genre
+                if cfg.NFO.add_producer_publisher_to_genre:
+                    if all_info[name].publisher:            
+                        final_info.genre.append("发行:{}".format(all_info[name].publisher))
+                    if all_info[name].producer:     
+                        final_info.genre.append("片商:{}".format(all_info[name].producer))
                 break
 
     if not final_info.genre:
@@ -161,7 +171,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         final_info.genre.append('内嵌字幕')
     if movie.uncensored:
         final_info.genre.append('无码流出/破解')
-
+    
     ########## 移除所有抓取器数据中，标题尾部的女优名 ##########
     if cfg.Crawler.title__remove_actor:
         for name, data in all_info.items():

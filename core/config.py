@@ -264,6 +264,7 @@ def norm_boolean(cfg: Config):
             ('Picture', 'use_big_cover'),
             ('Picture', 'use_ai_crop'),
             ('NFO', 'add_genre_to_tag'),
+            ('NFO', 'add_producer_publisher_to_genre'),
             ('Other', 'check_update'),
             ('Other', 'auto_update')
         ]:
