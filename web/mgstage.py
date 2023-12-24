@@ -45,7 +45,9 @@ def parse_data(movie: MovieInfo):
     dvdid = container.xpath("//th[text()='品番：']/following-sibling::td/text()")[0]
     date_str = container.xpath("//th[text()='配信開始日：']/following-sibling::td/text()")[0]
     publish_date = date_str.replace('/', '-')
-    serial = container.xpath("//th[text()='シリーズ：']/following-sibling::td/a/text()")[0].strip()
+    serial_tag = container.xpath("//th[text()='シリーズ：']/following-sibling::td/a/text()")
+    if serial_tag:
+        movie.serial = serial_tag[0].strip()
     # label: 大意是某个系列策划用同样的番号，例如ABS打头的番号label是'ABSOLUTELY PERFECT'，暂时用不到
     # label = container.xpath("//th[text()='レーベル：']/following-sibling::td/text()")[0].strip()
     genre_tags = container.xpath("//th[text()='ジャンル：']/following-sibling::td/a")
@@ -94,7 +96,6 @@ def parse_data(movie: MovieInfo):
     movie.actress = actress
     movie.producer = producer
     movie.publish_date = publish_date
-    movie.serial = serial
     movie.genre = genre
     movie.plot = plot
     movie.preview_pics = preview_pics
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('SIRO-4718')
+    movie = MovieInfo('HRV-045')
     try:
         parse_data(movie)
         print(movie)
