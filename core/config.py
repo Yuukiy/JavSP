@@ -291,7 +291,7 @@ def norm_ignore_pattern(cfg: Config):
 
 def validate_media_servers(cfg: Config):
     """获取媒体服务器配置并验证有效性"""
-    supported = set(('plex', 'emby', 'jellyfin', 'kodi', 'video_station'))
+    supported = set(('universal', 'plex', 'emby', 'jellyfin', 'kodi', 'video_station'))
     servers = cfg.NamingRule.media_servers.lower()
     items = set(re.split(r'[^\w_]+', servers, flags=re.I))
     cfg.NamingRule.media_servers = items & supported
