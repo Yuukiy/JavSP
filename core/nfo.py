@@ -1,6 +1,8 @@
 """与操作nfo文件相关的功能"""
 import os
 import sys
+import json
+import logging
 from lxml.etree import tostring
 from lxml.builder import E
 
@@ -9,6 +11,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from core.datatype import MovieInfo
 from core.config import cfg
 
+logger = logging.getLogger(__name__)
+
+def setActor(name):
+    # 引入文件还需要处理一下
+    actorsFile = f"{os.path.join(os.path.dirname(__file__), '..')}/actors/items.json"
+    with open(actorsFile, "r", encoding="utf-8") as file:
+        actress = json.load(file)
+    for actor in actress:
+        if name in actor['alias']:
+            logger.debug(f"按照alias设置，将演员名[{name}]替换为[{actor['name']}]")
+            return actor['name']
+
+    return name
 
 def write_nfo(info: MovieInfo, nfo_file):
     """将存储了影片信息的'info'写入到nfo文件中"""
@@ -90,11 +105,13 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     # 写入演员名。Kodi支持用thumb显示演员头像，如果能获取到演员头像也一并写入
     if info.actress:
-        for i in info.actress:
-            if (info.actress_pics) and (i in info.actress_pics):
-                nfo.append(E.actor(E.name(i), E.thumb(info.actress_pics[i])))
+        for name in info.actress:
+            if (cfg.NFO.is_replace_actor_alias):
+                name  = setActor(name)
+            if (info.actress_pics) and (name in info.actress_pics):
+                nfo.append(E.actor(E.name(name), E.thumb(info.actress_pics[name])))
             else:
-                nfo.append(E.actor(E.name(i)))
+                nfo.append(E.actor(E.name(name)))
 
     with open(nfo_file, 'wt', encoding='utf-8') as f:
         f.write(tostring(nfo, encoding='unicode', pretty_print=True,
