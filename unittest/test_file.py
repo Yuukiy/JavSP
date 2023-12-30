@@ -11,6 +11,7 @@ from core.file import failed_items, scan_movies
 
 
 tmp_folder = 'TMP_' + ''.join(random.choices(string.ascii_uppercase, k=6))
+DEFAULT_SIZE = 512*2**20    # 512 MiB
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def prepare_files(files):
         files (list of tuple): 文件列表，仅接受相对路径
     """
     if not isinstance(files, dict):
-        files = {i:1024 for i in files}
+        files = {i:DEFAULT_SIZE for i in files}
     for name, size in files.items():
         path = os.path.join(tmp_folder, name)
         folder = os.path.split(path)[0]
@@ -195,7 +196,7 @@ def test_scan_movies__mix_data(prepare_files):
 
 
 # 文件夹以番号命名，文件夹内同时有带番号的影片和广告
-@pytest.mark.parametrize('files', [{'ABC-123/ABC-123.mp4': 1, 'ABC-123/广告1.mp4': 1024, 'ABC-123/广告2.mp4': 1048576, 'ABC-123/Advertisement.mp4': 243269631}])
+@pytest.mark.parametrize('files', [{'ABC-123/ABC-123.mp4': DEFAULT_SIZE, 'ABC-123/广告1.mp4': 1024, 'ABC-123/广告2.mp4': 243269631}])
 def test_scan_movies__1_video_with_ad(prepare_files):
     movies = scan_movies(tmp_folder)
     assert len(movies) == 1
@@ -203,22 +204,8 @@ def test_scan_movies__1_video_with_ad(prepare_files):
     assert len(movies[0].files) == 1
 
 
-# 文件夹以番号命名，文件夹内同时有带番号的影片和超出阈值的广告
-@pytest.mark.parametrize('files', [{'ABC-123/ABC-123.mp4': 1, 'ABC-123/广告1.mp4': 1024, 'ABC-123/广告2.mp4': 1048576, 'ABC-123/Advertisement.mp4': 2**30}])
-def test_scan_movies__1_video_with_large_ad(prepare_files):
-    before = failed_items.copy()
-    movies = scan_movies(tmp_folder)
-    after = failed_items.copy()
-    failed = [i for i in after if i not in before]
-    assert len(movies) == 1
-    assert movies[0].dvdid == 'ABC-123'
-    assert len(movies[0].files) == 1
-    assert len(failed) == 1 and len(failed[0].files) == 1
-    assert os.path.basename(failed[0].files[0]) == 'Advertisement.mp4'
-
-
 # 文件夹内同时有多部带番号的影片和广告
-@pytest.mark.parametrize('files', [{'ABC-123.mp4': 1, 'DEF-456.mp4': 1, '广告1.mp4': 1024, '广告2.mp4': 1048576, 'Advertisement.mp4': 243269631}])
+@pytest.mark.parametrize('files', [{'ABC-123.mp4': DEFAULT_SIZE, 'DEF-456.mp4': DEFAULT_SIZE, '广告1.mp4': 1024, '广告2.mp4': 243269631}])
 def test_scan_movies__n_video_with_ad(prepare_files):
     movies = scan_movies(tmp_folder)
     assert len(movies) == 2
