@@ -42,7 +42,7 @@ def strftime_to_minutes(s: str) -> int:
     return minutes
 
 
-_PATTERN = re.compile(r'(uncensor(ed)?[- _\s]*leak(ed)?|[无無][码碼](流出|破解))', flags=re.I)
+_PATTERN = re.compile(r'(uncen(sor(ed)?)?([- _\s]*leak(ed)?)?|[无無][码碼](流出|破解))', flags=re.I)
 def detect_special_attr(filepath: str) -> str:
     """通过文件名检测影片是否有特殊属性（内嵌字幕、无码流出/破解）
 
