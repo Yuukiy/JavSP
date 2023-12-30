@@ -81,7 +81,7 @@ def test_from_file():
     if write_back:
         with open(datafile, 'wt', encoding='utf-8') as f:
             f.writelines(rewrite_lines)
-            
+
 
 def test_cid_invalid():
     assert '' == get_cid('hasUpperletter.mp4')

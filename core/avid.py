@@ -45,6 +45,18 @@ def get_id(filepath: str) -> str:
         match = re.search(r'(?:hey)[-_]*(\d{4})[-_]0?(\d{3,5})', filename, re.I)
         if match:
             return 'heydouga-' + '-'.join(match.groups())
+        # 匹配片商 MUGEN 的奇怪番号。由于MK3D2DBD的模式，要放在普通番号模式之前进行匹配
+        match = re.search(r'(MKB?D)[-_]*(S\d{2,3})|(MK3D2DBD)[-_]*(\d\d)', filename, re.I)
+        if match:
+            if match.group(1) is not None:
+                avid = match.group(1) + '-' + match.group(2)
+            else:
+                avid = match.group(3) + '-' + match.group(4)
+            return avid
+        # 匹配IBW这样带有后缀z的番号
+        match = re.search(r'(IBW)[-_](\d{2,5}z)', filename, re.I)
+        if match:
+            return match.group(1) + '-' + match.group(2)
         # 普通番号，优先尝试匹配带分隔符的（如ABC-123）
         match = re.search(r'([a-z]{2,10})[-_](\d{2,5})', filename, re.I)
         if match:
