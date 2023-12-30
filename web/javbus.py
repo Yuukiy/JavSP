@@ -51,7 +51,9 @@ def parse_data(movie: MovieInfo):
         movie.director = director_tag[0].getnext().text.strip()
     producer_tag = info.xpath("p/span[text()='製作商:']")
     if producer_tag:
-        movie.producer = producer_tag[0].getnext().text.strip()
+        text = producer_tag[0].getnext().text
+        if text:
+            movie.producer = text.strip()
     publisher_tag = info.xpath("p/span[text()='發行商:']")
     if publisher_tag:
         movie.publisher = publisher_tag[0].getnext().text.strip()
@@ -108,7 +110,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('KING-048')
+    movie = MovieInfo('NANP-030')
     try:
         parse_clean_data(movie)
         print(movie)
