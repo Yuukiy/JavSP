@@ -364,6 +364,11 @@ def convert_naming_rule(cfg: Config):
     cfg.NamingRule.save_dir = Template(combine)
     cfg.NamingRule.filename = Template(cfg.NamingRule.filename)
     cfg.NamingRule.nfo_title = Template(cfg.NamingRule.nfo_title)
+    cfg.NamingRule.censorship_names = {
+        False: cfg.NamingRule.text_for_censored,
+        True: cfg.NamingRule.text_for_uncensored,
+        None: cfg.NamingRule.text_for_unknown_censorship,
+    }
 
 
 def check_proxy_free_url(cfg: Config):

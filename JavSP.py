@@ -147,20 +147,8 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     final_info = MovieInfo(movie)
     ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
     # genre
-    if 'javdb' in all_info:
+    if 'javdb' in all_info and all_info['javdb'].genre:
         final_info.genre = all_info['javdb'].genre
-    else:
-        for name, data in all_info.items():
-            if data.genre != None:
-                final_info.genre = all_info[name].genre
-                break
-
-    if not final_info.genre:
-        final_info.genre = []
-    if movie.hard_sub:
-        final_info.genre.append('内嵌字幕')
-    if movie.uncensored:
-        final_info.genre.append('无码流出/破解')
 
     ########## 移除所有抓取器数据中，标题尾部的女优名 ##########
     if cfg.Crawler.title__remove_actor:
@@ -186,7 +174,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                     absorbed.append(attr)
             else:
                 current = getattr(final_info, attr)
-                if (not current) and (incoming):
+                if (current is None) and (incoming is not None):
                     setattr(final_info, attr, incoming)
                     absorbed.append(attr)
         if absorbed:
@@ -216,6 +204,13 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     if big_covers:
         final_info.big_cover = big_covers[0]
     ########## 部分字段放在最后进行检查 ##########
+    # 特殊的 genre
+    if final_info.genre is None:
+        final_info.genre = []
+    if movie.hard_sub:
+        final_info.genre.append('内嵌字幕')
+    if movie.uncensored:
+        final_info.genre.append('无码流出/破解')
     # title
     if cfg.Crawler.title__chinese_first and 'airav' in all_info:
         if all_info['airav'].title and final_info.title != all_info['airav'].title:
@@ -246,6 +241,7 @@ def generate_names(movie: Movie):
         actress = info.actress
     d['actress'] = ','.join(actress) if actress else cfg.NamingRule.null_for_actress
     d['score'] = info.score or '0'
+    d['censor'] = cfg.NamingRule.censorship_names[info.uncensored]
     d['serial'] = info.serial or cfg.NamingRule.null_for_serial
     d['director'] = info.director or cfg.NamingRule.null_for_director
     d['producer'] = info.producer or cfg.NamingRule.null_for_producer

@@ -57,13 +57,21 @@ def scan_movies(root: str) -> List[Movie]:
                     fail.files = [fullpath]
                     failed_items.append(fail)
                     logger.error(f"无法提取影片番号: '{fullpath}'")
+    # 多分片影片容易有文件大小低于阈值的子片，进行特殊处理
+    has_avid = {}
+    for name in list(small_videos.keys()):
+        dvdid = get_id(name)
+        cid = get_cid(name)
+        avid = cid if cid else dvdid
+        if avid in dic:
+            dic[avid].extend(small_videos.pop(name))
+        elif avid:
+            has_avid[name] = avid
     # 对于前面忽略的视频生成一个简单的提示
     small_videos = {k:sorted(v) for k,v in sorted(small_videos.items())}
-    try_avid = [get_id(i) for i in small_videos.keys()]
-    has_avid = [name for name, avid in zip(small_videos.keys(), try_avid) if avid]
     skipped_files = list(itertools.chain(*small_videos.values()))
     if len(has_avid) > 0:
-        logger.info(f"跳过了 {','.join(has_avid)} 等{len(skipped_files)}个小于指定大小的视频文件")
+        logger.info(f"跳过了 {', '.join(has_avid)} 等{len(skipped_files)}个小于指定大小的视频文件")
     else:
         logger.info(f"跳过了{len(skipped_files)}个小于指定大小的视频文件")
     logger.debug('跳过的视频文件如下:\n' + '\n'.join(skipped_files))
