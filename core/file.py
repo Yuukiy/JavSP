@@ -70,11 +70,13 @@ def scan_movies(root: str) -> List[Movie]:
     # 对于前面忽略的视频生成一个简单的提示
     small_videos = {k:sorted(v) for k,v in sorted(small_videos.items())}
     skipped_files = list(itertools.chain(*small_videos.values()))
-    if len(has_avid) > 0:
-        logger.info(f"跳过了 {', '.join(has_avid)} 等{len(skipped_files)}个小于指定大小的视频文件")
-    else:
-        logger.info(f"跳过了{len(skipped_files)}个小于指定大小的视频文件")
-    logger.debug('跳过的视频文件如下:\n' + '\n'.join(skipped_files))
+    skipped_cnt = len(skipped_files)
+    if skipped_cnt > 0:
+        if len(has_avid) > 0:
+            logger.info(f"跳过了 {', '.join(has_avid)} 等{skipped_cnt}个小于指定大小的视频文件")
+        else:
+            logger.info(f"跳过了{skipped_cnt}个小于指定大小的视频文件")
+        logger.debug('跳过的视频文件如下:\n' + '\n'.join(skipped_files))
     # 检查是否有多部影片对应同一个番号
     non_slice_dup = {}  # avid: [abspath1, abspath2...]
     for avid, files in dic.copy().items():

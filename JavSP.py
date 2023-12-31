@@ -172,9 +172,13 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                 if incoming and (incoming not in big_covers):
                     big_covers.append(incoming)
                     absorbed.append(attr)
+            elif attr == 'uncensored':
+                if (current is None) and (incoming is not None):
+                    setattr(final_info, attr, incoming)
+                    absorbed.append(attr)
             else:
                 current = getattr(final_info, attr)
-                if (current is None) and (incoming is not None):
+                if (not current) and (incoming):
                     setattr(final_info, attr, incoming)
                     absorbed.append(attr)
         if absorbed:
