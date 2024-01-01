@@ -132,7 +132,7 @@ class Movie:
         # 暂不支持多分片的影片
         if len(self.files) != 1:
             return ''
-        r = detect_special_attr(self.files[0])
+        r = detect_special_attr(self.files[0], self.dvdid)
         if r:
             r = '-' + r
         return r

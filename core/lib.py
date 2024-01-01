@@ -37,13 +37,12 @@ def strftime_to_minutes(s: str) -> int:
     elif len(items) == 3:
         minutes = items[0] * 60 + items[1] + round(items[2]/60)
     else:
-        logger.error(f"无法将字符串'{s}'转换为分钟")
-        return
+        raise ValueError(f"无法将字符串'{s}'转换为分钟")
     return minutes
 
 
 _PATTERN = re.compile(r'(uncen(sor(ed)?)?([- _\s]*leak(ed)?)?|[无無][码碼](流出|破解))', flags=re.I)
-def detect_special_attr(filepath: str) -> str:
+def detect_special_attr(filepath: str, avid: str = None) -> str:
     """通过文件名检测影片是否有特殊属性（内嵌字幕、无码流出/破解）
 
     Returns:
@@ -59,10 +58,15 @@ def detect_special_attr(filepath: str) -> str:
     postfix = base.split('-')[-1]
     if postfix in ('U', 'C', 'UC'):
         result += postfix
+    elif avid:
+        pattern_str = re.sub(r'[_-]', '[_-]*', avid) + '(UC|U|C)'
+        match = re.search(pattern_str, base, flags=re.I)
+        if match:
+            result += match.group(1)
     # 最终格式化
-    result = ''.join(sorted(result, reverse=True))
+    result = ''.join(sorted(set(result), reverse=True))
     return result
 
 
 if __name__ == "__main__":
-    print(detect_special_attr('STARS-225_UNCENSORED_LEAKED.mp4'))
+    print(detect_special_attr('STARS225Uc.mp4', 'STARS-225'))
