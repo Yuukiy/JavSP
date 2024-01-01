@@ -15,7 +15,7 @@ filemove_logger = logging.getLogger('filemove')
 
 
 class MovieInfo:
-    def __init__(self, dvdid=None, /, *, cid=None, from_file=None):
+    def __init__(self, dvdid: str = None, /, *, cid: str = None, from_file=None):
         """
         Args:
             dvdid ([str], optional): 番号，要通过其他方式创建实例时此参数应留空

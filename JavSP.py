@@ -164,6 +164,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         # 遍历所有属性，如果某一属性当前值为空而爬取的数据中含有该属性，则采用爬虫的属性
         for attr in attrs:
             incoming = getattr(data, attr)
+            current = getattr(final_info, attr)
             if attr == 'cover':
                 if incoming and (incoming not in covers):
                     covers.append(incoming)
@@ -177,7 +178,6 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                     setattr(final_info, attr, incoming)
                     absorbed.append(attr)
             else:
-                current = getattr(final_info, attr)
                 if (not current) and (incoming):
                     setattr(final_info, attr, incoming)
                     absorbed.append(attr)
