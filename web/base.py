@@ -132,7 +132,7 @@ def get_html(url, encoding='utf-8'):
     return html
 
 
-def resp2html(resp, encoding='utf-8'):
+def resp2html(resp, encoding='utf-8') -> lxml.html.HtmlComment:
     """将request返回的response转换为经lxml解析后的document"""
     text = get_resp_text(resp, encoding=encoding)
     html = lxml.html.fromstring(text)

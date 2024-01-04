@@ -23,16 +23,31 @@ request.headers['Accept-Language'] = 'ja,en-US;q=0.9'
 
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
-    url = f'{base_url}/digital/videoa/-/detail/=/cid={movie.cid}/'
-    resp = request.get(url, delay_raise=True)
-    # 404错误表明没有这部影片的数据
-    if resp.status_code == 404:
+    try_urls = {
+        'videoa': f'{base_url}/digital/videoa/-/detail/=/cid={movie.cid}/', # AV
+        'anime': f'{base_url}/mono/anime/-/detail/=/cid={movie.cid}/',      # 里番
+    }
+    for type_, url in try_urls.items():
+        r = request.get(url, delay_raise=True)
+        # 404错误表明没有这部影片的数据
+        if r.status_code == 404:
+            continue
+
+        r.raise_for_status()
+        html = resp2html(r)
+        break
+    else:
         raise MovieNotFoundError(__name__, movie.cid)
-    resp.raise_for_status()
-    html = resp2html(resp)
     if 'not available in your region' in html.text_content():
         raise SiteBlocked('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
 
+    movie.url = url
+    parse_func = globals()[f'parse_{type_}_page']
+    parse_func(movie, html)
+
+
+def parse_videoa_page(movie: MovieInfo, html):
+    """解析AV影片的页面布局"""
     title = html.xpath("//h1[@id='title']/text()")[0]
     # 注意: 浏览器在渲染时会自动加上了'tbody'字段，但是原始html网页中并没有，因此xpath解析时还是要按原始网页的来
     container = html.xpath("//table[@class='mg-b12']/tr/td")[0]
@@ -92,7 +107,6 @@ def parse_data(movie: MovieInfo):
             logger.debug('解析视频地址时异常: ' + repr(e))
 
     movie.cid = cid
-    movie.url = url
     movie.title = title
     movie.cover = cover
     movie.publish_date = publish_date
@@ -104,12 +118,51 @@ def parse_data(movie: MovieInfo):
     movie.uncensored = False    # 服务器在日本且面向日本国内公开发售，不会包含无码片
 
 
+def parse_anime_page(movie: MovieInfo, html):
+    """解析动画影片的页面布局"""
+    title = html.xpath("//h1[@id='title']/text()")[0]
+    container = html.xpath("//table[@class='mg-b12']/tr/td")[0]
+    cover = container.xpath("//a[@name='package-image']/@href")[0]
+    date_str = container.xpath("//td[text()='発売日：']/following-sibling::td/text()")[0].strip()
+    publish_date = date_str.replace('/', '-')
+    duration_str = container.xpath("//td[text()='収録時間：']/following-sibling::td/text()")[0].strip()
+    duration = duration_str.replace('分', '')
+    serial_tag = container.xpath("//td[text()='シリーズ：']/following-sibling::td/a/text()")
+    if serial_tag:
+        movie.serial = serial_tag[0].strip()
+    producer_tag = container.xpath("//td[text()='メーカー：']/following-sibling::td/a/text()")
+    if producer_tag:
+        movie.producer = producer_tag[0].strip()
+    genre_tags = container.xpath("//td[text()='ジャンル：']/following-sibling::td/a[contains(@href,'article=keyword')]")
+    genre, genre_id = [], []
+    for tag in genre_tags:
+        genre.append(tag.text.strip())
+        genre_id.append(tag.get('href').split('=')[-1].strip('/'))
+    cid = container.xpath("//td[text()='品番：']/following-sibling::td/text()")[0].strip()
+    plot = container.xpath("//div[@class='mg-b20 lh4']/p")[0].text_content().strip()
+    preview_pics = container.xpath("//a[@name='sample-image']/img/@src")
+    score_img = container.xpath("//td[@class='dcd-review__anchor_content']/img/@src")[0]
+    score = int(score_img.split('/')[-1].split('.')[0]) # 00, 05 ... 50
+
+    movie.cid = cid
+    movie.title = title
+    movie.cover = cover
+    movie.publish_date = publish_date
+    movie.duration = duration
+    movie.genre = genre
+    movie.genre_id = genre_id
+    movie.plot = plot
+    movie.score = f'{score/5:.2f}'  # 转换为10分制
+    movie.preview_pics = preview_pics
+    movie.uncensored = False    # 服务器在日本且面向日本国内公开发售，不会包含无码片
+
+
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo(cid='sqte00300')
+    movie = MovieInfo(cid='62knbm009')
     try:
         parse_data(movie)
         print(movie)
