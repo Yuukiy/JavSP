@@ -113,12 +113,12 @@ def get_cid(filepath: str) -> str:
                 return possible
         else:
             # 绝大多数都只有一个下划线（只有约万分之一带有两个下划线）
-            match = re.match(r'''^h_\d{3,4}[a-z]{1,10}\d{4,5}[a-z\d]{0,8}$  # 约 99.17%
+            match2 = re.match(r'''^h_\d{3,4}[a-z]{1,10}\d{2,5}[a-z\d]{0,8}$  # 约 99.17%
                                 |^\d{3}_\d{4,5}$                            # 约 0.57%
                                 |^402[a-z]{3,6}\d*_[a-z]{3,8}\d{5,6}$       # 约 0.09%
                                 |^h_\d{3,4}wvr\d\w\d{4,5}[a-z\d]{0,8}$      # 约 0.06%
                                  $''', possible, re.VERBOSE)
-            if match:
+            if match2:
                 return possible
     return ''
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     if len(sys.argv) <= 1:
         avid = get_id('ex0001')
-        cid = get_cid('403ksxa54363_1')
+        cid = get_cid('h_826zizd021')
         print(avid, cid)
     else:
         for file in sys.argv[1:]:
