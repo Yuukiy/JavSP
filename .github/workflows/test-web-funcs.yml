@@ -24,7 +24,7 @@ jobs:
     runs-on: windows-latest
     env:
       PYTHONIOENCODING: "utf-8"
-      PYTEST_ADDOPTS: "-rA --color=yes"
+      PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
 
     steps:
     - uses: actions/checkout@v2
@@ -35,8 +35,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest
-        pip install -r requirements.txt
+        python -m pip install pytest
+        python -m pip install -r requirements.txt
     - name: Switch code page
       run: |
         chcp 65001

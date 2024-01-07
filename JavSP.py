@@ -8,6 +8,8 @@ import threading
 from shutil import copyfile
 from typing import Dict, List
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 import colorama
 import pretty_errors
 from colorama import Fore, Style
