@@ -46,7 +46,7 @@ def get_id(filepath: str) -> str:
         if match:
             return 'heydouga-' + '-'.join(match.groups())
         # 匹配片商 MUGEN 的奇怪番号。由于MK3D2DBD的模式，要放在普通番号模式之前进行匹配
-        match = re.search(r'(MKB?D)[-_]*(S\d{2,3})|(MK3D2DBD)[-_]*(\d\d)', filename, re.I)
+        match = re.search(r'(MKB?D)[-_]*(S\d{2,3})|(MK3D2DBD|S2M|S2MBD)[-_]*(\d{2,3})', filename, re.I)
         if match:
             if match.group(1) is not None:
                 avid = match.group(1) + '-' + match.group(2)
