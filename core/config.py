@@ -7,14 +7,27 @@ import configparser
 from shutil import copyfile
 from string import Template
 
-from .lib import re_escape
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from core.lib import re_escape
 
-__all__ = ['cfg', 'args', 'is_url']
+# 获取调用者函数
+from inspect import getframeinfo, stack
+caller = os.path.splitext(os.path.basename(getframeinfo(stack()[-1][0]).filename))[0]
+
+
+__all__ = ['cfg', 'args', 'is_url', 'Config']
+
+
 
 if getattr(sys, 'frozen', False):
     built_in_cfg_file = os.path.join(sys._MEIPASS, 'config.ini')
+# 调用者函数是threading时，从WebUi读取配置文件
+elif caller == 'threading':
+    built_in_cfg_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'webui\config.ini')
 else:
     built_in_cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+
+    
 
 
 def rel_path_from_exe(path):
@@ -470,3 +483,4 @@ if __name__ == "__main__":
 
     print(cfg.NamingRule.output_folder)
     print(args)
+

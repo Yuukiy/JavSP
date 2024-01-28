@@ -9,6 +9,8 @@ from shutil import copyfile
 from typing import Dict, List
 # 获取调用者信息
 from inspect import getframeinfo, stack
+import streamlit as st
+from configparser import ConfigParser
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -34,13 +36,15 @@ for handler in root_logger.handlers:
         handler.stream = TqdmOut
 
 # TODO:
-'''TODO: 重新定义logger，当前文件作为脚本触发时，仍保持原来的逻辑，作为模块引入时，使用st的模块来打印
+
+_="""TODO: 重新定义logger，当前文件作为脚本触发时，仍保持原来的逻辑，作为模块引入时，使用st的模块来打印
     以下几种报错方式需要用st来修改
         logging.DEBUG:    '\033[1;30m',  # grey
         logging.WARNING:  '\033[1;33m',  # light yellow
         logging.ERROR:    '\033[1;31m',  # light red
         logging.CRITICAL: '\033[0;31m',  # red
-'''
+
+"""
 
 logger = logging.getLogger('main')
 
@@ -57,7 +61,7 @@ from web.translate import translate_movie_info
 
 
 def import_crawlers(cfg):
-    """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
+    _="""按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
     unknown_mods = []
     for typ, cfg_str in cfg.CrawlerSelect.items():
         # HACK:暂时实现了python进程不退出反复调用问题，根源还是要解决内存参数的清理
@@ -84,9 +88,10 @@ def import_crawlers(cfg):
 
 # 爬虫是IO密集型任务，可以通过多线程提升效率
 def parallel_crawler(movie: Movie, tqdm_bar=None):
-    """使用多线程抓取不同网站的数据"""
+    _="""使用多线程抓取不同网站的数据"""
     def wrapper(parser, info: MovieInfo, retry):
-        """对抓取器函数进行包装，便于更新提示信息和自动重试"""
+
+        _="""对抓取器函数进行包装，便于更新提示信息和自动重试"""
         crawler_name = threading.current_thread().name
         task_info = f'Crawler: {crawler_name}: {info.dvdid}'
         for cnt in range(retry):
@@ -160,7 +165,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
 
 
 def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
-    """汇总多个来源的在线数据生成最终数据"""
+    _="""汇总多个来源的在线数据生成最终数据"""
     final_info = MovieInfo(movie)
     ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
     # genre
@@ -248,7 +253,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
 
 
 def generate_names(movie: Movie):
-    """按照模板生成相关文件的文件名"""
+    _="""按照模板生成相关文件的文件名"""
     info = movie.info
     # 准备用来填充命名模板的字典
     d = {}
@@ -349,7 +354,7 @@ def generate_names(movie: Movie):
 
 
 def postStep_videostation(movie: Movie):
-    """使用群晖Video Station时，生成额外的影片poster、fanart文件"""
+    _="""使用群晖Video Station时，生成额外的影片poster、fanart文件"""
     fanart_ext = os.path.splitext(movie.fanart_file)[1]
     for file in movie.new_paths:
         # 创建与影片同名的fanart
@@ -361,7 +366,7 @@ def postStep_videostation(movie: Movie):
 
 
 def postStep_MultiMoviePoster(movie: Movie):
-    """为多分片的影片创建额外的poster图片"""
+    _="""为多分片的影片创建额外的poster图片"""
     # Jellyfin将多分片影片视作CD1的附加部分，nfo文件名、fanart均使用的CD1的文件名，
     # 只有poster是为各个分片创建的
     for i, _ in enumerate(movie.files[1:], start=2):
@@ -370,7 +375,7 @@ def postStep_MultiMoviePoster(movie: Movie):
 
 
 def reviewMovieID(all_movies, root):
-    """人工检查每一部影片的番号"""
+    _="""人工检查每一部影片的番号"""
     count = len(all_movies)
     logger.info('进入手动模式检查番号: ')
     for i, movie in enumerate(all_movies, start=1):
@@ -403,7 +408,7 @@ def reviewMovieID(all_movies, root):
 
 
 def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
-    """包装各种海报裁剪方法，提供统一的调用"""
+    _="""包装各种海报裁剪方法，提供统一的调用"""
     if method == 'baidu':
         try:
             aip_crop_poster(fanart_file, poster_file)
@@ -416,9 +421,10 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
 
 
 def RunNormalMode(all_movies):
-    """普通整理模式"""
+    _="""普通整理模式"""
     def check_step(result, msg='步骤错误'):
-        """检查一个整理步骤的结果，并负责更新tqdm的进度"""
+
+        _="""检查一个整理步骤的结果，并负责更新tqdm的进度"""
         if result:
             inner_bar.update()
         else:
@@ -507,7 +513,7 @@ def RunNormalMode(all_movies):
 
 
 def download_cover(covers, fanart_path, big_covers=[]):
-    """下载封面图片"""
+    _="""下载封面图片"""
     # 优先下载高清封面
     fanart_base = os.path.splitext(fanart_path)[0] + '.'
     for url in big_covers:
@@ -545,32 +551,127 @@ def download_cover(covers, fanart_path, big_covers=[]):
 
 
 def error_exit(success, err_info):
-    """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
+    _ = """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
     if not success:
         logger.error(err_info)
-        if caller == 'threading':
-            sys.exit()
-        else:
-            sys_exit(1)
+        # sys.exit(0)
 
 
-def sys_exit(code):
-    # 脚本退出机制：检查是否需要关机 → 若不需要，检查是否需要保持当前窗口
-    if args.shutdown:
-        shutdown()
-    elif caller == 'threading':
-        pass
-    elif not args.auto_exit:
-        os.system('pause')
-    # 最后传退出码退出
-    sys.exit(code)
 
 
-def clear():
-    for key, value in globals().items():
-        if callable(value) or value.__class__.__name__ == "module":
-            continue
-        del globals()[key]
+_ = """交互页面中需要的一些函数"""
+def get_configures():
+
+    _ = """读取配置文件"""
+    file_path = os.path.join(os.path.dirname(__file__), 'webui\config.ini')
+    config = ConfigParser()
+    conf_dict = {}              # 参数字典
+    config.read(file_path,encoding='utf-8')
+
+    for section in config.sections():
+        items = config.items(section)
+        mid_conf = {}
+        for key,value in items:
+            if section == 'OptionAttribute':
+                # 参数属性转换成列表
+                attributes = value.split(',')
+                if '/' in value: 
+                    # 选择项转换成列表
+                    attributes[2] = attributes[2].split('/')
+                mid_conf[key] = list(attributes)
+            else:
+                mid_conf[key] = value
+        conf_dict[section] = mid_conf
+    options_attribute = conf_dict['OptionAttribute']
+
+    return conf_dict, options_attribute
+
+
+def get_attributes(attributes:dict,key:str):
+    name = attributes[key][0]
+    type = attributes[key][1]
+    choices = []
+    default = ''
+    if len(attributes[key]) == 3:
+        choices = attributes[key][2]
+    elif len(attributes[key]) == 4:
+        default = attributes[key][3]
+
+    return name,type,choices,default
+
+
+def write_configures(settings:dict):
+    _ = """将配置参数写入配置文件"""
+    config = ConfigParser()
+    file_path = os.path.join(os.path.dirname(__file__), 'webui\config.ini')
+    config.read(file_path,encoding='utf-8')
+
+    for key in settings.keys():
+        for option,value in settings[key].items():
+            if type(value) == bool:
+                value = 'yes' if value == True else 'no'
+            elif type(value) == list:
+                # 读取时将多个选项转化成了列表，这里要转换回字符串
+                for i in range(len(value)):
+                    if type(value[i]) == list:
+                        value[i] = '/'.join(value[i])
+                value = ','.join(value)
+            else:
+                value = str(value)
+            
+            if key not in config.keys():
+                config.add_section(key)
+            config.set(key,option,value)
+                
+            with open(file_path,'w',encoding='utf-8') as file:
+                config.write(file)
+
+
+def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:list):
+    for key in settings.keys():
+
+        if key != 'OptionAttribute':    # 生成组件时排除基础配置项，在上面配置
+
+            _ = """浏览器缓存一个值，用来判断组件左右放置位置"""
+            if 'key' not in st.session_state:
+                st.session_state.counter = 2
+            mid_conf = {}   
+            section = names[key]
+
+            with st.expander(section):
+                sub_cols =st.columns(2)
+                for option in settings[key].keys():
+                    # 获取参数属性
+                    option_name,option_type,option_choices,option_default = get_attributes(attributes,option)
+                    option_value = settings[key][option]
+                    
+                    _ = """根据参数类型展示组件"""
+                    if option not in required_settings:
+                        if option_type == 'box':
+                            if st.session_state.counter % 2 == 0:
+                                mid_conf[option] = sub_cols[0].checkbox(option_name, option_default)
+                            else:
+                                mid_conf[option] = sub_cols[1].checkbox(option_name, option_default)
+                        else:
+                            if option_type == 'text':
+                                mid_conf[option] = st.text_input(option_name, option_value)
+                            elif option_type == 'num':
+                                mid_conf[option] = st.number_input(option_name, int(option_value))
+                            elif option_type == 'choice':
+                                mid_conf[option] = st.selectbox(option_name, option_choices)
+                            else:
+                                mid_conf[option] = st.multiselect(option_name, option_choices, option_choices)
+                    else:
+                        if key == 'File':
+                            mid_conf[option] = scan_dir
+                        else:
+                            if option == 'media_servers':
+                                mid_conf[option] = media_servers
+                            else:
+                                mid_conf[option] = output_folder
+                    st.session_state.counter += 1
+            settings[key] = mid_conf
+    st.session_state.counter = 2
 
 
 def main():
@@ -607,46 +708,47 @@ def main():
         reviewMovieID(recognized, root)
     RunNormalMode(recognized + recognize_fail)
     
-    clear()
-    sys_exit(0)
-    
+    sys.exit()
 
 
-if __name__ == "__main__":
-    colorama.init(autoreset=True)
-    # python版本检查
-    import platform
-    from packaging import version
-    py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
-    error_exit(py_version_ok, '请使用3.8及以上版本的Python')
-    # 检查更新
-    version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
-    logger.debug(version_info.center(60, '='))
-    check_update(cfg.Other.check_update, cfg.Other.auto_update)
-    root = get_scan_dir(cfg.File.scan_dir)
-    error_exit(root, '未选择要扫描的文件夹')
-    # 导入抓取器，必须在chdir之前
-    import_crawlers(cfg)
-    os.chdir(root)
+_ = """获取/定义一些交互页面要用的数据"""
+settings, options_attribute = get_configures()
+sections_name = {'MovieID': '番号正则', 'File': '文件识别', 'Network': '网络代理', 'CrawlerSelect': '爬虫列表', 'Crawler': '爬虫配置', 'ProxyFree': '免代理地址', 'NamingRule': '命名规则', 'Picture': '封面配置', 'Translate': '翻译配置', 'NFO': 'NFO配置', 'Other': '其他配置', 'OptionAttribute': '参数属性'}
+required_settings = ['scan_dir','output_folder','media_servers']
+# 判断必要参数是否已保存到配置文件中
+saved = False if settings['File']['scan_dir'] != '' and settings['NamingRule']['output_folder']  != '' else True
 
-    print(f'扫描影片文件...')
-    recognized = scan_movies(root)
-    movie_count = len(recognized)
-    # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
-    if args.manual:
-        recognize_fail = get_failed_when_scan()
-        fail_count = len(recognize_fail)
-        if fail_count > 0:
-            reviewMovieID(recognize_fail, root)
-            movie_count += fail_count
-    else:
-        recognize_fail = []
-    error_exit(movie_count, '未找到影片文件')
-    logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    print('')
 
-    if args.manual == 'all':
-        reviewMovieID(recognized, root)
-    RunNormalMode(recognized + recognize_fail)
+_ = """以下是页面交互部分"""
+# streamlit要求的页面配置
+st.set_page_config(page_icon='', page_title='设置页')   
 
-    sys_exit(0)
+
+_ = """侧边栏参数设置菜单"""
+with st.sidebar:
+    with st.expander('基础配置',expanded=True):
+        scan_dir = st.text_input('扫描目录', settings['File']['scan_dir'], placeholder = '请输入要整理的文件夹位置')
+        output_folder = st.text_input('保存目录', settings['NamingRule']['output_folder'], placeholder = '最终文件的保存位置')
+        media_servers = st.selectbox('媒体服务器',options_attribute['media_servers'][2])
+
+    _ = """其他参数配置组件"""
+    other_conf(settings,options_attribute,sections_name,required_settings)
+
+    _ = """保存按钮"""
+    option_filled = False if settings['File']['scan_dir'] != '' and settings['NamingRule']['output_folder']  != '' else True
+    save_optinons = st.button('保存参数', type='primary', disabled=option_filled, use_container_width=True)
+
+    if save_optinons:
+        # 将配置的参数写入配置文件中
+        write_configures(settings)
+        # 更新配置文件的状态，使主页面执行按钮可点击
+        saved = False
+
+
+_ = """主页面"""
+
+st.subheader('执行情况')
+submit = st.button('开始程序', type='primary', disabled=saved)
+if submit:
+    # 调用主程序按钮
+    main()

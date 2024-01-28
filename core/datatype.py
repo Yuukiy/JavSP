@@ -149,6 +149,9 @@ class Movie:
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
+
+            ''' TODO: 增加新的同步方式，硬链接、软连接、复制 '''
+            
             os.rename(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
