@@ -10,6 +10,7 @@ from typing import Dict, List
 # 获取调用者信息
 from inspect import getframeinfo, stack
 import streamlit as st
+from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx
 from configparser import ConfigParser
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -138,6 +139,8 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             th = threading.Thread(target=wrapper, name=mod, args=(parser, info, 1))
         else:
             th = threading.Thread(target=wrapper, name=mod, args=(parser, info, cfg.Network.retry))
+        # TODO: st的加入多线程方法，目前并未生效
+        add_script_run_ctx(th)
         th.start()
         thread_pool.append(th)
     # 等待所有线程结束
