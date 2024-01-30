@@ -18,7 +18,6 @@ caller = os.path.splitext(os.path.basename(getframeinfo(stack()[-1][0]).filename
 __all__ = ['cfg', 'args', 'is_url', 'Config']
 
 
-
 if getattr(sys, 'frozen', False):
     built_in_cfg_file = os.path.join(sys._MEIPASS, 'config.ini')
 # 调用者函数是threading时，从WebUi读取配置文件
@@ -28,8 +27,6 @@ else:
     built_in_cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
 
     
-
-
 def rel_path_from_exe(path):
     """将一个相对于exe文件的路径转换为绝对路径"""
     if getattr(sys, 'frozen', False):

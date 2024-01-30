@@ -7,8 +7,7 @@ import requests
 import threading
 from shutil import copyfile
 from typing import Dict, List
-# 获取调用者信息
-from inspect import getframeinfo, stack
+
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -23,10 +22,6 @@ pretty_errors.configure(display_link=True)
 
 from core.print import TqdmOut
 from core.baidu_aip import aip_crop_poster
-
-# 获取调用者函数
-caller = os.path.splitext(os.path.basename(getframeinfo(stack()[-1][0]).filename))[0]
-
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
 root_logger = logging.getLogger()
 for handler in root_logger.handlers:
@@ -548,8 +543,8 @@ def error_exit(success, err_info):
     """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
     if not success:
         logger.error(err_info)
-        if caller == 'threading':
-            sys.exit()
+        if __name__ != "__main__":
+            sys.exit(0)
         else:
             sys_exit(1)
 
@@ -557,20 +552,13 @@ def error_exit(success, err_info):
 def sys_exit(code):
     # 脚本退出机制：检查是否需要关机 → 若不需要，检查是否需要保持当前窗口
     if args.shutdown:
-        shutdown()
-    elif caller == 'threading':
+        shutdown()   
+    elif __name__ != "__main__":
         pass
     elif not args.auto_exit:
         os.system('pause')
     # 最后传退出码退出
     sys.exit(code)
-
-
-def clear():
-    for key, value in globals().items():
-        if callable(value) or value.__class__.__name__ == "module":
-            continue
-        del globals()[key]
 
 
 def main():
@@ -607,7 +595,6 @@ def main():
         reviewMovieID(recognized, root)
     RunNormalMode(recognized + recognize_fail)
     
-    clear()
     sys_exit(0)
     
 

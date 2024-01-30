@@ -5,7 +5,7 @@ from configparser import ConfigParser
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from JavSP import main as Jav
-from core.config import args
+from run import scraper_process
 
 def get_configures():
 
@@ -43,6 +43,10 @@ def get_attributes(attributes:dict,key:str):
         choices = attributes[key][2]
     elif len(attributes[key]) == 4:
         default = attributes[key][3]
+        if default == 'False':
+            default = False
+        elif default == 'True':
+            default = True
 
     return name,type,choices,default
 
@@ -161,10 +165,4 @@ st.subheader('执行情况')
 submit = st.button('开始程序', type='primary', disabled=saved)
 if submit:
     # 调用主程序按钮
-    Jav()
-    
-
-
-
-
-
+    scraper_process()
