@@ -4,8 +4,8 @@ import streamlit as st
 from configparser import ConfigParser
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from JavSP import main as Jav
-from run import scraper_process
+from JavSP import scraper
+
 
 def get_configures():
 
@@ -125,6 +125,10 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
     st.session_state.counter = 2
 
 
+def progress_display(info):
+    st.write(info)
+
+
 _ = """获取/定义一些要用到的数据"""
 settings, options_attribute = get_configures()
 sections_name = {'MovieID': '番号正则', 'File': '文件识别', 'Network': '网络代理', 'CrawlerSelect': '爬虫列表', 'Crawler': '爬虫配置', 'ProxyFree': '免代理地址', 'NamingRule': '命名规则', 'Picture': '封面配置', 'Translate': '翻译配置', 'NFO': 'NFO配置', 'Other': '其他配置', 'OptionAttribute': '参数属性'}
@@ -165,4 +169,5 @@ st.subheader('执行情况')
 submit = st.button('开始程序', type='primary', disabled=saved)
 if submit:
     # 调用主程序按钮
-    scraper_process()
+    scraper()
+

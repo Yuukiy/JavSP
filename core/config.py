@@ -15,7 +15,7 @@ from inspect import getframeinfo, stack
 caller = os.path.splitext(os.path.basename(getframeinfo(stack()[-1][0]).filename))[0]
 
 
-__all__ = ['cfg', 'args', 'is_url', 'Config']
+__all__ = ['cfg', 'args', 'is_url', 'conf']
 
 
 if getattr(sys, 'frozen', False):
@@ -104,6 +104,8 @@ class DetailedFormatter(logging.Formatter):
 
 # 添加到root的filter无法对root的子logger生效（真是反直觉的设计），因此将filter添加到每一个handler
 # https://docs.python.org/3/library/logging.html#filter-objects
+# TODO: 增加给WebUI用的进度日志输出
+
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 file_handler = logging.FileHandler(
@@ -459,6 +461,20 @@ def overwrite_cfg(cfg, args):
         cfg.File.scan_dir = args.input
     if args.output:
         cfg.NamingRule.output_folder = args.output
+
+
+def conf():
+    cfg = Config()
+    args = parse_args()
+    cfg.read_cfg(args.config)
+    # 先覆盖配置，再进行配置有效性的验证
+    overwrite_cfg(cfg, args)
+    try:
+        cfg.validate()
+    except Exception as e:
+        logger.error('验证配置文件时出错: ' + repr(e))
+    
+    return cfg, args
 
 
 cfg = Config()

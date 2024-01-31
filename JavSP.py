@@ -28,20 +28,12 @@ for handler in root_logger.handlers:
     if type(handler) == logging.StreamHandler:
         handler.stream = TqdmOut
 
-# TODO:
-'''TODO: 重新定义logger，当前文件作为脚本触发时，仍保持原来的逻辑，作为模块引入时，使用st的模块来打印
-    以下几种报错方式需要用st来修改
-        logging.DEBUG:    '\033[1;30m',  # grey
-        logging.WARNING:  '\033[1;33m',  # light yellow
-        logging.ERROR:    '\033[1;31m',  # light red
-        logging.CRITICAL: '\033[0;31m',  # red
-'''
 
 logger = logging.getLogger('main')
 
 
 from core.nfo import write_nfo
-from core.config import cfg, args
+from core.config import conf
 from core.file import *
 from core.func import *
 from core.image import *
@@ -55,30 +47,28 @@ def import_crawlers(cfg):
     """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
     unknown_mods = []
     for typ, cfg_str in cfg.CrawlerSelect.items():
-        # HACK:暂时实现了python进程不退出反复调用问题，根源还是要解决内存参数的清理
-        if type(cfg_str) == str: 
-            mods = cfg_str.split(',')
-            if 'airav' in mods:
-                mods.sort(key=lambda x:x=='airav', reverse=cfg.Crawler.title__chinese_first)
-            valid_mods = []
-            for name in mods:
-                try:
-                    # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
-                    # if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
-                    #     logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
-                    #     continue
-                    import_name = 'web.' + name
-                    __import__(import_name)
-                    valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
-                except ModuleNotFoundError:
-                    unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
-            cfg._sections['CrawlerSelect'][typ] = tuple(valid_mods)
+        mods = cfg_str.split(',')
+        if 'airav' in mods:
+            mods.sort(key=lambda x:x=='airav', reverse=cfg.Crawler.title__chinese_first)
+        valid_mods = []
+        for name in mods:
+            try:
+                # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
+                # if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
+                #     logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
+                #     continue
+                import_name = 'web.' + name
+                __import__(import_name)
+                valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
+            except ModuleNotFoundError:
+                unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
+        cfg._sections['CrawlerSelect'][typ] = tuple(valid_mods)
     if unknown_mods:
         logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
 
 
 # 爬虫是IO密集型任务，可以通过多线程提升效率
-def parallel_crawler(movie: Movie, tqdm_bar=None):
+def parallel_crawler(cfg, movie: Movie, tqdm_bar=None):
     """使用多线程抓取不同网站的数据"""
     def wrapper(parser, info: MovieInfo, retry):
         """对抓取器函数进行包装，便于更新提示信息和自动重试"""
@@ -154,7 +144,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     return all_info
 
 
-def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
+def info_summary(cfg, movie: Movie, all_info: Dict[str, MovieInfo]):
     """汇总多个来源的在线数据生成最终数据"""
     final_info = MovieInfo(movie)
     ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
@@ -242,7 +232,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     return True
 
 
-def generate_names(movie: Movie):
+def generate_names(cfg, movie: Movie):
     """按照模板生成相关文件的文件名"""
     info = movie.info
     # 准备用来填充命名模板的字典
@@ -410,7 +400,7 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
         crop_poster(fanart_file, poster_file)
 
 
-def RunNormalMode(all_movies):
+def RunNormalMode(cfg, all_movies):
     """普通整理模式"""
     def check_step(result, msg='步骤错误'):
         """检查一个整理步骤的结果，并负责更新tqdm的进度"""
@@ -429,12 +419,12 @@ def RunNormalMode(all_movies):
             inner_bar = tqdm(total=total_step, desc='步骤', ascii=True, leave=False)
             # 依次执行各个步骤
             inner_bar.set_description(f'启动并发任务')
-            all_info = parallel_crawler(movie, inner_bar)
+            all_info = parallel_crawler(cfg, movie, inner_bar)
             msg = f'为其配置的{len(cfg.CrawlerSelect[movie.data_src])}个抓取器均未获取到影片信息'
             check_step(all_info, msg)
 
             inner_bar.set_description('汇总数据')
-            has_required_keys = info_summary(movie, all_info)
+            has_required_keys = info_summary(cfg, movie, all_info)
             check_step(has_required_keys)
 
             if cfg.Translate.engine:
@@ -442,16 +432,16 @@ def RunNormalMode(all_movies):
                 success = translate_movie_info(movie.info)
                 check_step(success)
 
-            generate_names(movie)
+            generate_names(cfg, movie)
             check_step(movie.save_dir, '无法按命名规则生成目标文件夹')
             if not os.path.exists(movie.save_dir):
                 os.makedirs(movie.save_dir)
 
             inner_bar.set_description('下载封面图片')
             if cfg.Picture.use_big_cover:
-                cover_dl = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
+                cover_dl = download_cover(cfg, movie.info.covers, movie.fanart_file, movie.info.big_covers)
             else:
-                cover_dl = download_cover(movie.info.covers, movie.fanart_file)
+                cover_dl = download_cover(cfg, movie.info.covers, movie.fanart_file)
             check_step(cover_dl, '下载封面图片失败')
             cover, pic_path = cover_dl
             # 确保实际下载的封面的url与即将写入到movie.info中的一致
@@ -501,7 +491,7 @@ def RunNormalMode(all_movies):
             inner_bar.close()
 
 
-def download_cover(covers, fanart_path, big_covers=[]):
+def download_cover(cfg, covers, fanart_path, big_covers=[]):
     """下载封面图片"""
     # 优先下载高清封面
     fanart_base = os.path.splitext(fanart_path)[0] + '.'
@@ -539,17 +529,17 @@ def download_cover(covers, fanart_path, big_covers=[]):
     return None
 
 
-def error_exit(success, err_info):
+def error_exit(args, success, err_info):
     """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
     if not success:
         logger.error(err_info)
         if __name__ != "__main__":
             sys.exit(0)
         else:
-            sys_exit(1)
+            sys_exit(args, 1)
 
 
-def sys_exit(code):
+def sys_exit(args, code):
     # 脚本退出机制：检查是否需要关机 → 若不需要，检查是否需要保持当前窗口
     if args.shutdown:
         shutdown()   
@@ -561,62 +551,26 @@ def sys_exit(code):
     sys.exit(code)
 
 
-def main():
+def scraper():
+    cfg, args = conf()
     colorama.init(autoreset=True)
     # python版本检查
     import platform
     from packaging import version
     py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
-    error_exit(py_version_ok, '请使用3.8及以上版本的Python')
-    
-    root = get_scan_dir(cfg.File.scan_dir)
-    error_exit(root, '未选择要扫描的文件夹')
-    # 导入抓取器，必须在chdir之前
-    import_crawlers(cfg)
-    os.chdir(root)
-
-    print(f'扫描影片文件...')
-    recognized = scan_movies(root)
-    movie_count = len(recognized)
-    # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
-    if args.manual:
-        recognize_fail = get_failed_when_scan()
-        fail_count = len(recognize_fail)
-        if fail_count > 0:
-            reviewMovieID(recognize_fail, root)
-            movie_count += fail_count
-    else:
-        recognize_fail = []
-    error_exit(movie_count, '未找到影片文件')
-    logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    print('')
-
-    if args.manual == 'all':
-        reviewMovieID(recognized, root)
-    RunNormalMode(recognized + recognize_fail)
-    
-    sys_exit(0)
-    
-
-
-if __name__ == "__main__":
-    colorama.init(autoreset=True)
-    # python版本检查
-    import platform
-    from packaging import version
-    py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
-    error_exit(py_version_ok, '请使用3.8及以上版本的Python')
+    error_exit(args, py_version_ok, '请使用3.8及以上版本的Python')
     # 检查更新
     version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
     logger.debug(version_info.center(60, '='))
     check_update(cfg.Other.check_update, cfg.Other.auto_update)
+    # 开始扫描
     root = get_scan_dir(cfg.File.scan_dir)
-    error_exit(root, '未选择要扫描的文件夹')
+    error_exit(args, root, '未选择要扫描的文件夹')
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)
 
-    print(f'扫描影片文件...')
+    print(f'扫描影片文件：{cfg.File.scan_dir}')
     recognized = scan_movies(root)
     movie_count = len(recognized)
     # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
@@ -628,12 +582,54 @@ if __name__ == "__main__":
             movie_count += fail_count
     else:
         recognize_fail = []
-    error_exit(movie_count, '未找到影片文件')
+    error_exit(args, movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     print('')
 
     if args.manual == 'all':
         reviewMovieID(recognized, root)
-    RunNormalMode(recognized + recognize_fail)
+    RunNormalMode(cfg, recognized + recognize_fail)
 
-    sys_exit(0)
+    sys_exit(args, 0)
+
+
+if __name__ == "__main__":
+    cfg, args = conf()
+    colorama.init(autoreset=True)
+    # python版本检查
+    import platform
+    from packaging import version
+    py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
+    error_exit(args, py_version_ok, '请使用3.8及以上版本的Python')
+    # 检查更新
+    version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
+    logger.debug(version_info.center(60, '='))
+    check_update(cfg.Other.check_update, cfg.Other.auto_update)
+    # 开始扫描
+    root = get_scan_dir(cfg.File.scan_dir)
+    error_exit(args, root, '未选择要扫描的文件夹')
+    # 导入抓取器，必须在chdir之前
+    import_crawlers(cfg)
+    os.chdir(root)
+
+    print(f'扫描影片文件：{cfg.File.scan_dir}')
+    recognized = scan_movies(root)
+    movie_count = len(recognized)
+    # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
+    if args.manual:
+        recognize_fail = get_failed_when_scan()
+        fail_count = len(recognize_fail)
+        if fail_count > 0:
+            reviewMovieID(recognize_fail, root)
+            movie_count += fail_count
+    else:
+        recognize_fail = []
+    error_exit(args, movie_count, '未找到影片文件')
+    logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
+    print('')
+
+    if args.manual == 'all':
+        reviewMovieID(recognized, root)
+    RunNormalMode(cfg, recognized + recognize_fail)
+
+    sys_exit(args, 0)
