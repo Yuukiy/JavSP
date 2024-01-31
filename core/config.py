@@ -104,10 +104,11 @@ class DetailedFormatter(logging.Formatter):
 
 # 添加到root的filter无法对root的子logger生效（真是反直觉的设计），因此将filter添加到每一个handler
 # https://docs.python.org/3/library/logging.html#filter-objects
-# TODO: 增加给WebUI用的进度日志输出
+
 
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
+
 file_handler = logging.FileHandler(
     filename=rel_path_from_exe('JavSP.log'), mode='a', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)

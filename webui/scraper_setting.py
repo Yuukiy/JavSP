@@ -126,6 +126,7 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
 
 
 def progress_display(info):
+    # TODO: 完成刮削进度展示
     st.write(info)
 
 
