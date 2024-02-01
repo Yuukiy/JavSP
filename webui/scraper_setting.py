@@ -1,10 +1,15 @@
-import sys
 import os
+import sys
 import streamlit as st
 from configparser import ConfigParser
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from JavSP import scraper
+
+
+_ = """浏览器缓存值，不随页面刷新而改变"""
+if 'key' not in st.session_state:
+    st.session_state.counter = 2    # 用来判断组件左右放置位置
 
 
 def get_configures():
@@ -82,10 +87,6 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
     for key in settings.keys():
 
         if key != 'OptionAttribute':    # 生成组件时排除基础配置项，在上面配置
-
-            _ = """浏览器缓存一个值，用来判断组件左右放置位置"""
-            if 'key' not in st.session_state:
-                st.session_state.counter = 2
             mid_conf = {}   
             section = names[key]
 
@@ -123,11 +124,6 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
                     st.session_state.counter += 1
             settings[key] = mid_conf
     st.session_state.counter = 2
-
-
-def progress_display(info):
-    # TODO: 完成刮削进度展示
-    st.write(info)
 
 
 _ = """获取/定义一些要用到的数据"""
@@ -169,6 +165,6 @@ _ = """主页面"""
 st.subheader('执行情况')
 submit = st.button('开始程序', type='primary', disabled=saved)
 if submit:
-    # 调用主程序按钮
+    # 调用刮削程序
     scraper()
 
