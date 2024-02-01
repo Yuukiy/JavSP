@@ -3,11 +3,13 @@ import os
 import csv
 import sys
 import json
+import shutil
 import logging
 from functools import cached_property
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.lib import mei_path, detect_special_attr
+from core.config import conf
 
 
 logger = logging.getLogger(__name__)
@@ -150,9 +152,15 @@ class Movie:
             """移动（重命名）文件并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
 
-            ''' TODO: 增加新的同步方式，硬链接、软连接、复制 '''
-            
-            os.rename(src, abs_dst)
+            ''' 文件保存方式，硬链接、移动、复制 '''
+            cfg, args = conf()
+            if cfg.NamingRule.save_type == 'hardlink':
+                os.link(src, abs_dst)
+            elif cfg.NamingRule.save_type == 'copy':
+                shutil.copyfile(src, abs_dst)
+            else:
+                os.rename(src, abs_dst)
+
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
             logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")

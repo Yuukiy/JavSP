@@ -119,8 +119,11 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
                         else:
                             if option == 'media_servers':
                                 mid_conf[option] = media_servers
-                            else:
+                            elif option == 'save_type':
+                                mid_conf[option] = save_type
+                            elif option == 'output_folder':
                                 mid_conf[option] = output_folder
+
                     st.session_state.counter += 1
             settings[key] = mid_conf
     st.session_state.counter = 2
@@ -129,7 +132,7 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
 _ = """获取/定义一些要用到的数据"""
 settings, options_attribute = get_configures()
 sections_name = {'MovieID': '番号正则', 'File': '文件识别', 'Network': '网络代理', 'CrawlerSelect': '爬虫列表', 'Crawler': '爬虫配置', 'ProxyFree': '免代理地址', 'NamingRule': '命名规则', 'Picture': '封面配置', 'Translate': '翻译配置', 'NFO': 'NFO配置', 'Other': '其他配置', 'OptionAttribute': '参数属性'}
-required_settings = ['scan_dir','output_folder','media_servers']
+required_settings = ['scan_dir', 'output_folder', 'save_type', 'media_servers']
 # 判断必要参数是否已保存到配置文件中
 saved = False if settings['File']['scan_dir'] != '' and settings['NamingRule']['output_folder']  != '' else True
 
@@ -144,6 +147,7 @@ with st.sidebar:
     with st.expander('基础配置',expanded=True):
         scan_dir = st.text_input('扫描目录', settings['File']['scan_dir'], placeholder = '请输入要整理的文件夹位置')
         output_folder = st.text_input('保存目录', settings['NamingRule']['output_folder'], placeholder = '最终文件的保存位置')
+        save_type = st.selectbox('保存方式',options_attribute['save_type'][2])
         media_servers = st.selectbox('媒体服务器',options_attribute['media_servers'][2])
 
     _ = """其他参数配置组件"""
