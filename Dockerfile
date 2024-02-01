@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone http://oauth2:b425ce21165015a9dba060a1ca8c274b81df0dbf@gitea/wayne/JavSP.git .
+RUN git clone http://oauth2:b425ce21165015a9dba060a1ca8c274b81df0dbf@www.bool.fun:9117/wayne/JavSP.git .
 
 RUN pip3 install -r requirements.txt
 
