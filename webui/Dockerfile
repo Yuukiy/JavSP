@@ -1,4 +1,4 @@
-FROM python:3.8.18-alpine3.18
+FROM python:3.8.18-slim
 
 WORKDIR /app
 
@@ -17,4 +17,4 @@ EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "webui/scraper_setting.py", "--server.port=8501", "--server.address=192.168.1.14"]
+ENTRYPOINT ["streamlit", "run", "webui/scraper_setting.py", "--server.port=8501", "--server.address=0.0.0.0"]

@@ -7,7 +7,7 @@ from threading import Thread
 from configparser import ConfigParser
 from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from JavSP import scraper
 
 
