@@ -11,10 +11,10 @@ from aip import AipBodyAnalysis
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.config import cfg, rel_path_from_exe
+from core.config import conf, rel_path_from_exe
 
 logger = logging.getLogger(__name__)
-
+cfg, args = conf()
 
 class AipClient():
     def __init__(self) -> None:
