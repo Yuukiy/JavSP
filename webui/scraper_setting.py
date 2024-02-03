@@ -1,7 +1,11 @@
 import os
+import re
 import sys
+import time
 import streamlit as st
+from threading import Thread
 from configparser import ConfigParser
+from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx, get_script_run_ctx
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from JavSP import scraper
@@ -10,6 +14,8 @@ from JavSP import scraper
 _ = """浏览器缓存值，不随页面刷新而改变"""
 if 'key' not in st.session_state:
     st.session_state.counter = 2    # 用来判断组件左右放置位置
+    st.session_state.movies_found = 0
+    st.session_state.movies_sorted = 0
 
 
 def get_configures():
@@ -129,6 +135,144 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
     st.session_state.counter = 2
 
 
+class opened(object):
+    def __init__(self, filename):
+        self.filename = filename
+        self.handle = open(filename)
+        if filename in get_read_info().keys():
+            self.handle.seek(get_read_info()[filename], 0)
+
+    def __enter__(self):
+        return self.handle
+
+    def __exit__(self, exc_type, exc_value, exc_trackback):
+        seek_num = self.handle.tell()
+        set_read_info(self.filename, seek_num)
+        self.handle.close()
+        if exc_trackback is None:
+            print(f'文件【{self.filename}】读取退出正常！')
+        else:
+            print(f'文件【{self.filename}】读取退出异常！')
+
+
+def get_read_info():
+    # 读取已读取的文件的句柄位置
+    file_info = {}
+    temp = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'temp')
+    # 如果文件不存在则创建一个空文件
+    if not os.path.exists(temp):
+        with open(temp, 'w', encoding='utf-8') as f:
+            pass
+        return file_info
+
+    with open(temp, 'r', encoding='utf-8') as f:
+        datas = f.readlines()
+        for data in datas:
+            name, line = data.split('===')
+            file_info[name] = int(line)
+    return file_info
+
+
+def set_read_info(filename, seek_num):
+    '''
+    设置为已经读取的文件的句柄位置
+    :param filename: 文件名称
+    :param seek_num: 句柄位置
+    :return:
+    '''
+    temp = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'temp')
+    flag = True
+    with open(temp, 'r', encoding='utf-8') as f:
+        datas = f.readlines()
+        for num, data in enumerate(datas):
+            if filename in data:
+                flag = False
+                datas[num] = f'{filename}==={seek_num}\n'
+        if flag:
+            datas.append(f'{filename}==={seek_num}\n')
+    # print(datas)
+    with open(temp, 'w', encoding='utf-8') as f:
+        f.writelines(datas)
+
+
+def process_dispaly():
+    file = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), 'JavSP.log')
+    end_status = ''
+    file_name = ''
+    main_status = ''
+
+    while True:
+        if main_status != 'next':
+            with opened(file) as fp:
+                for line_data in fp:
+                    if re.match(r'^.*正在整理: .*$', line_data):
+                        file_name = re.compile(r'^.*正在整理: (.*)$').findall(line_data)[0]
+                        main_status = 'next'
+                    elif re.match(r'^.*未找到影片文件$', line_data):
+                        main_status = 'break'
+                    elif re.match(r'^.*扫描影片文件：共找到 .*? 部影片$', line_data):
+                        st.session_state.movies_found = int(re.compile(r'^.*扫描影片文件：共找到 (.*?) 部影片$').findall(line_data)[0])
+                        main_status = 'continue'
+                    elif re.match(r'^.*整理失败.*$', line_data):
+                         main_status = 'continue'
+                    elif re.match(r'^.*整理完成.*$', line_data):
+                        main_status = 'continue'
+                    else:
+                        main_status = 'continue'
+
+        if main_status == 'break':
+            st.warning('**未找到影片！请确定扫描目录是否正确。**', icon='🚨')
+            break
+        elif main_status == 'continue':
+            continue
+        elif main_status == 'next':
+            main_status = ''
+            st.columns(1)
+            st.markdown(f'****共找到 {st.session_state.movies_found} 部影片，正在整理第{st.session_state.movies_sorted+1}部：{file_name}****')
+            with st.status(f'正在整理...', expanded=False) as status:
+                while True:
+                    with opened(file) as fp:  # 默认为读模式
+                        for line_data in fp:
+                            if re.match(r'^.*整理失败.*$', line_data):
+                                st.write(line_data)
+                                end_status = 'error'
+                            elif re.match(r'^.*整理完成.*$', line_data):
+                                st.write(line_data)
+                                end_status = 'complete'
+                            elif re.match(r'^.*正在整理: .*$', line_data):
+                                file_name = re.compile(r'^.*正在整理: (.*)$').findall(line_data)[0]
+                                main_status = 'next'
+                                end_status = 'error' if end_status == 'error' and end_status != '' else 'complete'
+                            else:
+                                st.write(line_data)
+                                end_status = 'error' if end_status == 'error' and end_status != '' else 'complete'
+                                
+
+                    if end_status != '':
+                        st.session_state.movies_sorted += 1
+
+                        if end_status == 'error':
+                            status.update(label='整理失败，请查看详情。', state='error', expanded=False)
+                        elif end_status == 'complete':
+                            status.update(label='整理完成！', state='complete', expanded=False)
+                        else:
+                            status.update(label='整理完成！', state='complete', expanded=False)
+
+                        end_status = ''
+                        break
+                    
+                    time.sleep(3)
+                    
+        if st.session_state.movies_sorted == st.session_state.movies_found:
+            st.session_state.movies_sorted = 0
+            st.session_state.movies_found = 0
+            st.balloons()
+            break
+
+        time.sleep(1)
+
+  
+
 _ = """获取/定义一些要用到的数据"""
 settings, options_attribute = get_configures()
 sections_name = {'MovieID': '番号正则', 'File': '文件识别', 'Network': '网络代理', 'CrawlerSelect': '爬虫列表', 'Crawler': '爬虫配置', 'ProxyFree': '免代理地址', 'NamingRule': '命名规则', 'Picture': '封面配置', 'Translate': '翻译配置', 'NFO': 'NFO配置', 'Other': '其他配置', 'OptionAttribute': '参数属性'}
@@ -162,13 +306,18 @@ with st.sidebar:
         write_configures(settings)
         # 更新配置文件的状态，使主页面执行按钮可点击
         saved = False
+        st.toast('保存成功', icon='😍')
 
 
 _ = """主页面"""
 
-st.subheader('执行情况')
+
 submit = st.button('开始程序', type='primary', disabled=saved)
 if submit:
     # 调用刮削程序
-    scraper()
+    jsp_thread = Thread(target=scraper)
+    add_script_run_ctx(jsp_thread)
+    jsp_thread.start()
 
+    # 展示进度
+    process_dispaly()
