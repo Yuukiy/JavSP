@@ -5,7 +5,7 @@ import time
 import streamlit as st
 from threading import Thread
 from configparser import ConfigParser
-from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx, get_script_run_ctx
+from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from JavSP import scraper
@@ -242,10 +242,10 @@ def process_dispaly():
                             elif re.match(r'^.*正在整理: .*$', line_data):
                                 file_name = re.compile(r'^.*正在整理: (.*)$').findall(line_data)[0]
                                 main_status = 'next'
-                                end_status = 'error' if end_status == 'error' and end_status != '' else 'complete'
+                                end_status = 'error' if end_status == 'error' else end_status
                             else:
                                 st.write(line_data)
-                                end_status = 'error' if end_status == 'error' and end_status != '' else 'complete'
+                                end_status = 'error' if end_status == 'error' else end_status
                                 
 
                     if end_status != '':
@@ -272,7 +272,6 @@ def process_dispaly():
 
         time.sleep(1)
 
-  
 
 _ = """获取/定义一些要用到的数据"""
 settings, options_attribute = get_configures()
