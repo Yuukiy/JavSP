@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+import platform
 import logging
 import requests
 import threading
@@ -545,8 +546,8 @@ def sys_exit(args, code):
         shutdown()   
     elif __name__ != "__main__":
         pass
-    elif not args.auto_exit:
-        os.system('pause')
+    elif not args.auto_exit and platform.system() == 'Windows':
+        os.system('pause') 
     # 最后传退出码退出
     sys.exit(code)
 
@@ -555,7 +556,6 @@ def scraper():
     cfg, args = conf()
     colorama.init(autoreset=True)
     # python版本检查
-    import platform
     from packaging import version
     py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
     error_exit(args, py_version_ok, '请使用3.8及以上版本的Python')
@@ -597,7 +597,6 @@ if __name__ == "__main__":
     cfg, args = conf()
     colorama.init(autoreset=True)
     # python版本检查
-    import platform
     from packaging import version
     py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
     error_exit(args, py_version_ok, '请使用3.8及以上版本的Python')

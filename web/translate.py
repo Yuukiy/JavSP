@@ -14,7 +14,8 @@ __all__ = ['translate', 'translate_movie_info']
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.config import cfg
+from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 from core.datatype import MovieInfo
 
 

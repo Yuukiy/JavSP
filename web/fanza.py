@@ -10,7 +10,8 @@ from typing import Dict, List, Tuple
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import Request, resp2html
 from web.exceptions import *
-from core.config import cfg
+from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 from core.datatype import MovieInfo
 
 

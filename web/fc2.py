@@ -7,7 +7,8 @@ import logging
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from web.base import get_html, request_get
 from web.exceptions import *
-from core.config import cfg
+from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 from core.lib import strftime_to_minutes
 from core.datatype import MovieInfo
 

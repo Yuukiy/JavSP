@@ -9,7 +9,8 @@ from web.base import Request, resp2html
 from web.exceptions import *
 from core.func import *
 from core.avid import guess_av_type
-from core.config import cfg
+from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 from core.datatype import MovieInfo, GenreMap
 from core.chromium import get_browsers_cookies
 

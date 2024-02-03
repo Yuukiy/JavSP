@@ -14,7 +14,8 @@ __all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_ill
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.avid import *
 from core.lib import re_escape
-from core.config import cfg
+from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 from core.datatype import Movie
 
 logger = logging.getLogger(__name__)

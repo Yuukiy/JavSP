@@ -3,6 +3,7 @@ import re
 import sys
 import logging
 import argparse
+import platform
 import configparser
 from shutil import copyfile
 from string import Template
@@ -479,22 +480,22 @@ def conf():
     return cfg, args
 
 
-cfg = Config()
-args = parse_args()
-cfg.read_cfg(args.config)
-# 先覆盖配置，再进行配置有效性的验证
-overwrite_cfg(cfg, args)
-try:
-    cfg.validate()
-except Exception as e:
-    logger.error('验证配置文件时出错: ' + repr(e))
-    os.system('pause')
-    sys.exit(2)
-
-
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
+
+    cfg = Config()
+    args = parse_args()
+    cfg.read_cfg(args.config)
+    # 先覆盖配置，再进行配置有效性的验证
+    overwrite_cfg(cfg, args)
+    try:
+        cfg.validate()
+    except Exception as e:
+        logger.error('验证配置文件时出错: ' + repr(e))
+        if platform.system() == 'Windows':
+            os.system('pause')
+        sys.exit(2)
 
     print(cfg.NamingRule.output_folder)
     print(args)

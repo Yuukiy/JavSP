@@ -12,9 +12,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 
 logger = logging.getLogger(__name__)
-cfg, args = conf()
+
 
 class AipClient():
     def __init__(self) -> None:

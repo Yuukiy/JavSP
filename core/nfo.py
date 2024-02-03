@@ -7,7 +7,8 @@ from lxml.builder import E
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.datatype import MovieInfo
-from core.config import cfg
+from core.config import conf, rel_path_from_exe
+cfg, args = conf()
 
 
 def write_nfo(info: MovieInfo, nfo_file):
