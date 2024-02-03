@@ -6,6 +6,7 @@ import argparse
 import configparser
 from shutil import copyfile
 from string import Template
+from getpass import getuser
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.lib import re_escape
@@ -85,7 +86,7 @@ class DetailedFormatter(logging.Formatter):
     def __init__(self, fmt='%(asctime)s %(name)s:%(lineno)d %(levelname)s: %(message)s',
                  datefmt='%Y-%m-%d %H:%M:%S', *args) -> None:
         super().__init__(fmt, datefmt, *args)
-        username = os.getlogin()
+        username = getuser()
         self.anonymize = re.compile(r'([\\/]*)' + re_escape(username) + '([\\/]*)', flags=re.I)
 
     def format(self, record):
