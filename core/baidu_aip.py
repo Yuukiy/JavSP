@@ -54,9 +54,6 @@ class AipClient():
             return result
 
 
-ai = AipClient()
-
-
 def choose_center(body_parts):
     # 寻找关键部位作为图片的中心点，顺序依次为:
     # 鼻子, 左右眼, 左右耳, 左右嘴角, 头顶, 颈部, 左右肩
@@ -123,6 +120,7 @@ def fit_crop_box(box, persons):
 
 def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     """将给定的fanart图片文件裁剪为适合poster尺寸的图片"""
+    ai = AipClient()
     r = ai.analysis(fanart)
     im = ImageOps.exif_transpose(Image.open(fanart))
     # 计算识别到的各人体框区域的权重

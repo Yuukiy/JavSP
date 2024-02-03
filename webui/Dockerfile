@@ -2,6 +2,8 @@ FROM python:3.8.18-slim
 
 WORKDIR /app
 
+RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -9,7 +11,10 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN git clone http://oauth2:b425ce21165015a9dba060a1ca8c274b81df0dbf@113.205.142.106:9117/wayne/JavSP.git .
+RUN git clone -b beta_0.0.2 --depth=1 http://oauth2:b425ce21165015a9dba060a1ca8c274b81df0dbf@www.bool.fun:9117/wayne/JavSP.git .
+
+RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -U pip 
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 RUN pip3 install -r requirements.txt
 
