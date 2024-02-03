@@ -266,7 +266,8 @@ def process_dispaly():
         if st.session_state.movies_sorted == st.session_state.movies_found:
             st.session_state.movies_sorted = 0
             st.session_state.movies_found = 0
-            st.balloons()
+            st.balloons()    
+
             break
 
         time.sleep(1)
@@ -277,7 +278,7 @@ _ = """获取/定义一些要用到的数据"""
 settings, options_attribute = get_configures()
 sections_name = {'MovieID': '番号正则', 'File': '文件识别', 'Network': '网络代理', 'CrawlerSelect': '爬虫列表', 'Crawler': '爬虫配置', 'ProxyFree': '免代理地址', 'NamingRule': '命名规则', 'Picture': '封面配置', 'Translate': '翻译配置', 'NFO': 'NFO配置', 'Other': '其他配置', 'OptionAttribute': '参数属性'}
 required_settings = ['scan_dir', 'output_folder', 'save_type', 'media_servers']
-# 判断必要参数是否已保存到配置文件中
+# 判断必要参数是否已保存到配置文件中，同时控制按钮状态
 saved = False if settings['File']['scan_dir'] != '' and settings['NamingRule']['output_folder']  != '' else True
 
 
@@ -299,7 +300,7 @@ with st.sidebar:
 
     _ = """保存按钮"""
     option_filled = False if settings['File']['scan_dir'] != '' and settings['NamingRule']['output_folder']  != '' else True
-    save_optinons = st.button('保存参数', type='primary', disabled=option_filled, use_container_width=True)
+    save_optinons = st.button('保存参数', disabled=option_filled, use_container_width=True)
 
     if save_optinons:
         # 将配置的参数写入配置文件中
@@ -312,7 +313,7 @@ with st.sidebar:
 _ = """主页面"""
 
 
-submit = st.button('开始程序', type='primary', disabled=saved)
+submit = st.button('开始程序', type='primary', disabled=saved, use_container_width=True)
 if submit:
     # 调用刮削程序
     jsp_thread = Thread(target=scraper)
