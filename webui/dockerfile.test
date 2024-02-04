@@ -1,7 +1,5 @@
-FROM python:3.8.18-slim
-
+FROM python:3.8.18-slim as builder
 WORKDIR /app
-
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -14,11 +12,15 @@ RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -U pip
 RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip3 install -r requirements.txt
 
+FROM python:3.8.18-alpine
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
+
+WORKDIR /app
+COPY --from=builder /app /app
+
 VOLUME /media
 
 EXPOSE 8501
-
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
-
 ENTRYPOINT ["streamlit", "run", "webui/scraper_setting.py", "--server.port=8501", "--server.address=0.0.0.0"]
-
