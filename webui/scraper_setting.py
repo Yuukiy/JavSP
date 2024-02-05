@@ -331,13 +331,13 @@ with st.sidebar:
 
 _ = """主页面"""
 
+cfg, args = conf()
+jsp_thread = Thread(target=scraper, args=[cfg, args])
+add_script_run_ctx(jsp_thread)
 
 submit = st.button('开始程序', type='primary', disabled=saved, use_container_width=True)
 if submit:
     # 调用刮削程序
-    cfg, args = conf()
-    jsp_thread = Thread(target=scraper, args=[cfg, args])
-    add_script_run_ctx(jsp_thread)
     jsp_thread.start()
 
     # 展示进度
