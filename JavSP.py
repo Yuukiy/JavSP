@@ -552,8 +552,7 @@ def sys_exit(args, code):
     sys.exit(code)
 
 
-def scraper():
-    cfg, args = conf()
+def scraper(cfg, args):
     colorama.init(autoreset=True)
     # python版本检查
     from packaging import version

@@ -10,6 +10,7 @@ from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from JavSP import scraper
+from core.config import conf
 
 
 _ = """浏览器缓存值，不随页面刷新而改变"""
@@ -334,7 +335,8 @@ _ = """主页面"""
 submit = st.button('开始程序', type='primary', disabled=saved, use_container_width=True)
 if submit:
     # 调用刮削程序
-    jsp_thread = Thread(target=scraper)
+    cfg, args = conf()
+    jsp_thread = Thread(target=scraper, args=[cfg, args])
     add_script_run_ctx(jsp_thread)
     jsp_thread.start()
 
