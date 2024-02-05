@@ -274,7 +274,7 @@ def process_dispaly():
                     
                     time.sleep(3)
                     
-        if st.session_state.movies_sorted == st.session_state.movies_found:
+        if st.session_state.movies_sorted == st.session_state.movies_found and st.session_state.movies_found!=0:
             st.session_state.movies_sorted = 0
             st.session_state.movies_found = 0
             st.balloons()    
@@ -299,15 +299,13 @@ st.set_page_config(page_icon='', page_title='设置页')
 
 _ = """侧边栏参数设置菜单"""
 with st.sidebar:
-    
-
     with st.expander('基础配置',expanded=True):
         if platform.system() == 'Windows':
-            path = 'E:/整理'
+            path = 'E:\\整理'
         else:
             path = '/video'
         dirs = []
-        depth = st.number_input('可选目录深度',0,10,3)
+        depth = st.number_input('可选目录深度',0,10,1)
         traversal_files(path, dirs, depth+1)
 
         scan_dir = st.selectbox('扫描目录', dirs,)
