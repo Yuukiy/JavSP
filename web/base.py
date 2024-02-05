@@ -96,7 +96,7 @@ class DownloadProgressBar(tqdm):
         self.update(b * bsize - self.n)
 
 
-def request_get(url, timeout, cookies={}, delay_raise=False):
+def request_get(url, cookies={}, timeout=10, delay_raise=False):
     timeout=cfg.Network.timeout
 
     """获取指定url的原始请求"""
@@ -106,7 +106,7 @@ def request_get(url, timeout, cookies={}, delay_raise=False):
     return r
 
 
-def request_post(url, timeout, data, cookies={}, delay_raise=False):
+def request_post(url, data, cookies={}, timeout=10, delay_raise=False):
     timeout=cfg.Network.timeout
 
     """向指定url发送post请求"""

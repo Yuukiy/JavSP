@@ -471,6 +471,15 @@ def conf():
     args = parse_args()
     cfg.read_cfg(args.config)
     # 先覆盖配置，再进行配置有效性的验证
+    overwrite_cfg(cfg, args)
+    try:
+        cfg.validate()
+    except Exception as e:
+        logger.error('验证配置文件时出错: ' + repr(e))
+        if platform.system() == 'Windows':
+            os.system('pause')
+        sys.exit(2)
+        
     return cfg, args
 
 
