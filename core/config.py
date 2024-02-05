@@ -219,7 +219,7 @@ class Config(configparser.ConfigParser):
         norm_int(self)
         norm_tuples(self)
         norm_boolean(self)
-        validate_proxy(self)
+        # validate_proxy(self)
         norm_ignore_pattern(self)
         convert_naming_rule(self)
         validate_translation(self)
