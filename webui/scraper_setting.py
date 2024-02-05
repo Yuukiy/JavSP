@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+import platform
 import streamlit as st
 from threading import Thread
 from configparser import ConfigParser
@@ -133,6 +134,16 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
                     st.session_state.counter += 1
             settings[key] = mid_conf
     st.session_state.counter = 2
+
+
+def traversal_files(path, dirs, depth):
+    depth -= 1
+    for item in os.scandir(path):
+        if item.is_dir() and depth>0:
+            dirs.append(os.path.join(path,item))
+            traversal_files(item, dirs, depth)
+        else:
+            break
 
 
 class opened(object):
@@ -288,9 +299,19 @@ st.set_page_config(page_icon='', page_title='设置页')
 
 _ = """侧边栏参数设置菜单"""
 with st.sidebar:
+    
+
     with st.expander('基础配置',expanded=True):
-        scan_dir = st.text_input('扫描目录', settings['File']['scan_dir'], placeholder = '请输入要整理的文件夹位置')
-        output_folder = st.text_input('保存目录', settings['NamingRule']['output_folder'], placeholder = '最终文件的保存位置')
+        if platform.system() == 'Windows':
+            path = 'E:/整理'
+        else:
+            path = '/video'
+        dirs = []
+        depth = st.number_input('可选目录深度',0,10,3)
+        traversal_files(path, dirs, depth+1)
+
+        scan_dir = st.selectbox('扫描目录', dirs,)
+        output_folder = st.selectbox('保存目录', dirs)
         save_type = st.selectbox('保存方式',options_attribute['save_type'][2])
         media_servers = st.selectbox('媒体服务器',options_attribute['media_servers'][2])
 

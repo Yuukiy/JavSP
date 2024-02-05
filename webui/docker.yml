@@ -7,6 +7,8 @@ services:
       - PUID=${PUID}    # 替换或者删除
       - PGID=${PGID}    # 替换或者删除
       - TZ=${TZ}        # 替换或者删除
+    volumes:
+      - ${media_disk}/pool/video:/video 
     ports:
       - 8501:8501                              
     restart: always

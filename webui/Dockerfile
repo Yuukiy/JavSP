@@ -14,7 +14,7 @@ RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -U pip
 RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip3 install -r requirements.txt
 
-VOLUME /media
+VOLUME /video
 
 EXPOSE 8501
 
