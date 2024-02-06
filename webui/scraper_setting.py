@@ -347,7 +347,7 @@ submit = st.button('开始程序', type='primary', disabled=saved, use_container
 if submit:
     
     # 调用刮削程序
-    jsp_thread = Thread(scraper())
+    jsp_thread = Thread(target=scraper)
     add_script_run_ctx(jsp_thread)
     jsp_thread.start()
 
