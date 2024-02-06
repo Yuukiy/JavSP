@@ -175,7 +175,7 @@ def replace_illegal_chars(name):
         name = name.replace('/', '／')
     return name
 
-
+# TODO: 删掉这个函数，直接用 pathlib.Path(path).resolve() 获取真实地址来算长度就可以了
 def is_remote_drive(path: str):
     """判断一个路径是否为远程映射到本地"""
     #TODO: 当前仅支持Windows平台
