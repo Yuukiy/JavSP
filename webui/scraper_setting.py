@@ -122,16 +122,17 @@ def other_conf(settings:dict, attributes:dict, names:dict ,required_settings:lis
                             else:
                                 mid_conf[option] = st.multiselect(option_name, option_choices, option_choices)
                     else:
-                        if key == 'File':
+                        if option == 'scan_dir':
                             mid_conf[option] = scan_dir
-                        else:
-                            if option == 'media_servers':
-                                mid_conf[option] = media_servers
-                            elif option == 'save_type':
-                                mid_conf[option] = save_type
-                            elif option == 'output_folder':
-                                mid_conf[option] = output_folder
-
+                        elif option == 'dir_depth':
+                            mid_conf[option] = dir_depth
+                        elif option == 'media_servers':
+                            mid_conf[option] = media_servers
+                        elif option == 'save_type':
+                            mid_conf[option] = save_type
+                        elif option == 'output_folder':
+                            mid_conf[option] = output_folder
+                            
                     st.session_state.counter += 1
             settings[key] = mid_conf
     st.session_state.counter = 2
@@ -145,6 +146,16 @@ def traversal_files(path, dirs, depth):
             traversal_files(item, dirs, depth)
         else:
             break
+
+
+def saved_dir(value):
+    # 上次的扫描和保存目录
+    try:
+        dir = dirs.index(value)
+    except:
+        dir = None
+    
+    return dir
 
 
 class opened(object):
@@ -212,7 +223,6 @@ def process_dispaly():
     end_status = ''
     file_name = ''
     main_status = ''
-
     while True:
         if main_status != 'next':
             with opened(file) as fp:
@@ -288,7 +298,7 @@ def process_dispaly():
 _ = """获取/定义一些要用到的数据"""
 settings, options_attribute = get_configures()
 sections_name = {'MovieID': '番号正则', 'File': '文件识别', 'Network': '网络代理', 'CrawlerSelect': '爬虫列表', 'Crawler': '爬虫配置', 'ProxyFree': '免代理地址', 'NamingRule': '命名规则', 'Picture': '封面配置', 'Translate': '翻译配置', 'NFO': 'NFO配置', 'Other': '其他配置', 'OptionAttribute': '参数属性'}
-required_settings = ['scan_dir', 'output_folder', 'save_type', 'media_servers']
+required_settings = ['scan_dir', 'dir_depth', 'output_folder', 'save_type', 'media_servers']
 # 判断必要参数是否已保存到配置文件中，同时控制按钮状态
 saved = False if settings['File']['scan_dir'] != '' and settings['NamingRule']['output_folder']  != '' else True
 
@@ -306,11 +316,11 @@ with st.sidebar:
         else:
             path = '/video'
         dirs = []
-        depth = st.number_input('可选目录深度',0,10,1)
-        traversal_files(path, dirs, depth+1)
+        dir_depth = st.number_input('可选目录深度',0,10,int(settings['File']['dir_depth']))
+        traversal_files(path, dirs, dir_depth+1)
 
-        scan_dir = st.selectbox('扫描目录', dirs,)
-        output_folder = st.selectbox('保存目录', dirs)
+        scan_dir = st.selectbox('扫描目录', dirs, saved_dir(settings['File']['scan_dir']))
+        output_folder = st.selectbox('保存目录', dirs, saved_dir(settings['NamingRule']['output_folder']))
         save_type = st.selectbox('保存方式',options_attribute['save_type'][2])
         media_servers = st.selectbox('媒体服务器',options_attribute['media_servers'][2])
 
@@ -326,19 +336,21 @@ with st.sidebar:
         write_configures(settings)
         # 更新配置文件的状态，使主页面执行按钮可点击
         saved = False
+
         st.toast('保存成功', icon='😍')
 
 
 _ = """主页面"""
 
-cfg, args = conf()
-jsp_thread = Thread(target=scraper, args=[cfg, args])
-add_script_run_ctx(jsp_thread)
-
 submit = st.button('开始程序', type='primary', disabled=saved, use_container_width=True)
+
 if submit:
+    
     # 调用刮削程序
+    jsp_thread = Thread(scraper())
+    add_script_run_ctx(jsp_thread)
     jsp_thread.start()
 
     # 展示进度
     process_dispaly()
+    
