@@ -23,8 +23,8 @@ __all__ = ['cfg', 'args', 'is_url', 'conf']
 if getattr(sys, 'frozen', False):
     built_in_cfg_file = os.path.join(sys._MEIPASS, 'config.ini')
 # 调用者函数是threading时，从WebUi读取配置文件
-elif caller == 'threading':
-    built_in_cfg_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'webui\config.ini')
+elif caller == 'scraper_setting':
+    built_in_cfg_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'webui/config.ini')
 else:
     built_in_cfg_file = os.path.join(os.path.dirname(__file__), 'config.ini')
 
@@ -219,7 +219,7 @@ class Config(configparser.ConfigParser):
         norm_int(self)
         norm_tuples(self)
         norm_boolean(self)
-        # validate_proxy(self)
+        validate_proxy(self)
         norm_ignore_pattern(self)
         convert_naming_rule(self)
         validate_translation(self)
