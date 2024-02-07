@@ -1,6 +1,12 @@
 ![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/javsp_logo.png?raw=true)
 
-# Jav Scraper Package
+# JavSP Docker版配一个WebUI
+
+Demo如下：
+![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/screenshot.png.png?raw=true)
+
+非专业程序员，只是自己用用，有bug可以反馈，不保证解决
+
 
 **汇总多站点数据的AV元数据刮削器**
 
