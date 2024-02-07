@@ -1,9 +1,9 @@
-![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/javsp_logo.png?raw=true)
+![JavSP](https://github.com/tetato/JavSP-Docker/blob/master/image/javsp_logo.png?raw=true)
 
 # JavSP Docker WebUI
 
 Demo如下：
-![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/screenshot.png.png?raw=true)
+![JavSP](https://github.com/tetato/JavSP-Docker/blob/master/image/screenshot.png.png?raw=true)
 
 非专业程序员，只是自己用用，有bug可以反馈，不保证解决
 
