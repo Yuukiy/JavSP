@@ -4,11 +4,11 @@ services:
     image: javsp_image:latest
     container_name: javsp
     environment:
-      - PUID=${PUID}    # 替换或者删除
-      - PGID=${PGID}    # 替换或者删除
-      - TZ=${TZ}        # 替换或者删除
+      - PUID=${PUID}    # 填写自己要指定的，不指定可以删除
+      - PGID=${PGID}    # 填写自己要指定的，不指定可以删除
+      - TZ=${TZ}        # 填写自己要指定的，不指定可以删除
     volumes:
-      - ${media_disk}/pool/video:/video 
+      - ${media_disk}/pool/video:/video   # 映射存放影片的目录
     ports:
       - 8501:8501                              
     restart: always
