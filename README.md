@@ -1,6 +1,6 @@
 ![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/javsp_logo.png?raw=true)
 
-# JavSP Docker版配一个WebUI
+# JavSP Docker WebUI
 
 Demo如下：
 ![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/screenshot.png.png?raw=true)
