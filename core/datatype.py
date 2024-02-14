@@ -3,6 +3,7 @@ import os
 import csv
 import sys
 import json
+import shutil
 import logging
 from functools import cached_property
 
@@ -149,7 +150,7 @@ class Movie:
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
-            os.rename(src, abs_dst)
+            shutil.move(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
             logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
