@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import getpass
 import logging
 import argparse
 import configparser
@@ -75,7 +76,7 @@ class DetailedFormatter(logging.Formatter):
     def __init__(self, fmt='%(asctime)s %(name)s:%(lineno)d %(levelname)s: %(message)s',
                  datefmt='%Y-%m-%d %H:%M:%S', *args) -> None:
         super().__init__(fmt, datefmt, *args)
-        username = os.getlogin()
+        username = getpass.getuser()
         self.anonymize = re.compile(r'([\\/]*)' + re_escape(username) + '([\\/]*)', flags=re.I)
 
     def format(self, record):
