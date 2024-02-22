@@ -172,6 +172,8 @@ def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
     box = fit_crop_box((left2, top2, right2, bottom2), persons)
     # 裁剪图片
     im_poster = im.crop(box)
+    if im_poster.mode != 'RGB':
+        im_poster = im_poster.convert('RGB')
     im_poster.save(poster, quality=95)
     # 调试模式下显示图片结果和标注
     if globals().get('baidu_aip_debug'):
