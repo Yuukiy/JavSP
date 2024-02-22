@@ -36,6 +36,8 @@ def crop_poster(fanart_file, poster_file):
     # (left, upper, right, lower)
     box = (fanart_w-poster_w, 0, fanart_w, poster_h)
     poster = fanart.crop(box)
+    if poster.mode != 'RGB':
+        poster = poster.convert('RGB')
     # quality: from doc, default is 75, values above 95 should be avoided
     poster.save(poster_file, quality=95)
 
