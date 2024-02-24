@@ -86,7 +86,9 @@ def parse_data(movie: MovieInfo):
                 movie.url = d['url']
                 break
             except:
-                if id(d) == id(urls[-1]):
+                logger.debug(f"Fail to parse {d['url']}", exc_info=True)
+                if d is urls[-1]:
+                    logger.warning(f"在fanza查找到的cid={movie.cid}的影片页面均解析失败")
                     raise
     else:
         html = resp2html_wrapper(r0)
@@ -139,7 +141,7 @@ def parse_videoa_page(movie: MovieInfo, html):
             score = float(match.group()) * 2
             movie.score = f'{score:.2f}'
     else:
-        score_img = container.xpath("//td[@class='dcd-review__anchor_content']/img/@src")[0]
+        score_img = container.xpath("//td[text()='平均評価：']/following-sibling::td/img/@src")[0]
         movie.score = int(score_img.split('/')[-1].split('.')[0]) # 00, 05 ... 50
     
     if cfg.Crawler.hardworking_mode:
@@ -194,7 +196,7 @@ def parse_anime_page(movie: MovieInfo, html):
     cid = container.xpath("//td[text()='品番：']/following-sibling::td/text()")[0].strip()
     plot = container.xpath("//div[@class='mg-b20 lh4']/p")[0].text_content().strip()
     preview_pics = container.xpath("//a[@name='sample-image']/img/@src")
-    score_img = container.xpath("//td[@class='dcd-review__anchor_content']/img/@src")[0]
+    score_img = container.xpath("//td[text()='平均評価：']/following-sibling::td/img/@src")[0]
     score = int(score_img.split('/')[-1].split('.')[0]) # 00, 05 ... 50
 
     movie.cid = cid
@@ -220,7 +222,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo(cid='1stars931r')
+    movie = MovieInfo(cid='145tb017')
     try:
         parse_data(movie)
         print(movie)
