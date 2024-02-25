@@ -202,6 +202,14 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                 final_info.dvdid = final_id
             else:
                 final_info.cid = final_id
+    # javdb封面有水印，优先采用其他站点的封面
+    javdb_cover = getattr(all_info.get('javdb'), 'cover', None)
+    if javdb_cover is not None:
+        if cfg.Crawler.ignore_javdb_cover == 'auto':
+            covers.remove(javdb_cover)
+            covers.append(javdb_cover)
+        elif cfg.getboolean('Crawler', 'ignore_javdb_cover'):
+            covers.remove(javdb_cover)
     setattr(final_info, 'covers', covers)
     setattr(final_info, 'big_covers', big_covers)
     # 对cover和big_cover赋值，避免后续检查必须字段时出错
