@@ -13,7 +13,9 @@
   "ori_title": null,
   "magnet": null,
   "serial": "ラグジュTV",
-  "actress": "白咲りの",
+  "actress": [
+    "白咲りの"
+  ],
   "actress_pics": null,
   "director": null,
   "duration": null,

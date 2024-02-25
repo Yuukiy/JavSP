@@ -46,12 +46,15 @@ def parse_data(movie: MovieInfo):
     dt_txt_ls, dd_tags = info.xpath("dt/text()"), info.xpath("dd")
     data = {}
     for dt_txt, dd in zip(dt_txt_ls, dd_tags):
+        dt_txt = dt_txt.strip()
         a_tag = dd.xpath('a')
         if len(a_tag) == 0:
-            dd_txt = dd.text
+            dd_txt = dd.text.strip()
         else:
-            dd_txt = a_tag[0].text
-        data[dt_txt.strip()] = dd_txt.strip()
+            dd_txt = [i.text.strip() for i in a_tag]
+        if isinstance(dd_txt, list) and dt_txt != 'AV女優名':    # 只有女优名以列表的数据格式保留
+            dd_txt = dd_txt[0]
+        data[dt_txt] = dd_txt
 
     ATTR_MAP = {'メーカー': 'producer', 'AV女優名': 'actress', 'メーカー品番': 'dvdid', 'シリーズ': 'serial', '配信開始日': 'publish_date'}
     for key, attr in ATTR_MAP.items():

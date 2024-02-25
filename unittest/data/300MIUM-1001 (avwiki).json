@@ -13,7 +13,9 @@
   "ori_title": null,
   "magnet": null,
   "serial": "レンタル彼女",
-  "actress": "沙優七羽",
+  "actress": [
+    "沙優七羽"
+  ],
   "actress_pics": null,
   "director": null,
   "duration": null,
