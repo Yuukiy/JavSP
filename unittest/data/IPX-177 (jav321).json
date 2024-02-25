@@ -31,8 +31,12 @@
   "ori_title": null,
   "magnet": null,
   "serial": null,
-  "actress": [],
-  "actress_pics": {},
+  "actress": [
+    "相沢みなみ"
+  ],
+  "actress_pics": {
+    "相沢みなみ": "http://pics.dmm.co.jp/mono/actjpgs/aizawa_minami.jpg"
+  },
   "director": null,
   "duration": "170",
   "producer": "アイデアポケット",

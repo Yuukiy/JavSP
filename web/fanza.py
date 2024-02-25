@@ -37,7 +37,7 @@ def get_urls_of_cid(cid: str) -> Tuple[str, str]:
     if r.status_code == 404:
         raise MovieNotFoundError(__name__, cid)
     r.raise_for_status()
-    html = resp2html(r)
+    html = resp2html_wrapper(r)
     result = html.xpath("//ul[@id='list']/li/div/p/a/@href")
     parsed_result = {}
     for url in result:
