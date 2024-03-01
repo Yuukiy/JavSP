@@ -42,6 +42,22 @@ from web.base import download
 from web.exceptions import *
 from web.translate import translate_movie_info
 
+import json
+
+actressAliasMap = {}
+if cfg.NFO.fix_actress_name:
+    actressAliasFilePath = f"data/actress_alias.json"
+    with open(actressAliasFilePath, "r", encoding="utf-8") as file:
+        actressAliasMap = json.load(file)
+
+
+def resolve_alias(name):
+    """将别名解析为固定的名字"""
+    for fixedName, aliases in actressAliasMap.items():
+        if name in aliases:
+            return fixedName
+    return name  # 如果找不到别名对应的固定名字，则返回原名
+
 
 def import_crawlers(cfg):
     """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
@@ -229,7 +245,14 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     if cfg.Crawler.title__chinese_first and 'airav' in all_info:
         if all_info['airav'].title and final_info.title != all_info['airav'].title:
             final_info.ori_title = final_info.title
-            final_info.title = all_info['airav'].title
+
+    # 女优别名固定
+    if cfg.NFO.fix_actress_name:
+        final_info.actress = [resolve_alias(i) for i in final_info.actress]
+        final_info.actress_pics = {
+            resolve_alias(key): value for key, value in final_info.actress_pics.items()
+        }
+
     # 检查是否所有必需的字段都已经获得了值
     for attr in cfg.Crawler.required_keys:
         if not getattr(final_info, attr, None):
