@@ -214,11 +214,118 @@ def parse_clean_data(movie: MovieInfo):
         movie.genre_id = None   # 没有别的地方需要再用到，清空genre id（表明已经完成转换）
 
 
+def collect_actress_alias(type=0, use_original=True):
+    """
+    收集女优的别名
+    type: 0-有码, 1-无码, 2-欧美
+    use_original: 是否使用原名而非译名，True-田中レモン，False-田中檸檬
+    """
+    import json
+    import time
+    import random
+
+    actressAliasMap = {}
+
+    actressAliasFilePath = "data/actress_alias.json"
+    # 检查文件是否存在
+    if not os.path.exists(actressAliasFilePath):
+        # 如果文件不存在，创建文件并写入空字典
+        with open(actressAliasFilePath, "w", encoding="utf-8") as file:
+            json.dump({}, file)
+
+    typeList = ["censored", "uncensored", "western"]
+    page_url = f"{base_url}/actors/{typeList[type]}"
+    while True:
+        try:
+            html = get_html_wrapper(page_url)
+            actors = html.xpath("//div[@class='box actor-box']/a")
+
+            count = 0
+            for actor in actors:
+                count += 1
+                actor_name = actor.xpath("strong/text()")[0].strip()
+                actor_url = actor.xpath("@href")[0]
+                # actor_url = f"https://javdb.com{actor_url}"  # 构造演员主页的完整URL
+
+                # 进入演员主页，获取更多信息
+                actor_html = get_html_wrapper(actor_url)
+                # 解析演员所有名字信息
+                names_span = actor_html.xpath("//span[@class='actor-section-name']")[0]
+                aliases_span_list = actor_html.xpath("//span[@class='section-meta']")
+                aliases_span = aliases_span_list[0]
+
+                names_list = [name.strip() for name in names_span.text.split(",")]
+                if len(aliases_span_list) > 1:
+                    aliases_list = [
+                        alias.strip() for alias in aliases_span.text.split(",")
+                    ]
+                else:
+                    aliases_list = []
+
+                # 将信息添加到actressAliasMap中
+                actressAliasMap[names_list[-1 if use_original else 0]] = (
+                    names_list + aliases_list
+                )
+                print(
+                    f"{count} --- {names_list[-1 if use_original else 0]}: {names_list + aliases_list}"
+                )
+
+                if count == 10:
+                    # 将数据写回文件
+                    with open(actressAliasFilePath, "r", encoding="utf-8") as file:
+                        existing_data = json.load(file)
+
+                    # 合并现有数据和新爬取的数据
+                    existing_data.update(actressAliasMap)
+
+                    # 将合并后的数据写回文件
+                    with open(actressAliasFilePath, "w", encoding="utf-8") as file:
+                        json.dump(existing_data, file, ensure_ascii=False, indent=2)
+
+                    actressAliasMap = {}  # 重置actressAliasMap
+
+                    print(
+                        f"已爬取 {count} 个女优，数据已更新并写回文件:",
+                        actressAliasFilePath,
+                    )
+
+                    # 重置计数器
+                    count = 0
+
+                time.sleep(max(1, 10 * random.random()))  # 随机等待 1-10 秒
+
+            # 判断是否有下一页按钮
+            next_page_link = html.xpath(
+                "//a[@rel='next' and @class='pagination-next']/@href"
+            )
+            if not next_page_link:
+                break  # 没有下一页，结束循环
+            else:
+                next_page_url = f"{next_page_link[0]}"
+                page_url = next_page_url
+
+        except SiteBlocked:
+            raise
+
+    with open(actressAliasFilePath, "r", encoding="utf-8") as file:
+        existing_data = json.load(file)
+
+    # 合并现有数据和新爬取的数据
+    existing_data.update(actressAliasMap)
+
+    # 将合并后的数据写回文件
+    with open(actressAliasFilePath, "w", encoding="utf-8") as file:
+        json.dump(existing_data, file, ensure_ascii=False, indent=2)
+
+    print(f"已爬取 {count} 个女优，数据已更新并写回文件:", actressAliasFilePath)
+
+
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
+    # collect_actress_alias()
     movie = MovieInfo('JUQ-471')
     try:
         parse_clean_data(movie)
