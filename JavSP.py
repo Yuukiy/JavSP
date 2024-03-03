@@ -247,11 +247,12 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
             final_info.ori_title = final_info.title
 
     # 女优别名固定
-    if cfg.NFO.fix_actress_name:
+    if cfg.NFO.fix_actress_name and final_info.actress is not None:
         final_info.actress = [resolve_alias(i) for i in final_info.actress]
-        final_info.actress_pics = {
-            resolve_alias(key): value for key, value in final_info.actress_pics.items()
-        }
+        if final_info.actress_pics != None:
+            final_info.actress_pics = {
+                resolve_alias(key): value for key, value in final_info.actress_pics.items()
+            }
 
     # 检查是否所有必需的字段都已经获得了值
     for attr in cfg.Crawler.required_keys:
@@ -455,7 +456,9 @@ def RunNormalMode(all_movies):
             check_step(all_info, msg)
 
             inner_bar.set_description('汇总数据')
+            logger.info(f"bro2{movie}{all_info}")
             has_required_keys = info_summary(movie, all_info)
+            logger.info("bro3")
             check_step(has_required_keys)
 
             if cfg.Translate.engine:
