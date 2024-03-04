@@ -34,6 +34,11 @@ def get_id(filepath: str) -> str:
         match = re.search(r'gyutto-(\d+)', filename, re.I)
         if match:
             return 'GYUTTO-' + match.group(1)
+    elif '259luxu' in filename_lc: # special case having form of '259luxu'
+        match = re.search(r'259luxu-(\d+)', filename, re.I)
+        if match:
+            return '259LUXU-' + match.group(1)
+
     else:
         # 先尝试移除可疑域名进行匹配，如果匹配不到再使用原始文件名进行匹配
         no_domain = re.sub(r'\w{3,10}\.(com|net|app|xyz)', '', filename, flags=re.I)
