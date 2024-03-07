@@ -249,9 +249,10 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # 女优别名固定
     if cfg.NFO.fix_actress_name and bool(final_info.actress_pics):
         final_info.actress = [resolve_alias(i) for i in final_info.actress]
-        final_info.actress_pics = {
-            resolve_alias(key): value for key, value in final_info.actress_pics.items()
-        }
+        if final_info.actress_pics:
+            final_info.actress_pics = {
+                resolve_alias(key): value for key, value in final_info.actress_pics.items()
+            }
 
     # 检查是否所有必需的字段都已经获得了值
     for attr in cfg.Crawler.required_keys:
