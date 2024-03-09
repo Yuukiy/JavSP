@@ -1,6 +1,6 @@
 #!/usr/bin/env bash 
 
-set +x
+set -x
 
 if [[ "$VIRTUAL_ENV" == "" ]]
 then
