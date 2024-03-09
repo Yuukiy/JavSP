@@ -2,14 +2,14 @@
 
 set -x
 
-if [[ "$VIRTUAL_ENV" == "" ]]
-then
-  source venv/bin/activate
-fi
+python -m venv venv
+source ./venv/bin/activate
+pip install pyinstaller
+pip install -r ./requirements.txt
 
 echo "JavSP version: "
 python ./make/gen_ver_hook.py ver_hook.py
 pyinstaller --clean ./make/linux.spec
 rm ver_hook.py
-rm dist/config.ini 2> null
-cp -r ./data ./build
+rm dist/config.ini 2> /dev/null
+cp -r ./data ./dist

@@ -19,5 +19,5 @@ IF EXIST %ps_script% (
 	del %ps_script%
 )
 del ver_hook.py
-del dist\config.ini 2>nul
+del dist\config.ini 2>/dev/null
 rmdir /s /q build
