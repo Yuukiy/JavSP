@@ -4,8 +4,8 @@ set -x
 
 python -m venv venv
 source ./venv/bin/activate
-pip install pyinstaller
 pip install -r ./requirements.txt
+pip install pyinstaller
 
 echo "JavSP version: "
 python ./make/gen_ver_hook.py ver_hook.py
