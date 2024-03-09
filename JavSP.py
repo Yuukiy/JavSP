@@ -21,7 +21,6 @@ pretty_errors.configure(display_link=True)
 
 
 from core.print import TqdmOut
-from core.baidu_aip import aip_crop_poster
 
 
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
@@ -422,8 +421,17 @@ def reviewMovieID(all_movies, root):
 def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
     """包装各种海报裁剪方法，提供统一的调用"""
     if method == 'baidu':
+        from core.ai_crop.baidu_aip import aip_crop_poster
         try:
             aip_crop_poster(fanart_file, poster_file)
+        except Exception as e:
+            logger.debug('人脸识别失败，回退到常规裁剪方法')
+            logger.debug(e, exc_info=True)
+            crop_poster(fanart_file, poster_file)
+    elif method == 'retina':
+        from core.ai_crop.retina import ai_crop_poster
+        try:
+            ai_crop_poster(fanart_file, poster_file)
         except Exception as e:
             logger.debug('人脸识别失败，回退到常规裁剪方法')
             logger.debug(e, exc_info=True)

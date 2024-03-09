@@ -341,6 +341,8 @@ def validate_ai_config(cfg: Config):
         empty_keys = [i for i in required_keys if not piccfg[i]]
         if empty_keys:
             logger.error('使用百度人体分析时，相关设置不能为空: ' + ', '.join(empty_keys))
+    elif piccfg.ai_engine.lower() == 'retina':
+        piccfg.ai_engine = 'retina'
     else:
         logger.error('不支持的图像识别引擎: ' + piccfg.ai_engine)
 
