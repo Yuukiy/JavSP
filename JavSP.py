@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import json
 import time
 import logging
 import requests
@@ -32,6 +33,7 @@ for handler in root_logger.handlers:
 logger = logging.getLogger('main')
 
 
+from core.lib import mei_path
 from core.nfo import write_nfo
 from core.config import cfg, args
 from core.file import *
@@ -42,11 +44,9 @@ from web.base import download
 from web.exceptions import *
 from web.translate import translate_movie_info
 
-import json
-
 actressAliasMap = {}
 if cfg.NFO.fix_actress_name:
-    actressAliasFilePath = f"data/actress_alias.json"
+    actressAliasFilePath = mei_path("data/actress_alias.json")
     with open(actressAliasFilePath, "r", encoding="utf-8") as file:
         actressAliasMap = json.load(file)
 
@@ -247,7 +247,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
             final_info.ori_title = final_info.title
 
     # 女优别名固定
-    if cfg.NFO.fix_actress_name:
+    if cfg.NFO.fix_actress_name and bool(final_info.actress_pics):
         final_info.actress = [resolve_alias(i) for i in final_info.actress]
         final_info.actress_pics = {
             resolve_alias(key): value for key, value in final_info.actress_pics.items()
