@@ -580,7 +580,7 @@ def sys_exit(code):
     # 脚本退出机制：检查是否需要关机 → 若不需要，检查是否需要保持当前窗口
     if args.shutdown:
         shutdown()
-    elif not args.auto_exit:
+    elif not (args.auto_exit or cfg.Other.auto_exit):
         os.system('pause')
     # 最后传退出码退出
     sys.exit(code)
