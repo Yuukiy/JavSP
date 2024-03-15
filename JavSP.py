@@ -418,7 +418,7 @@ def reviewMovieID(all_movies, root):
         print()
 
 
-def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
+def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False):
     """包装各种海报裁剪方法，提供统一的调用"""
     if method == 'baidu':
         from core.ai_crop.baidu_aip import aip_crop_poster
@@ -438,6 +438,10 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal'):
             crop_poster(fanart_file, poster_file)
     else:
         crop_poster(fanart_file, poster_file)
+    if hard_sub == True:
+        dir_name, file_name = os.path.split(os.path.abspath(__file__))
+        sub_mark_file = os.path.join(dir_name, 'image', 'sub_mark.png')
+        poster_sub_mark(poster_file, sub_mark_file)
 
 
 def RunNormalMode(all_movies):
@@ -503,7 +507,7 @@ def RunNormalMode(all_movies):
             else:
                 inner_bar.set_description('裁剪海报封面')
                 method = 'normal'
-            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method)
+            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method, movie.hard_sub)
             check_step(True)
 
             if 'video_station' in cfg.NamingRule.media_servers:
