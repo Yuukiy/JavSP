@@ -1,5 +1,6 @@
 """从dl.getchu官网抓取数据"""
 import os
+import re
 import sys
 import logging
 
@@ -23,10 +24,8 @@ def get_movie_title(html):
     rows = container.xpath('.//tr')
     title = ''
     for row in rows:
-        cell_texts = []
         for cell in row.xpath('.//td/div'):
             # 获取单元格文本内容
-            cell_text = None
             if cell.text:
                 title = str(cell.text).strip()
     return title
@@ -50,6 +49,7 @@ def get_movie_preview(html, getchu_id):
     return preview_pics
 
 
+DURATION_PATTERN = re.compile(r'(?:動画)?(\d+)分')
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # 去除番号中的'GETCHU'字样
@@ -80,36 +80,35 @@ def parse_data(movie: MovieInfo):
         else:
             # 获取第2个td标签的内容（下标从1开始计数）
             value = row.xpath("td[2]/text()")
-            if len(value) > 0:
-                value = value[0].strip()
         data[key] = value
 
     for key, value in data.items():
         if key == 'サークル':
-            producer = value[0]
+            movie.producer = value[0]
         elif key == '作者':
             # 暂时没有在getchu找到多个actress的片子
-            actress = [value]
+            movie.actress = [i.strip() for i in value]
         elif key == '画像数&ページ数':
-            duration = value.replace('分', '')
+            match = DURATION_PATTERN.search(' '.join(value))
+            if match:
+                movie.duration = match.group(1)
         elif key == '配信開始日':
-            publish_date = value.replace('/', '-')
+            movie.publish_date = value[0].replace('/', '-')
         elif key == '趣向':
-            genre = value
+            movie.genre = value
         elif key == '作品内容':
-            plot = value
+            idx = -1
+            for i, line in enumerate(value):
+                if line.lstrip().startswith('※'):
+                    idx = i
+                    break
+            movie.plot = ''.join(value[:idx])
 
     movie.title = get_movie_title(html)
     movie.cover = get_movie_img(html, getchu_id)
     movie.preview_pics = get_movie_preview(html, getchu_id)
     movie.dvdid = id_uc
     movie.url = url
-    movie.producer = producer
-    movie.actress = actress
-    movie.duration = duration
-    movie.publish_date = publish_date
-    movie.genre = genre
-    movie.plot = plot
 
 
 if __name__ == "__main__":
@@ -118,7 +117,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('getchu-4053720')
+    movie = MovieInfo('getchu-4041026')
     try:
         parse_data(movie)
         print(movie)
