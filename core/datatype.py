@@ -158,6 +158,7 @@ class Movie:
             filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
 
         new_paths = []
+        dir = os.path.dirname(self.files[0])
         if len(self.files) == 1:
             fullpath = self.files[0]
             ext = os.path.splitext(fullpath)[1]
@@ -171,6 +172,9 @@ class Movie:
                 move_file(fullpath, newpath)
                 new_paths.append(newpath)
         self.new_paths = new_paths
+        if len(os.listdir(dir)) == 0:
+            #如果移动文件后目录为空则删除该目录
+            os.rmdir(dir)
 
 
 class GenreMap(dict):
