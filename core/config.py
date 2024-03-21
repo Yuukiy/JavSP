@@ -397,6 +397,9 @@ def parse_args():
                         help="由用户介入番号识别过程，可选值为：\n'all': 检查所有番号\n'failed': 仅检查无法识别的番号（默认）")
     parser.add_argument('-e', '--auto-exit', action='store_true', help='运行结束后自动退出')
     parser.add_argument('-s', '--shutdown', action='store_true', help='整理完成后关机')
+    parser.add_argument('--data-cache-file', help='存储数据的缓存文件，临时文件，供进程间通信使用')
+    parser.add_argument('--only-scan', action='store_true', help='仅识别，不刮削')
+    parser.add_argument('--only-fetch', action='store_true', help='仅刮削data-cache-file缓存文件中的数据')
     # 忽略无法识别的参数，避免传入供pytest使用的参数时报错
     args, unknown = parser.parse_known_args()
 
@@ -431,6 +434,8 @@ def parse_args():
         msg = f"{parser.prog}: error: argument -m/--manual: invalid choice: '{args.manual}' (choose from 'all', 'failed' or leave it empty)"
         # 使用SystemExit异常以避免显示traceback信息
         raise SystemExit(msg)
+    if (args.only_scan == True or args.only_fetch == True) and args.data_cache_file == None:
+        raise SystemExit("当仅刮削或者仅识别时，必须传入缓存文件路径")
     args.config = cfg_file
     return args
 
@@ -453,6 +458,9 @@ def overwrite_cfg(cfg, args):
         cfg.File.scan_dir = args.input
     if args.output:
         cfg.NamingRule.output_folder = args.output
+    if args.only_fetch == True:
+        # 如果仅刮削，则不会整理文件
+        cfg.File.enable_file_move = 'no'
 
 
 cfg = Config()
