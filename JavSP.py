@@ -626,7 +626,7 @@ if __name__ == "__main__":
     os.chdir(root)
 
     print(f'扫描影片文件...')
-    recognized = scan_movies(root)
+    recognized = scan_movies(root, args.only_scan, args.data_cache_file)
     movie_count = len(recognized)
     # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
     if args.manual:
@@ -639,7 +639,9 @@ if __name__ == "__main__":
         recognize_fail = []
     error_exit(movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    print('')
+    if args.only_scan == True:
+        #仅识别，不刮削
+        sys_exit(0)
 
     if args.manual == 'all':
         reviewMovieID(recognized, root)
