@@ -297,7 +297,7 @@ def generate_names(movie: Movie):
     # 生成nfo文件中的影片标题
     nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
     setattr(info, 'nfo_title', nfo_title)
-
+    
     # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
     cdx = '' if len(movie.files) <= 1 else '-CD1'
     if hasattr(info, 'title_break'):
@@ -315,8 +315,15 @@ def generate_names(movie: Movie):
         copyd['rawtitle'] = replace_illegal_chars(''.join(ori_title_break[:end]).strip())
         for sub_end in range(len(title_break), 0, -1):
             copyd['title'] = replace_illegal_chars(''.join(title_break[:sub_end]).strip())
-            save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
-            basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd).strip())
+            # 如果不整理文件，则保存抓取的数据到当前目录
+            if cfg.File.enable_file_move is False:
+                save_dir = os.path.dirname(movie.files[0])
+                filebasename = os.path.basename(movie.files[0])
+                ext = os.path.splitext(filebasename)[1]
+                basename = filebasename.replace(ext, '')
+            else:
+                save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+                basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd).strip())
             if 'universal' in cfg.NamingRule.media_servers:
                 long_path = os.path.join(save_dir, basename+longest_ext)
             else:
@@ -347,9 +354,17 @@ def generate_names(movie: Movie):
             logger.error("命名规则导致标题被截断至空，请增大'max_path_len'或减小'max_actress_count'配置项后重试")
             logger.debug((d, templates, cfg.NamingRule.max_path_len))
             return
-        save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+        # 如果不整理文件，则保存抓取的数据到当前目录
+        if cfg.File.enable_file_move is False:
+            save_dir = os.path.dirname(movie.files[0])
+            filebasename = os.path.basename(movie.files[0])
+            ext = os.path.splitext(filebasename)[1]
+            basename = filebasename.replace(ext, '')
+        else:
+            save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
+            basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd)).strip()
         movie.save_dir = save_dir
-        movie.basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd)).strip()
+        movie.basename = basename
         if 'universal' in cfg.NamingRule.media_servers:
             movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
             movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
@@ -380,6 +395,8 @@ def postStep_MultiMoviePoster(movie: Movie):
     """为多分片的影片创建额外的poster图片"""
     # Jellyfin将多分片影片视作CD1的附加部分，nfo文件名、fanart均使用的CD1的文件名，
     # 只有poster是为各个分片创建的
+    # Jellyfin 10.8.9版本, 经测试分片可以自动使用poster.jpg，不必为每个分片创建单独的poster
+    return
     for i, _ in enumerate(movie.files[1:], start=2):
         cdx_poster = os.path.join(movie.save_dir, f'{movie.basename}-CD{i}-poster.jpg')
         copyfile(movie.poster_file, cdx_poster)
@@ -518,12 +535,13 @@ def RunNormalMode(all_movies):
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
             check_step(True)
-
-            inner_bar.set_description('移动影片文件')
-            movie.rename_files()
-            check_step(True)
-
-            logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+            if cfg.File.enable_file_move:
+                inner_bar.set_description('移动影片文件')
+                movie.rename_files()
+                check_step(True)
+                logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
+            else:
+                logger.info(f'刮削完成，相关文件已保存到: {movie.nfo_file}\n')
 
             if movie != all_movies[-1] and cfg.Crawler.sleep_after_scraping > 0:
                 time.sleep(cfg.Crawler.sleep_after_scraping)
