@@ -147,7 +147,7 @@ def scan_movies(root: str, only_scan = False, data_cache_file = "") -> List[Movi
         logger.debug(f'影片数据源类型: {avid}: {src}')
         movies.append(mov)
     if only_scan:
-        # 仅识别，则将结果转json存入缓存文件
+        # 仅识别，将结果转json存入缓存文件
         store_movies = []
         for m in movies:
             store_movies.append(m.__dict__)

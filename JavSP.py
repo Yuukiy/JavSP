@@ -607,6 +607,22 @@ def sys_exit(code):
     # 最后传退出码退出
     sys.exit(code)
 
+def only_fetch():
+    # 1. 读取缓存文件
+    movie_list: List[dict] = []
+    movies: List[Movie] = []
+    with open(args.data_cache_file) as f:
+        movie_list = json.load(f)
+    # 2. 重新实例化Movie
+    if len(movie_list) == 0:
+        return 0
+    for mov in movie_list:
+        movie = Movie(mov['dvdid'])
+        for k, v in mov.items():
+            setattr(movie, k, v)
+        movies.append(movie)
+    RunNormalMode(movies)
+    return 0
 
 if __name__ == "__main__":
     colorama.init(autoreset=True)
@@ -624,6 +640,10 @@ if __name__ == "__main__":
     # 导入抓取器，必须在chdir之前
     import_crawlers(cfg)
     os.chdir(root)
+
+    if args.only_fetch == True:
+        #仅刮削
+        sys_exit(only_fetch())
 
     print(f'扫描影片文件...')
     recognized = scan_movies(root, args.only_scan, args.data_cache_file)
