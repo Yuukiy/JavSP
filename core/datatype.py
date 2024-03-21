@@ -116,6 +116,7 @@ class Movie:
         self.nfo_file = None            # nfo文件的路径
         self.fanart_file = None         # fanart文件的路径
         self.poster_file = None         # poster文件的路径
+        self.guid = None                # GUI使用的唯一标识，通过dvdid和files做md5生成
 
     @cached_property
     def hard_sub(self) -> bool:
