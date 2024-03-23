@@ -472,6 +472,7 @@ def RunNormalMode(all_movies):
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     total_step = 7 if cfg.Translate.engine else 6
+    return_movies = []
     for movie in outer_bar:
         try:
             # 初始化本次循环要整理影片任务
@@ -545,12 +546,13 @@ def RunNormalMode(all_movies):
 
             if movie != all_movies[-1] and cfg.Crawler.sleep_after_scraping > 0:
                 time.sleep(cfg.Crawler.sleep_after_scraping)
-
+            return_movies.append(movie)
         except Exception as e:
             logger.debug(e, exc_info=True)
             logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
+    return return_movies
 
 
 def download_cover(covers, fanart_path, big_covers=[]):
@@ -611,7 +613,7 @@ def only_fetch():
     # 1. 读取缓存文件
     movie_list: List[dict] = []
     movies: List[Movie] = []
-    with open(args.data_cache_file) as f:
+    with open(args.data_cache_file, encoding='utf-8') as f:
         movie_list = json.load(f)
     # 2. 重新实例化Movie
     if len(movie_list) == 0:
@@ -621,12 +623,14 @@ def only_fetch():
         for k, v in mov.items():
             setattr(movie, k, v)
         movies.append(movie)
-    RunNormalMode(movies)
+    rmovies = RunNormalMode(movies)
     # 将数据回写到缓存文件
     store_movies = []
-    for m in movies:
-        store_movies.append(m.__dict__)
-    json_str = json.dumps(store_movies)
+    for m in rmovies:
+        d = m.__dict__
+        d['info'] = {'title': m.info.title}
+        store_movies.append(d)
+    json_str = json.dumps(store_movies, ensure_ascii=False)
     # 打开文件进行写入
     with open(args.data_cache_file, 'w', encoding='utf-8') as file:
         file.write(json_str)  # 将数据写入文件
