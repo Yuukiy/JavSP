@@ -622,6 +622,14 @@ def only_fetch():
             setattr(movie, k, v)
         movies.append(movie)
     RunNormalMode(movies)
+    # 将数据回写到缓存文件
+    store_movies = []
+    for m in movies:
+        store_movies.append(m.__dict__)
+    json_str = json.dumps(store_movies)
+    # 打开文件进行写入
+    with open(args.data_cache_file, 'w', encoding='utf-8') as file:
+        file.write(json_str)  # 将数据写入文件
     return 0
 
 if __name__ == "__main__":
