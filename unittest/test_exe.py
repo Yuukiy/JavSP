@@ -16,14 +16,14 @@ def test_javsp_exe():
 
     size = cfg.File.ignore_video_file_less_than
     tmp_folder = 'TMP_' + ''.join(random.choices(string.ascii_uppercase, k=6))
-    FILE = 'ABP-647.f4v'
+    FILE = 'VENX-247-uncensored-nyap2p.com.f4v'
     try:
         os.system(f"fsutil file createnew {FILE} {size}")
         exit_code = os.system(f"JavSP.exe --auto-exit --input . --output {tmp_folder}")
         assert exit_code == 0, f"Non-zero exit code: {exit_code}"
         # Check generated files
         files = glob(tmp_folder + '/**/*.*', recursive=True)
-        assert all('瀬名きらり' in i for i in files), "Actress name not found"
+        assert all('有棲舞衣' in i for i in files), "Actress name not found"
         assert any(i.endswith('fanart.jpg') for i in files), "fanart not found"
         assert any(i.endswith('poster.jpg') for i in files), "poster not found"
         assert any(i.endswith('.f4v') for i in files), "video file not found"
