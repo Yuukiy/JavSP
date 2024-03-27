@@ -5,8 +5,10 @@ import sys
 import ctypes
 import logging
 import itertools
+import json
 from sys import platform
 from typing import List
+
 
 __all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_illegal_chars', 'get_failed_when_scan', 'find_subtitle_in_dir']
 
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 failed_items = []
 
 
-def scan_movies(root: str) -> List[Movie]:
+def scan_movies(root: str, only_scan = False, data_cache_file = "") -> List[Movie]:
     """获取文件夹内的所有影片的列表（自动探测同一文件夹内的分片）"""
     # 由于实现的限制: 
     # 1. 以数字编号最多支持10个分片，字母编号最多支持26个分片
@@ -131,7 +133,7 @@ def scan_movies(root: str) -> List[Movie]:
     if msg:
         logger.error("下列番号对应多部影片文件且不符合分片规则，已略过整理，请手动处理后重新运行脚本: \n" + msg)
     # 转换数据的组织格式
-    movies = []
+    movies: List[Movie] = []
     for avid, files in dic.items():
         src = guess_av_type(avid)
         if src != 'cid':
@@ -144,6 +146,17 @@ def scan_movies(root: str) -> List[Movie]:
         mov.data_src = src
         logger.debug(f'影片数据源类型: {avid}: {src}')
         movies.append(mov)
+    if only_scan:
+        # 仅识别，将结果转json存入缓存文件
+        store_movies = []
+        for m in movies:
+            store_movies.append(m.__dict__)
+        for m in failed_items:
+            store_movies.append(m.__dict__)
+        json_str = json.dumps(store_movies)
+        # 打开文件进行写入
+        with open(data_cache_file, 'w', encoding='utf-8') as file:
+            file.write(json_str)  # 将数据写入文件
     return movies
 
 
