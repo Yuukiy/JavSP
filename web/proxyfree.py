@@ -62,7 +62,7 @@ def _get_javlib_urls() -> list:
 
 
 def _get_javdb_urls() -> list:
-    html = get_html('https://jav523.app')
+    html = get_html('https://jav524.app')
     js_links = html.xpath("//script[@src]/@src")
     for link in js_links:
         if '/js/index' in link:
