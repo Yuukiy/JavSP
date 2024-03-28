@@ -59,7 +59,7 @@ def detect_special_attr(filepath: str, avid: str = None) -> str:
     if postfix in ('U', 'C', 'UC'):
         result += postfix
     elif avid:
-        pattern_str = re.sub(r'[_-]', '[_-]*', avid) + '(UC|U|C)'
+        pattern_str = re.sub(r'[_-]', '[_-]*', avid) + '[_-]*(UC|U|C)'
         match = re.search(pattern_str, base, flags=re.I)
         if match:
             result += match.group(1)
