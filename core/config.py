@@ -266,7 +266,8 @@ def norm_boolean(cfg: Config):
             ('Picture', 'use_ai_crop'),
             ('NFO', 'add_genre_to_tag'),
             ('Other', 'check_update'),
-            ('Other', 'auto_update')
+            ('Other', 'auto_update'),
+            ('File', 'enable_file_move'),
         ]:
         cfg._sections[sec][key] = cfg.getboolean(sec, key)
     # 特殊转换
