@@ -43,10 +43,12 @@ class Request():
             self.scraper = None
             self.__get = requests.get
             self.__post = requests.post
+            self.__head = requests.head
         else:
             self.scraper = cloudscraper.create_scraper()
             self.__get = self._scraper_monitor(self.scraper.get)
             self.__post = self._scraper_monitor(self.scraper.post)
+            self.__head = self._scraper_monitor(self.scraper.head)
 
     def _scraper_monitor(self, func):
         """监控cloudscraper的工作状态，遇到不支持的Challenge时尝试退回常规的requests请求"""
@@ -74,6 +76,16 @@ class Request():
     def post(self, url, data, delay_raise=False):
         r = self.__post(url,
                       data=data,
+                      headers=self.headers,
+                      proxies=self.proxies,
+                      cookies=self.cookies,
+                      timeout=self.timeout)
+        if not delay_raise:
+            r.raise_for_status()
+        return r
+
+    def head(self, url, delay_raise=True):
+        r = self.__head(url,
                       headers=self.headers,
                       proxies=self.proxies,
                       cookies=self.cookies,

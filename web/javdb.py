@@ -206,6 +206,11 @@ def parse_clean_data(movie: MovieInfo):
     """解析指定番号的影片数据并进行清洗"""
     try:
         parse_data(movie)
+        # 检查封面URL是否真的存在对应图片
+        if movie.cover is not None:
+            r = request.head(movie.cover)
+            if r.status_code != 200:
+                movie.cover = None
     except SiteBlocked:
         raise
         logger.error('JavDB: 可能触发了反爬虫机制，请稍后再试')
@@ -326,7 +331,7 @@ if __name__ == "__main__":
     logger.root.handlers[1].level = logging.DEBUG
 
     # collect_actress_alias()
-    movie = MovieInfo('JUQ-471')
+    movie = MovieInfo('FC2-2735981')
     try:
         parse_clean_data(movie)
         print(movie)
