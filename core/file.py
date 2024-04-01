@@ -165,6 +165,7 @@ def get_failed_when_scan():
     return failed_items
 
 
+_PARDIR_REPLACE = re.compile(r'\.{2,}')
 def replace_illegal_chars(name):
     """将不能用于文件名的字符替换为形近的字符"""
     # 非法字符列表 https://stackoverflow.com/a/31976060/6415337
@@ -185,6 +186,9 @@ def replace_illegal_chars(name):
         name = name.replace(':', '：')
     else:   # 其余都当做Linux处理
         name = name.replace('/', '／')
+    # 处理连续多个英文句点.
+    if os.pardir in name:
+        name = _PARDIR_REPLACE.sub('…', name)
     return name
 
 
