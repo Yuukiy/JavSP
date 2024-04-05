@@ -4,7 +4,7 @@ import logging
 from PIL import Image, ImageOps
 
 
-__all__ = ['valid_pic', 'crop_poster', 'get_pic_size', 'poster_sub_mark']
+__all__ = ['valid_pic', 'crop_poster', 'get_pic_size', 'add_label_to_poster']
 
 logger = logging.getLogger(__name__)
 
@@ -41,14 +41,16 @@ def crop_poster(fanart_file, poster_file):
     # quality: from doc, default is 75, values above 95 should be avoided
     poster.save(poster_file, quality=95)
 
-def poster_sub_mark(poster_file, sub_mark_file):
-    """向poster中添加字幕水印"""
+
+def add_label_to_poster(poster_file, mark_pic_file):
+    """向poster中添加标签(水印)"""
     poster = Image.open(poster_file)
-    sub_mark_img = Image.open(sub_mark_file).convert('RGBA')
-    r,g,b,a = sub_mark_img.split()
-    box = (poster.size[0] - sub_mark_img.size[0], poster.size[1] - sub_mark_img.size[1])
-    poster.paste(sub_mark_img, box=box, mask=a)
+    mark_img = Image.open(mark_pic_file).convert('RGBA')
+    r,g,b,a = mark_img.split()
+    box = (poster.size[0] - mark_img.size[0], poster.size[1] - mark_img.size[1])
+    poster.paste(mark_img, box=box, mask=a)
     poster.save(poster_file, quality=95)
+
 
 def get_pic_size(pic_path):
     """获取图片文件的分辨率"""

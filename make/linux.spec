@@ -25,6 +25,7 @@ a = Analysis(['../JavSP.py'],
                  (cloudscraper_json, 'cloudscraper/user_agent'),
                  ("../core/config.ini", "."),
                  ("../data/*.*", "data"),
+                 ("../image/sub_mark.png", "image"),
                  (ico_file, "image")
              ],
              hiddenimports=all_crawlers,

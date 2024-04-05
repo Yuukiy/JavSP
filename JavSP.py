@@ -435,6 +435,7 @@ def reviewMovieID(all_movies, root):
         print()
 
 
+SUBTITLE_MARK_FILE = os.path.abspath(mei_path('image/sub_mark.png'))
 def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False):
     """包装各种海报裁剪方法，提供统一的调用"""
     if method == 'baidu':
@@ -455,10 +456,9 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=Fals
             crop_poster(fanart_file, poster_file)
     else:
         crop_poster(fanart_file, poster_file)
-    if hard_sub == True:
-        dir_name, file_name = os.path.split(os.path.abspath(__file__))
-        sub_mark_file = os.path.join(dir_name, 'image', 'sub_mark.png')
-        poster_sub_mark(poster_file, sub_mark_file)
+    if cfg.Picture.add_label_to_cover:
+        if hard_sub == True:
+            add_label_to_poster(poster_file, SUBTITLE_MARK_FILE)
 
 
 def RunNormalMode(all_movies):
