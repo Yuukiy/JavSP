@@ -151,6 +151,9 @@ class Movie:
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
+            # shutil.move might overwrite dst file
+            if os.path.exists(abs_dst):
+                raise FileExistsError(f'File exists: {abs_dst}')
             shutil.move(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
