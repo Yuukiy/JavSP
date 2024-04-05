@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.lib import * 
@@ -23,3 +22,5 @@ def test_detect_special_attr():
     assert run('STARS225u.mp4', 'STARS-225') == 'U'
     assert run('STARS225C.mp4', 'STARS-225') == 'C'
     assert run('STARS225uC.mp4', 'STARS-225') == 'UC'
+    assert run('STARS-225CD1.mp4', 'STARS-225') == ''
+    assert run('stars225cd2.mp4', 'STARS-225') == ''

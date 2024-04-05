@@ -59,7 +59,7 @@ def detect_special_attr(filepath: str, avid: str = None) -> str:
     if postfix in ('U', 'C', 'UC'):
         result += postfix
     elif avid:
-        pattern_str = re.sub(r'[_-]', '[_-]*', avid) + '(UC|U|C)'
+        pattern_str = re.sub(r'[_-]', '[_-]*', avid) + r'(UC|U|C)\b'
         match = re.search(pattern_str, base, flags=re.I)
         if match:
             result += match.group(1)
@@ -69,4 +69,4 @@ def detect_special_attr(filepath: str, avid: str = None) -> str:
 
 
 if __name__ == "__main__":
-    print(detect_special_attr('STARS225Uc.mp4', 'STARS-225'))
+    print(detect_special_attr('ipx-177cd1.mp4', 'IPX-177'))

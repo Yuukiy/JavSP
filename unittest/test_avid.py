@@ -54,6 +54,7 @@ def test_cid_valid():
     assert '1234wvr00001rp' == get_cid('1234wvr00001rp.mp4')
     assert '402abc_hello000089' == get_cid('402abc_hello000089.mp4')
     assert 'h_826zizd021' == get_cid('h_826zizd021.mp4')
+    assert '403abcd56789' == get_cid('403abcd56789cd1.mp4')
 
 
 def test_from_file():

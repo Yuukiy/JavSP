@@ -97,6 +97,17 @@ def test_scan_movies__cdx(prepare_files):
     assert basenames[2] == 'ABC-123.CD3.mp4'
 
 
+@pytest.mark.parametrize('files', [('abc123cd1.mp4','abc123cd2.mp4')])
+def test_scan_movies__cdx_without_delimeter(prepare_files):
+    movies = scan_movies(tmp_folder)
+    assert len(movies) == 1
+    assert movies[0].dvdid == 'abc-123'
+    assert len(movies[0].files) == 2
+    basenames = [os.path.basename(i) for i in movies[0].files]
+    assert basenames[0] == 'abc123cd1.mp4'
+    assert basenames[1] == 'abc123cd2.mp4'
+
+
 # 文件夹以番号命名，分片位于文件夹内且无番号信息
 @pytest.mark.parametrize('files', [('ABC-123/CD1.mp4','ABC-123/CD2 .mp4','ABC-123/CD3.mp4')])
 def test_scan_movies__from_folder(prepare_files):
