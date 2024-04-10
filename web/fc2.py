@@ -47,7 +47,9 @@ def parse_data(movie: MovieInfo):
         container = container[0]
     else:
         raise MovieNotFoundError(__name__, movie.dvdid)
-    title = container.xpath("//div[@class='items_article_headerInfo']/h3/text()")[0]
+    # FC2 标题增加反爬乱码，使用数组合并标题
+    title_arr = container.xpath("//div[@class='items_article_headerInfo']/h3/text()")
+    title = ''.join(title_arr)
     thumb_tag = container.xpath("//div[@class='items_article_MainitemThumb']")[0]
     thumb_pic = thumb_tag.xpath("span/img/@src")[0]
     duration_str = thumb_tag.xpath("span/p[@class='items_article_info']/text()")[0]
