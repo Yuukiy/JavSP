@@ -5,7 +5,7 @@ chardet==4.0.0
 cloudscraper==1.2.71
 colorama==0.4.4
 future==0.18.3
-idna==2.10
+idna==3.7
 lxml==4.9.1
 packaging==20.9
 pefile==2019.4.18
