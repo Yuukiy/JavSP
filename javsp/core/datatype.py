@@ -82,7 +82,7 @@ class MovieInfo:
         if not filepath:
             id = self.dvdid if self.dvdid else self.cid
             if crawler:
-                filepath = f'../unittest/data/{id} ({crawler}).json'
+                filepath = f'../tests/data/{id} ({crawler}).json'
                 filepath = os.path.join(os.path.dirname(__file__), filepath)
             else:
                 filepath = id + '.json'
