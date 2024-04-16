@@ -34,7 +34,6 @@ for glob_pattern in globs:
         dir_path = os.path.dirname(file)
         datas.append((file, os.path.relpath(dir_path, '..')))
 
-extra_toc = Tree('../data', prefix='data', excludes=['.git'])
 a = Analysis(['../JavSP.py'],
              pathex=['build'],
              binaries=[],
