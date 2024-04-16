@@ -32,22 +32,34 @@ def gen_ver_hook(version, hook_file):
 
 def main():
     version = get_version()
-    print(f"Packaging JavSP {version}...")
+    print(f"JavSP {version}")
 
     script_path = Path(os.path.dirname(os.path.realpath(__file__)))
     os.chdir(script_path)
 
     gen_ver_hook(version, 'ver_hook.py')
 
+    try:
+        shutil.rmtree('../dist')
+    except FileNotFoundError:
+        pass # We're fine
+
+    print("Packaging...")
     PyInstaller.__main__.run([
         '--clean',
         './build.spec'
     ])
 
-    # create zip
-    sys_info = platform.uname()
-    zip_file = f'dist/JavSP-{version}-{sys_info.system}-{sys_info.machine}.zip'
-    shutil.make_archive(zip_file, 'zip', 'dist')
+    # print("Creating zip...")
+    # try:
+    #     shutil.rmtree('../dist_compressed')
+    # except FileNotFoundError:
+    #     pass # We're fine
+    # os.mkdir('../dist_compressed')
+    # sys_info = platform.uname()
+    # zip_file = f'../dist_compressed/JavSP-{version}-{sys_info.system}-{sys_info.machine}'
+    # print(zip_file)
+    # shutil.make_archive(zip_file, 'zip', '../dist')
 
     os.remove('ver_hook.py')
 
