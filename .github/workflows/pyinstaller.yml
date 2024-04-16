@@ -23,6 +23,11 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: bash
+
     env:
       PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
 
@@ -41,10 +46,19 @@ jobs:
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-pip-wheels
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        run: |
-          poetry install
+        run: poetry install --no-interaction --no-root
 
       - name: Build with PyInstaller for windows
         run: poetry run make
