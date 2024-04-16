@@ -4,7 +4,7 @@ import sys
 import json
 
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../javsp')))
 from web.base import Request
 
 request = Request()

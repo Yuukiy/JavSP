@@ -11,7 +11,7 @@ pretty_errors.configure(display_link=True)
 
 
 file_dir = os.path.dirname(__file__)
-data_dir = os.path.abspath(os.path.join(file_dir, '../unittest/data'))
+data_dir = os.path.abspath(os.path.join(file_dir, '../tests/data'))
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 from core.datatype import MovieInfo
 
@@ -19,7 +19,7 @@ from core.datatype import MovieInfo
 # 搜索抓取器并导入它们
 all_crawler = {}
 exclude_files = ['fc2fan']
-for file in os.listdir('web'):
+for file in os.listdir('../javsp/web/'):
     name, ext = os.path.splitext(file)
     if ext == '.py' and name not in exclude_files:
         modu = 'web.' + name
