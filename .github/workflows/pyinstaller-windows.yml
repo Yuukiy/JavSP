@@ -1,0 +1,77 @@
+# This is a basic workflow to help you get started with Actions
+
+name: PyInstaller on Windows
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events
+  push:
+    branches:
+    - master
+    - premerge
+  pull_request:
+    branches:
+    - master
+    - premerge
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
+
+      - name: Setup Python 3.8
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-python3.8-${{ hashFiles('**/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Build with PyInstaller for windows
+        run: poetry run make
+
+      - name: Test JavSP.exe
+        run: poetry run pytest tests/test_exe.py
+
+      - name: Set VERSION variable for windows
+        run: |
+          echo "VERSION=$(poetry run python ./make/make.py version)" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: JavSP-${{ env.VERSION }}-Windows-amd64
+          path: dist/JavSP.exe
