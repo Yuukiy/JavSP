@@ -56,10 +56,10 @@ jobs:
 
     - name: Test proxyfree.py
       run: |
-        poetry run pytest unittest/test_proxyfree.py
+        poetry run pytest tests/test_proxyfree.py
     - name: Test web crawlers
       run: |
-        poetry run pytest unittest/test_crawlers.py
+        poetry run pytest tests/test_crawlers.py
     - name: Upload log as artifact
       uses: actions/upload-artifact@v1
       if: ${{ always() }}
