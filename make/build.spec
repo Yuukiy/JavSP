@@ -2,6 +2,7 @@
 import os
 import inspect
 import cloudscraper
+import glob
 
 block_cipher = None
 cloudscraper_dir = os.path.dirname(inspect.getfile(cloudscraper))
@@ -9,7 +10,7 @@ cloudscraper_json = cloudscraper_dir + '/user_agent/browsers.json'
 
 # generate crawlers list (exlcude list is not needed here)
 all_crawlers = []
-for file in os.listdir('javsp/web'):
+for file in os.listdir('../javsp/web'):
     name, ext = os.path.splitext(file)
     if ext == '.py':
         all_crawlers.append('web.' + name)
@@ -18,16 +19,25 @@ for file in os.listdir('javsp/web'):
 ico_file = os.path.abspath(os.path.join(SPECPATH, "../image/JavSP.ico"))
 
 # pyinstaller locates path relative to the .spec file
+
+datas = [
+     (cloudscraper_json, 'cloudscraper/user_agent'),
+     ("../javsp/core/config.ini", "."),
+     ("../image/sub_mark.png", "image"),
+     (ico_file, "image")
+ ]
+
+globs = ['../data/**/*.json', '../data/**/*.csv']
+for glob_pattern in globs:
+    for file in list(glob.glob(glob_pattern, recursive=True)):
+        dir_path = os.path.dirname(file)
+        datas.append((file, os.path.relpath(dir_path, '..')))
+
+extra_toc = Tree('../data', prefix='data', excludes=['.git'])
 a = Analysis(['../javsp/__main__.py'],
              pathex=['build'],
              binaries=[],
-             datas=[
-                 (cloudscraper_json, 'cloudscraper/user_agent'),
-                 ("../javsp/core/config.ini", "."),
-                 Tree('../data', prefix='data'),
-                 ("../image/sub_mark.png", "image"),
-                 (ico_file, "image")
-             ],
+             datas = datas,
              hiddenimports=all_crawlers,
              hookspath=[],
              runtime_hooks=['ver_hook.py'],

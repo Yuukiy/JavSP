@@ -17,8 +17,7 @@ def re_escape(s: str) -> str:
 def mei_path(path):
     """获取一个随代码打包的文件在解压后的路径"""
     if getattr(sys, 'frozen', False):
-        mei_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-        return os.path.join(mei_path, path)
+        return os.path.join(sys._MEIPASS, path)
     else:
         return path
 

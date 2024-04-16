@@ -9,9 +9,7 @@ import shutil
 def main():
 
     script_path = Path(os.path.dirname(os.path.realpath(__file__)))
-
-    project_root = script_path / ".."
-    os.chdir(str(project_root))
+    os.chdir(script_path)
 
     run = subprocess.run(['git', 'describe', '--tags', '--long'], capture_output=True, encoding='utf-8')
     if run.returncode == 0:
@@ -33,19 +31,10 @@ def main():
 
     PyInstaller.__main__.run([
         '--clean',
-        './make/build.spec'
+        './build.spec'
     ])
 
     os.remove('ver_hook.py')
-    try: 
-        os.remove('dist/config.ini')
-    except FileNotFoundError:
-        pass # if the file doesn't exist, it's OK
-    try: 
-        shutil.rmtree('./dist/data')
-    except FileNotFoundError:
-        pass # if the files doesn't exist, it's OK
-    shutil.copytree('./data', './dist/data')
 
 if __name__ == "__main__":
     main()
