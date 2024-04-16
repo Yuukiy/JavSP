@@ -537,6 +537,8 @@ def RunNormalMode(all_movies):
             if movie.info.preview_pics:
                 extrafanartdir = movie.save_dir + '/extrafanart'
                 os.mkdir(extrafanartdir)
+                movie.info.preview_pics = sorted(movie.info.preview_pics)
+                print(movie.info.preview_pics)
                 for (id, pic_url) in enumerate(movie.info.preview_pics):
                     inner_bar.set_description(f"下载剧照{id}")
 
