@@ -13,7 +13,7 @@ from core.datatype import MovieInfo, GenreMap
 
 
 logger = logging.getLogger(__name__)
-genre_map = GenreMap('data/genre_javbus.csv')
+genre_map = GenreMap('data/genres/javbus.csv')
 permanent_url = 'https://www.javbus.com'
 if cfg.Network.proxy:
     base_url = permanent_url
