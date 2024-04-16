@@ -23,11 +23,9 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: windows-latest
-
     defaults:
       run:
         shell: bash
-
     env:
       PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
 
@@ -40,25 +38,26 @@ jobs:
         run: git fetch --prune --unshallow --tags
 
       - name: Setup Python 3.8
-        uses: actions/setup-python@v4
+        id: setup-python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
-        id: setup_python
+          python-version: '3.8'
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
+          installer-parallel: true
 
       - name: Load cached venv
-        id: cached-pip-wheels
+        id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.cache
-          key: venv-${{ runner.os }}-${{ steps.setup_python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
       - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
       - name: Build with PyInstaller for windows
