@@ -24,7 +24,7 @@ a = Analysis(['../javsp/__main__.py'],
              datas=[
                  (cloudscraper_json, 'cloudscraper/user_agent'),
                  ("../javsp/core/config.ini", "."),
-                 ("../data/**/*", "data"),
+                 Tree('../data', prefix='data'),
                  ("../image/sub_mark.png", "image"),
                  (ico_file, "image")
              ],
