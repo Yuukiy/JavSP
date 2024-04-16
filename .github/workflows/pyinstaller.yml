@@ -46,7 +46,7 @@ jobs:
           python -m pip install pyinstaller
 
       - name: Build with PyInstaller for windows
-        run: cmd.exe /c 'make.bat'
+        run: python make/make.py
 
       - name: Install pytest
         run: |
