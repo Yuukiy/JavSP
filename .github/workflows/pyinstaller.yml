@@ -63,10 +63,6 @@ jobs:
       - name: Build with PyInstaller for windows
         run: poetry run make
 
-      - name: Switch code page
-        run: |
-          chcp 65001
-
       - name: Test JavSP.exe
         run: poetry run pytest unittest/test_exe.py
 

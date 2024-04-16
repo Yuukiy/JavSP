@@ -53,9 +53,7 @@ jobs:
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
-    - name: Switch code page
-      run: |
-        chcp 65001
+
     - name: Test proxyfree.py
       run: |
         poetry run pytest unittest/test_proxyfree.py
