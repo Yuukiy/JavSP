@@ -13,7 +13,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.8,<3.12"
 altgraph = "^0.17"
 baidu-aip = "^2.2.18.0"
 certifi = "^2023.7.22"
@@ -31,7 +31,7 @@ requests = "^2.31.0"
 tqdm = "^4.59.0"
 urllib3 = "^1.25.11"
 cryptography = "^42.0.4"
-tensorflow = "==2.15.1" # for retina-face
+tensorflow = "==2.13.1" # for retina-face
 tensorflow-io-gcs-filesystem = [
     { version = ">= 0.36.0", markers = "platform_system != 'Windows'" },
     { version = "< 0.32.0", markers = "platform_system == 'Windows'" }
