@@ -246,6 +246,8 @@ def norm_tuples(cfg: Config):
     cfg.File.media_ext = tuple(exts)
     # ignore_folder: 转换为元组
     items = cfg.File.ignore_folder.split(';')
+    # 将整理后的文件夹加入不扫描列表
+    items.append(cfg.NamingRule.output_folder)
     cfg.File.ignore_folder = tuple(items)
     # required_keys: 转换为元组
     items = cfg.Crawler.required_keys.split(',')
