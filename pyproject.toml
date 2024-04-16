@@ -40,6 +40,7 @@ pyinstaller = "^6.6.0"
 
 [tool.poetry.scripts]
 javsp = "javsp.cli:main"
+make = "make.make:main"
 
 [[tool.poetry.source]]
 name = "mirrors"
