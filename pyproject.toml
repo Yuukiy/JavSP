@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "JavSP"
+version = "1.7.2-10"
+description = "汇总多站点数据的AV元数据刮削器"
+authors = ["Yuukiy"]
+license = "GPL-3.0-only"
+readme = "README.md"
+include = [
+    { path = 'data/**/*.json', format = 'wheel' },
+    { path = 'data/**/*.csv', format = 'wheel' },
+    { path = 'data/**/*.json', format = 'sdist' },
+    { path = 'data/**/*.csv', format = 'sdist' },
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+altgraph = "^0.17"
+baidu-aip = "^2.2.18.0"
+certifi = "^2023.7.22"
+chardet = "^4.0.0"
+cloudscraper = "^1.2.71"
+colorama = "^0.4.4"
+future = "^0.18.3"
+idna = "^2.10"
+lxml = "^4.9.1"
+Pillow = "^10.2.0"
+pretty-errors = "^1.2.19"
+pycryptodome = "^3.19.1"
+PySocks = "^1.7.1"
+requests = "^2.31.0"
+tqdm = "^4.59.0"
+urllib3 = "^1.25.11"
+cryptography = "^42.0.4"
+tensorflow = "==2.15.1" # for retina-face
+retina-face = "^0.0.16"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+pyinstaller = "^6.6.0"
+
+[tool.poetry.scripts]
+javsp = "javsp.cli:main"
+
+[[tool.poetry.source]]
+name = "mirrors"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
+
+[build-system]
+requires = ["poetry-core", "cython"]
+build-backend = "poetry.core.masonry.api"
