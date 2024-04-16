@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import os
-from pathlib import Path
-import PyInstaller.__main__
 import shutil
 import subprocess
+import sys
+from pathlib import Path
+import PyInstaller.__main__
 
 def get_version():
     auto_ver = ""
@@ -50,4 +51,7 @@ def main():
     os.remove('ver_hook.py')
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 2 and sys.argv[-1] == 'version':
+        print(get_version())
+    else:
+        main()
