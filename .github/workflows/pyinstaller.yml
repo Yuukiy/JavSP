@@ -64,7 +64,7 @@ jobs:
         run: poetry run make
 
       - name: Test JavSP.exe
-        run: poetry run pytest unittest/test_exe.py
+        run: poetry run pytest tests/test_exe.py
 
       - name: Set VERSION variable for windows
         run: |
