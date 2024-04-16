@@ -19,7 +19,7 @@ request = Request(use_scraper=True)
 request.headers['Accept-Language'] = 'zh-CN,zh;q=0.9,zh-TW;q=0.8,en-US;q=0.7,en;q=0.6,ja;q=0.5'
 
 logger = logging.getLogger(__name__)
-genre_map = GenreMap('data/all/genres/genre_javdb.csv')
+genre_map = GenreMap('data/all/genres/javdb.csv')
 permanent_url = 'https://javdb.com'
 if cfg.Network.proxy:
     base_url = permanent_url
