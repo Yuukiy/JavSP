@@ -12,7 +12,7 @@ IF EXIST %activate% (
 
 echo JavSP version:
 python make\gen_ver_hook.py ver_hook.py
-pyinstaller --clean --noconfirm make\windows.spec
+pyinstaller --clean --noconfirm make\build.spec
 
 IF EXIST %ps_script% (
 	powershell -executionPolicy bypass -file %ps_script%
