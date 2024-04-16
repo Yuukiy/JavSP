@@ -34,6 +34,9 @@ jobs:
       - name: Fetch tags
         run: git fetch --prune --unshallow --tags
 
+      - name: Pull metadata submodule
+        run: git submodule update
+
       - name: Setup Python 3.8
         uses: actions/setup-python@v2
         with:
