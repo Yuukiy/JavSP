@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import sys
-import platform
 import subprocess
 import os
 from pathlib import Path
@@ -39,8 +37,14 @@ def main():
     ])
 
     os.remove('ver_hook.py')
-    os.remove('dist/config.ini')
-    os.rmdir('./dist/data')
+    try: 
+        os.remove('dist/config.ini')
+    except FileNotFoundError:
+        pass # if the file doesn't exist, it's OK
+    try: 
+        shutil.rmtree('./dist/data')
+    except FileNotFoundError:
+        pass # if the files doesn't exist, it's OK
     shutil.copytree('./data', './dist/data')
 
 if __name__ == "__main__":
