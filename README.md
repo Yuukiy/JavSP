@@ -46,7 +46,7 @@
 
 	请确保已安装 Python （此项目以 Python 3.8 开发）
 	```
-	git clone https://github.com/Yuukiy/JavSP.git
+	git clone --recurse-submodules https://github.com/Yuukiy/JavSP.git
 	cd JavSP
 	pip install -r requirements.txt
 	python JavSP.py
