@@ -45,7 +45,7 @@ from web.translate import translate_movie_info
 
 actressAliasMap = {}
 if cfg.NFO.fix_actress_name:
-    actressAliasFilePath = mei_path("data/actress_alias.json")
+    actressAliasFilePath = mei_path("data/ja_JP/aliases/actress_alias.json")
     with open(actressAliasFilePath, "r", encoding="utf-8") as file:
         actressAliasMap = json.load(file)
 
