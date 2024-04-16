@@ -32,6 +32,10 @@ tqdm = "^4.59.0"
 urllib3 = "^1.25.11"
 cryptography = "^42.0.4"
 tensorflow = "==2.15.1" # for retina-face
+tensorflow-io-gcs-filesystem = [
+    { version = ">= 0.36.0", markers = "platform_system != 'Windows'" },
+    { version = "< 0.32.0", markers = "platform_system == 'Windows'" }
+]
 retina-face = "^0.0.16"
 
 [tool.poetry.group.dev.dependencies]
