@@ -77,7 +77,7 @@
 
 - 帮助完善单元测试数据（不必非要写代码，例如如果你发现有某系列的番号识别不准确，总结一下提issue也是很好的）
 
-- 帮助翻译 genre
+- 帮助翻译分类和女优别名标注，请见[JavSP-meta](https://github.com/glyh/JavSP-meta)
 
 - Bugfix / 新功能？欢迎发 Pull Request
 
