@@ -28,10 +28,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
     - name: Setup Python 3.8
       id: setup-python
       uses: actions/setup-python@v5
