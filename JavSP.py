@@ -471,7 +471,7 @@ def RunNormalMode(all_movies):
             raise Exception(msg + '\n')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 7 if cfg.Translate.engine else 6
+    total_step = 8 if cfg.Translate.engine else 7
     return_movies = []
     for movie in outer_bar:
         try:
@@ -553,6 +553,7 @@ def RunNormalMode(all_movies):
                             check_step(False, f"下载剧照{id}: {pic_url}失败")
                     except:
                         check_step(False, f"下载剧照{id}: {pic_url}失败")
+            check_step(True)
 
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
