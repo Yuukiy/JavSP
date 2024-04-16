@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import platform
 from pathlib import Path
 import PyInstaller.__main__
 
@@ -44,8 +45,8 @@ def main():
     ])
 
     # create zip
-    sys_info = os.uname()
-    zip_file = f'dist/JavSP-{version}-{sys_info.sysname}-{sys_info.machine}.zip'
+    sys_info = platform.uname()
+    zip_file = f'dist/JavSP-{version}-{sys_info.system}-{sys_info.machine}.zip'
     shutil.make_archive(zip_file, 'zip', 'dist')
 
     os.remove('ver_hook.py')
