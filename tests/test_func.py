@@ -3,7 +3,7 @@ import sys
 import random
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.func import * 
+from javsp.core.func import * 
 
 
 def test_remove_trail_actor_in_title():

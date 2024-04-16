@@ -9,8 +9,8 @@ file_dir = os.path.dirname(__file__)
 data_dir = os.path.join(file_dir, 'data')
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 
-from core.datatype import MovieInfo
-from web.exceptions import CrawlerError, SiteBlocked
+from javsp.core.datatype import MovieInfo
+from javsp.web.exceptions import CrawlerError, SiteBlocked
 
 
 logger = logging.getLogger(__name__)
