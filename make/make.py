@@ -40,6 +40,7 @@ def main():
 
     os.remove('ver_hook.py')
     os.remove('dist/config.ini')
+    os.rmdir('./dist/data')
     shutil.copytree('./data', './dist/data')
 
 if __name__ == "__main__":
