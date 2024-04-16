@@ -27,6 +27,7 @@ datas = [
      (ico_file, "image")
  ]
 
+# This is so we can preserve the tree structure of the metadata.
 globs = ['../data/**/*.json', '../data/**/*.csv']
 for glob_pattern in globs:
     for file in list(glob.glob(glob_pattern, recursive=True)):
