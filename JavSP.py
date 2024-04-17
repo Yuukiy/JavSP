@@ -446,8 +446,16 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=Fals
             logger.debug('人脸识别失败，回退到常规裁剪方法')
             logger.debug(e, exc_info=True)
             crop_poster(fanart_file, poster_file)
-    elif method == 'retina':
-        from core.ai_crop.retina import ai_crop_poster
+    elif method == 'yunet':
+        from core.ai_crop.yunet import ai_crop_poster
+        try:
+            ai_crop_poster(fanart_file, poster_file)
+        except Exception as e:
+            logger.debug('人脸识别失败，回退到常规裁剪方法')
+            logger.debug(e, exc_info=True)
+            crop_poster(fanart_file, poster_file)
+    elif method == 'pphumanseg':
+        from core.ai_crop.pphumanseg import ai_crop_poster
         try:
             ai_crop_poster(fanart_file, poster_file)
         except Exception as e:
@@ -519,7 +527,7 @@ def RunNormalMode(all_movies):
                     movie.info.uncensored or
                     movie.data_src == 'fc2' or
                     movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
-                    (R'\d' in cfg.Picture.use_ai_crop_labels and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
+                    (R'\D' in cfg.Picture.use_ai_crop_labels and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
                 method = cfg.Picture.ai_engine
                 inner_bar.set_description('使用AI裁剪海报封面')
             else:
