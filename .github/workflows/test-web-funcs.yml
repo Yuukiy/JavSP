@@ -44,10 +44,6 @@ jobs:
     - name: Public IP
       id: ip
       uses: haythem/public-ip@v1.3
-    - name: Print Public IP
-      run: |
-        Write-Host ${{ steps.ip.outputs.ipv4 }}
-        Write-Host ${{ steps.ip.outputs.ipv6 }}
     - name: Test proxyfree.py
       run: |
         pytest unittest/test_proxyfree.py
