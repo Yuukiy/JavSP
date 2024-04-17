@@ -471,7 +471,13 @@ def RunNormalMode(all_movies):
             raise Exception(msg + '\n')
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 8 if cfg.Translate.engine else 7
+
+    total_step = 7
+    if cfg.Translate.engine:
+        total_step += 1
+    if cfg.Picture.use_extra_fanarts:
+        total_step += 1
+
     return_movies = []
     for movie in outer_bar:
         try:
@@ -533,29 +539,30 @@ def RunNormalMode(all_movies):
             if len(movie.files) > 1 and 'universal' not in cfg.NamingRule.media_servers:
                 postStep_MultiMoviePoster(movie)
 
-            inner_bar.set_description('下载剧照')
-            if movie.info.preview_pics:
-                extrafanartdir = movie.save_dir + '/extrafanart'
-                os.mkdir(extrafanartdir)
-                movie.info.preview_pics = sorted(movie.info.preview_pics)
-                print(movie.info.preview_pics)
-                for (id, pic_url) in enumerate(movie.info.preview_pics):
-                    inner_bar.set_description(f"下载剧照{id}")
+            if cfg.Picture.use_extra_fanarts == 'yes':
+                inner_bar.set_description('下载剧照')
+                if movie.info.preview_pics:
+                    extrafanartdir = movie.save_dir + '/extrafanart'
+                    os.mkdir(extrafanartdir)
+                    movie.info.preview_pics = sorted(movie.info.preview_pics)
+                    print(movie.info.preview_pics)
+                    for (id, pic_url) in enumerate(movie.info.preview_pics):
+                        inner_bar.set_description(f"下载剧照{id}")
 
-                    fanart_destination = f"{extrafanartdir}/{id}.png"
-                    try:
-                        info = download(pic_url, fanart_destination)
-                        if valid_pic(fanart_destination):
-                            filesize = get_fmt_size(pic_path)
-                            width, height = get_pic_size(pic_path)
-                            elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
-                            speed = get_fmt_size(info['rate']) + '/s'
-                            logger.info(f"已下载剧照{id}: {width}x{height}, {filesize} [{elapsed}, {speed}]")
-                        else:
+                        fanart_destination = f"{extrafanartdir}/{id}.png"
+                        try:
+                            info = download(pic_url, fanart_destination)
+                            if valid_pic(fanart_destination):
+                                filesize = get_fmt_size(pic_path)
+                                width, height = get_pic_size(pic_path)
+                                elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
+                                speed = get_fmt_size(info['rate']) + '/s'
+                                logger.info(f"已下载剧照{id}: {width}x{height}, {filesize} [{elapsed}, {speed}]")
+                            else:
+                                check_step(False, f"下载剧照{id}: {pic_url}失败")
+                        except:
                             check_step(False, f"下载剧照{id}: {pic_url}失败")
-                    except:
-                        check_step(False, f"下载剧照{id}: {pic_url}失败")
-            check_step(True)
+                check_step(True)
 
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
