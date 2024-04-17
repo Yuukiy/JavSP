@@ -40,6 +40,10 @@ jobs:
     - name: Switch code page
       run: |
         chcp 65001
+    - name: Print Public IP
+      run: |
+        echo ${{ steps.ip.outputs.ipv4 }}
+        echo ${{ steps.ip.outputs.ipv6 }}
     - name: Test proxyfree.py
       run: |
         pytest unittest/test_proxyfree.py
