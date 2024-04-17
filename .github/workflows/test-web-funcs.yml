@@ -41,6 +41,9 @@ jobs:
     - name: Switch code page
       run: |
         chcp 65001
+    - name: Public IP
+      id: ip
+      uses: haythem/public-ip@v1.3
     - name: Print Public IP
       run: |
         Write-Host ${{ steps.ip.outputs.ipv4 }}
