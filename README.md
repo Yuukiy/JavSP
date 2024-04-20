@@ -1,5 +1,7 @@
 ![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/javsp_logo.png?raw=true)
 
+[English](./README.en-US.md).
+
 # Jav Scraper Package
 
 **汇总多站点数据的AV元数据刮削器**
