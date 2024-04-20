@@ -540,6 +540,7 @@ def RunNormalMode(all_movies):
                 postStep_MultiMoviePoster(movie)
 
             if cfg.Picture.use_extra_fanarts == 'yes':
+                scrape_interval = float(cfg.Picture.extra_fanarts_scrap_interval)
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'
@@ -562,6 +563,7 @@ def RunNormalMode(all_movies):
                                 check_step(False, f"下载剧照{id}: {pic_url}失败")
                         except:
                             check_step(False, f"下载剧照{id}: {pic_url}失败")
+                        time.sleep(scrape_interval)
                 check_step(True)
 
             inner_bar.set_description('写入NFO')
