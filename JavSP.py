@@ -549,7 +549,7 @@ def RunNormalMode(all_movies):
             return_movies.append(movie)
         except Exception as e:
             logger.debug(e, exc_info=True)
-            print(e)
+            logger.error(e)
             logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
