@@ -163,6 +163,7 @@ class Movie:
                 # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
                 filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
             else:
+                print("目的地存在了")
                 logger.info(f"目的地存在文件: {abs_dst} 放弃移动")
 
         new_paths = []
