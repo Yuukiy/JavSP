@@ -151,15 +151,19 @@ class Movie:
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
+            src_rel = os.path.relpath(src)
+            dst_name = os.path.basename(dst)
             # shutil.move might overwrite dst file
             if os.path.exists(abs_dst):
                 raise FileExistsError(f'File exists: {abs_dst}')
-            shutil.move(src, abs_dst)
-            src_rel = os.path.relpath(src)
-            dst_name = os.path.basename(dst)
-            logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
-            # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
-            filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
+
+            if not os.path.exists(abs_dst):
+                shutil.move(src, abs_dst)
+                logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+                # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
+                filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
+            else:
+                logger.info(f"目的地存在文件: {abs_dst} 放弃移动")
 
         new_paths = []
         dir = os.path.dirname(self.files[0])
