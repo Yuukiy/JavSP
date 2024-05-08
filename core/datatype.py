@@ -165,7 +165,7 @@ class Movie:
             else:
                 if cfg.File.is_delect_duplicate_file == "yes":
                     os.remove(src)
-                    filemove_logger.info(f'删除（重复）文件: \n  路径: "{src}')
+                    raise FileExistsError(f'目的地存在同名文件: {src} 直接删除')
                 else:
                     raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃刮削')
 
