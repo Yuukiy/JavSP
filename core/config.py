@@ -7,10 +7,12 @@ import argparse
 import configparser
 from shutil import copyfile
 from string import Template
-
-from .lib import re_escape
+from core.lib import re_escape
+# from ./lib import re_escape
 
 __all__ = ['cfg', 'args', 'is_url']
+
+
 
 if getattr(sys, 'frozen', False):
     built_in_cfg_file = os.path.join(sys._MEIPASS, 'config.ini')
@@ -480,6 +482,3 @@ except Exception as e:
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-
-    print(cfg.NamingRule.output_folder)
-    print(args)
