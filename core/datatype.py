@@ -159,8 +159,7 @@ class Movie:
                                'json', file_path]
                 result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
                 if result.returncode == 0:
-                    data = json.loads(result.stdout)
-                    raise FileExistsError(f'输出文件：{data}')
+                    json.loads(result.stdout)
                     return True
                 else:
                     return False
@@ -182,11 +181,10 @@ class Movie:
                     # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
                     filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
                 else:
-                    raise FileExistsError(f'Files are not standard media files: {abs_dst}')
+                    raise FileExistsError(f'文件检查: {abs_dst} 不是合法媒体文件，放弃刮削')
 
             else:
-                logger.info(f"目的地存在文件: {abs_dst} 放弃移动")
-                raise FileExistsError(f'File exists: {abs_dst}')
+                raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃移动')
 
 
         new_paths = []
