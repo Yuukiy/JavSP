@@ -501,8 +501,9 @@ def RunNormalMode(all_movies):
             # 依次执行各个步骤
             # 查询一下影片的信息，如果不能合法输出代表影片没有刮削的意义，可以更加前置，目前简单的处理一下
             inner_bar.set_description(f'使用ffprobe 检查媒体文件是否完整')
-            if not get_video_encoding_info(movie.data_src):
-                raise FileExistsError(f'文件检查: {movie.data_src} 不是合法媒体文件，放弃刮削')
+            media_information = get_video_encoding_info(movie.data_src)
+            msg = f'文件检查: {movie.data_src} 不是合法媒体文件，放弃刮削'
+            check_step(media_information, msg)
 
             inner_bar.set_description(f'启动并发任务')
             all_info = parallel_crawler(movie, inner_bar)
