@@ -490,7 +490,7 @@ def RunNormalMode(all_movies):
             return True
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 8 if cfg.Translate.engine else 7
+    total_step = 10 if cfg.Translate.engine else 9
     return_movies = []
     for movie in outer_bar:
         try:
