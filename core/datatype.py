@@ -159,7 +159,8 @@ class Movie:
                                'json', file_path]
                 result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
                 if result.returncode == 0:
-                    json.loads(result.stdout)
+                    data = json.loads(result.stdout)
+                    raise FileExistsError(f'输出文件：{data}')
                     return True
                 else:
                     return False
