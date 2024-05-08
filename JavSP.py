@@ -482,7 +482,7 @@ def RunNormalMode(all_movies):
             result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
             if result.returncode == 0:
                 data_json = json.loads(result.stdout)
-                print(data_json)
+                logger.info(f'检查媒体信息{data_json}')
                 return True
             else:
                 return False
