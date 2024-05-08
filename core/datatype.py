@@ -157,14 +157,12 @@ class Movie:
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
             # shutil.move might overwrite dst file
-            logger.info(f'读一下配置文件{cfg.File.is_delect_duplicate_file}')
             if not os.path.exists(abs_dst):
                 shutil.move(src, abs_dst)
                 logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
                 # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
                 filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
             else:
-
                 if cfg.File.is_delect_duplicate_file == "yes":
                     os.remove(src)
                     filemove_logger.info(f'删除（重复）文件: \n  路径: "{src}')
