@@ -494,8 +494,8 @@ def RunNormalMode(all_movies):
     for movie in outer_bar:
         try:
             # 查询一下影片的信息，如果不能合法输出代表影片没有刮削的意义，可以更加前置，目前简单的处理一下
-            if not get_video_encoding_info(movie):
-                raise FileExistsError(f'文件检查: {movie} 不是合法媒体文件，放弃刮削')
+            if not get_video_encoding_info(movie.data_src):
+                raise FileExistsError(f'文件检查: {movie.data_src} 不是合法媒体文件，放弃刮削')
             else:
                 logger.info(f'文件检查通过继续下一步{movie}')
 
