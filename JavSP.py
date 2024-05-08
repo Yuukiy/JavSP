@@ -161,7 +161,6 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
 
 def get_video_encoding_info(file_path, tqdm_bar=None):
     if os.path.exists(cfg.File.document_completion):
-
         ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
                        '-of',
                        'json', file_path]
@@ -496,7 +495,7 @@ def RunNormalMode(all_movies):
 
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 8 if cfg.Translate.engine else 9
+    total_step = 7 if cfg.Translate.engine else 8
     return_movies = []
     for movie in outer_bar:
         try:
