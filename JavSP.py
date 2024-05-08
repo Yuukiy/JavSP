@@ -159,6 +159,26 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info
 
+def get_video_encoding_info(file_path, tqdm_bar=None):
+    if os.path.exists(cfg.File.document_completion):
+
+        ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
+                       '-of',
+                       'json', file_path]
+        result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
+        if result.returncode == 0:
+            if isinstance(tqdm_bar, tqdm):
+                tqdm_bar.set_description(f'文件检测正常')
+            return True
+        else:
+            if isinstance(tqdm_bar, tqdm):
+                tqdm_bar.set_description(f'文件获取不到媒体信息')
+            return False
+    else:
+        if isinstance(tqdm_bar, tqdm):
+            tqdm_bar.set_description(f'没有配置document_completion 跳过')
+        return True
+
 
 def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     """汇总多个来源的在线数据生成最终数据"""
@@ -473,24 +493,10 @@ def RunNormalMode(all_movies):
 
     """检查视频是否存在媒体关键信息"""
 
-    def get_video_encoding_info(file_path):
-        if os.path.exists(cfg.File.document_completion):
 
-            ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
-                           '-of',
-                           'json', file_path]
-            result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
-            if result.returncode == 0:
-                data_json = json.loads(result.stdout)
-                logger.info(f'检查媒体信息{data_json}')
-                return True
-            else:
-                return False
-        else:
-            return True
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 10 if cfg.Translate.engine else 9
+    total_step = 7 if cfg.Translate.engine else 8
     return_movies = []
     for movie in outer_bar:
         try:
@@ -501,7 +507,7 @@ def RunNormalMode(all_movies):
             # 依次执行各个步骤
             # 查询一下影片的信息，如果不能合法输出代表影片没有刮削的意义，可以更加前置，目前简单的处理一下
             inner_bar.set_description(f'使用ffprobe 检查媒体文件是否完整')
-            media_information = get_video_encoding_info(movie.data_src)
+            media_information = get_video_encoding_info(movie.data_src, inner_bar)
             msg = f'文件检查: {movie.data_src} 不是合法媒体文件，放弃刮削'
             check_step(media_information, msg)
 
