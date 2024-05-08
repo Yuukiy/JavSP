@@ -490,7 +490,7 @@ def RunNormalMode(all_movies):
             return True
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 7 if cfg.Translate.engine else 6
+    total_step = 8 if cfg.Translate.engine else 7
     return_movies = []
     for movie in outer_bar:
         try:
@@ -503,8 +503,7 @@ def RunNormalMode(all_movies):
             inner_bar.set_description(f'使用ffprobe 检查媒体文件是否完整')
             if not get_video_encoding_info(movie.data_src):
                 raise FileExistsError(f'文件检查: {movie.data_src} 不是合法媒体文件，放弃刮削')
-            else:
-                inner_bar.set_description(f'文件检查正常')
+
             inner_bar.set_description(f'启动并发任务')
             all_info = parallel_crawler(movie, inner_bar)
             msg = f'为其配置的{len(cfg.CrawlerSelect[movie.data_src])}个抓取器均未获取到影片信息'
