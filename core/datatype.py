@@ -150,21 +150,7 @@ class Movie:
         return __class__.__name__ + expression
 
     def rename_files(self):
-        """检查视频是否合法"""
-        def get_video_encoding_info(file_path):
-            if os.path.exists(cfg.File.document_completion):
 
-                ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
-                               '-of',
-                               'json', file_path]
-                result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
-                if result.returncode == 0:
-                    json.loads(result.stdout)
-                    return True
-                else:
-                    return False
-            else:
-                return True
         """根据命名规则移动（重命名）影片文件"""
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
@@ -174,17 +160,16 @@ class Movie:
             # shutil.move might overwrite dst file
 
             if not os.path.exists(abs_dst):
-                # 查询一下影片的信息，如果不能合法输出代表影片没有刮削的意义，可以更加前置，目前简单的处理一下
-                if get_video_encoding_info(src):
-                    shutil.move(src, abs_dst)
-                    logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
-                    # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
-                    filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
-                else:
-                    raise FileExistsError(f'文件检查: {abs_dst} 不是合法媒体文件，放弃刮削')
-
+                shutil.move(src, abs_dst)
+                logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+                # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
+                filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
             else:
-                raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃移动')
+                if cfg.File.is_delect_duplicate_file == "yes":
+                    os.remove(src)
+                    filemove_logger.info(f'删除（重复）文件: \n  路径: "{src}')
+                else:
+                    raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃移动')
 
 
         new_paths = []

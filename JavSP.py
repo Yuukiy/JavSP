@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import sys
 import json
 import time
@@ -470,11 +471,32 @@ def RunNormalMode(all_movies):
         else:
             raise Exception(msg + '\n')
 
+    """检查视频是否合法"""
+
+    def get_video_encoding_info(file_path):
+        if os.path.exists(cfg.File.document_completion):
+
+            ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
+                           '-of',
+                           'json', file_path]
+            result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
+            if result.returncode == 0:
+                json.loads(result.stdout)
+                return True
+            else:
+                return False
+        else:
+            return True
+
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     total_step = 7 if cfg.Translate.engine else 6
     return_movies = []
     for movie in outer_bar:
         try:
+            # 查询一下影片的信息，如果不能合法输出代表影片没有刮削的意义，可以更加前置，目前简单的处理一下
+            if not get_video_encoding_info(movie):
+                raise FileExistsError(f'文件检查: {movie} 不是合法媒体文件，放弃刮削')
+
             # 初始化本次循环要整理影片任务
             filenames = [os.path.split(i)[1] for i in movie.files]
             logger.info('正在整理: ' + ', '.join(filenames))
