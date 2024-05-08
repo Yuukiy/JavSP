@@ -150,7 +150,6 @@ class Movie:
         return __class__.__name__ + expression
 
     def rename_files(self):
-
         """根据命名规则移动（重命名）影片文件"""
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
@@ -169,7 +168,7 @@ class Movie:
                     os.remove(src)
                     filemove_logger.info(f'删除（重复）文件: \n  路径: "{src}')
                 else:
-                    raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃移动')
+                    raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃刮削')
 
 
         new_paths = []

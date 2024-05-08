@@ -481,7 +481,8 @@ def RunNormalMode(all_movies):
                            'json', file_path]
             result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
             if result.returncode == 0:
-                json.loads(result.stdout)
+                data_json = json.loads(result.stdout)
+                print(data_json)
                 return True
             else:
                 return False
