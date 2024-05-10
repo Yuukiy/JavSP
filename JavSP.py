@@ -164,8 +164,8 @@ def get_video_encoding_info(file_path, tqdm_bar=None):
         ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
                        '-of',
                        'json', file_path]
-        result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE)
-        if result.returncode == 0:
+        result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        if result.returncode == 0 and not result.stderr:
             if isinstance(tqdm_bar, tqdm):
                 tqdm_bar.set_description(f'文件检测正常')
             return True
