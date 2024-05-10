@@ -4,8 +4,11 @@ import csv
 import sys
 import json
 import shutil
+import subprocess
 import logging
 from functools import cached_property
+
+from core.config import cfg
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.lib import mei_path, detect_special_attr
@@ -151,15 +154,21 @@ class Movie:
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
-            # shutil.move might overwrite dst file
-            if os.path.exists(abs_dst):
-                raise FileExistsError(f'File exists: {abs_dst}')
-            shutil.move(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
-            logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
-            # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
-            filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
+            # shutil.move might overwrite dst file
+            if not os.path.exists(abs_dst):
+                shutil.move(src, abs_dst)
+                logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+                # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
+                filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
+            else:
+                if cfg.File.is_delect_duplicate_file == "yes":
+                    os.remove(src)
+                    raise FileExistsError(f'目的地存在同名文件: {src} 直接删除')
+                else:
+                    raise FileExistsError(f'目的地存在同名文件: {abs_dst} 放弃刮削')
+
 
         new_paths = []
         dir = os.path.dirname(self.files[0])

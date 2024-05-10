@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import sys
 import json
 import time
@@ -157,6 +158,25 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     # 删除all_info中键名中的'web.'
     all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info
+
+def get_video_encoding_info(file_path, tqdm_bar=None):
+    if os.path.exists(cfg.File.document_completion):
+        ffprobe_cmd = [f'{cfg.File.document_completion}', '-v', 'error', '-show_format', '-show_streams',
+                       '-of',
+                       'json', file_path]
+        result = subprocess.run(ffprobe_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        if result.returncode == 0 and not result.stderr:
+            if isinstance(tqdm_bar, tqdm):
+                tqdm_bar.set_description(f'文件检测正常')
+            return True
+        else:
+            if isinstance(tqdm_bar, tqdm):
+                tqdm_bar.set_description(f'文件获取不到媒体信息')
+            return False
+    else:
+        if isinstance(tqdm_bar, tqdm):
+            tqdm_bar.set_description(f'没有配置document_completion 跳过')
+        return True
 
 
 def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
@@ -470,8 +490,12 @@ def RunNormalMode(all_movies):
         else:
             raise Exception(msg + '\n')
 
+    """检查视频是否存在媒体关键信息"""
+
+
+
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
-    total_step = 7 if cfg.Translate.engine else 6
+    total_step = 7 if cfg.Translate.engine else 8
     return_movies = []
     for movie in outer_bar:
         try:
@@ -480,6 +504,12 @@ def RunNormalMode(all_movies):
             logger.info('正在整理: ' + ', '.join(filenames))
             inner_bar = tqdm(total=total_step, desc='步骤', ascii=True, leave=False)
             # 依次执行各个步骤
+            # 查询一下影片的信息，如果不能合法输出代表影片没有刮削的意义，可以更加前置，目前简单的处理一下
+            inner_bar.set_description(f'使用ffprobe 检查媒体文件是否完整')
+            media_information = get_video_encoding_info(movie.data_src, inner_bar)
+            msg = f'文件检查: {movie.data_src} 不是合法媒体文件，放弃刮削'
+            check_step(media_information, msg)
+
             inner_bar.set_description(f'启动并发任务')
             all_info = parallel_crawler(movie, inner_bar)
             msg = f'为其配置的{len(cfg.CrawlerSelect[movie.data_src])}个抓取器均未获取到影片信息'
@@ -549,6 +579,7 @@ def RunNormalMode(all_movies):
             return_movies.append(movie)
         except Exception as e:
             logger.debug(e, exc_info=True)
+            logger.error(e)
             logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
