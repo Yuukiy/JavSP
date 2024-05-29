@@ -1,14 +1,20 @@
 @echo off
 REM Create exe from script
 
-set activate=venv\Scripts\activate.bat
-set deactivate=venv\Scripts\deactivate.bat
+set activate=.venv\Scripts\activate.bat
+set deactivate=.venv\Scripts\deactivate.bat
 set ps_script=make\archive.ps1
 
-IF EXIST %activate% (
-	@echo Activate vitualenv...
-	call %activate%
+IF NOT EXIST %activate% (
+	@echo Creating virtual environment...
+	python -m venv .venv
 )
+
+@echo Activating vitual environment...
+call %activate%
+
+@echo Installing required packages...
+pip install -r requirements-noai.txt
 
 echo JavSP version:
 python make\gen_ver_hook.py ver_hook.py

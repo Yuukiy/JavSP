@@ -268,7 +268,7 @@ def norm_boolean(cfg: Config):
             ('NFO', 'add_genre_to_tag'),
             ('Other', 'check_update'),
             ('Other', 'auto_update'),
-            ('File', 'enable_file_move'),
+            ('File', 'fetch_only'),
         ]:
         cfg._sections[sec][key] = cfg.getboolean(sec, key)
     # 特殊转换
@@ -424,7 +424,7 @@ def parse_args():
     # manual: 未传入选项时值为-1，仅传入选项时值为None，传入选项且有对应值时为对应值
     # 为了方便使用，仅传入选项时的默认值修改为'failed'，未传入选项时修改为None
     # raise argparse.ArgumentError('a', "invalid choice: 'aa' (choose from 1, 23)")
-    if args.manual == None:
+    if not args.manual:
         args.manual = 'failed'
     elif args.manual == -1:
         args.manual = None
@@ -435,7 +435,7 @@ def parse_args():
         msg = f"{parser.prog}: error: argument -m/--manual: invalid choice: '{args.manual}' (choose from 'all', 'failed' or leave it empty)"
         # 使用SystemExit异常以避免显示traceback信息
         raise SystemExit(msg)
-    if (args.only_scan == True or args.only_fetch == True) and args.data_cache_file == None:
+    if (args.only_scan or args.only_fetch) and not args.data_cache_file:
         raise SystemExit("当仅刮削或者仅识别时，必须传入缓存文件路径")
     args.config = cfg_file
     return args
@@ -459,9 +459,9 @@ def overwrite_cfg(cfg, args):
         cfg.File.scan_dir = args.input
     if args.output:
         cfg.NamingRule.output_folder = args.output
-    if args.only_fetch == True:
+    if args.only_fetch:
         # 如果仅刮削，则不会整理文件
-        cfg.File.enable_file_move = 'no'
+        cfg.File.fetch_only = 'yes'
 
 
 cfg = Config()

@@ -316,7 +316,7 @@ def generate_names(movie: Movie):
         for sub_end in range(len(title_break), 0, -1):
             copyd['title'] = replace_illegal_chars(''.join(title_break[:sub_end]).strip())
             # 如果不整理文件，则保存抓取的数据到当前目录
-            if cfg.File.enable_file_move is False:
+            if cfg.File.fetch_only:
                 save_dir = os.path.dirname(movie.files[0])
                 filebasename = os.path.basename(movie.files[0])
                 ext = os.path.splitext(filebasename)[1]
@@ -355,7 +355,7 @@ def generate_names(movie: Movie):
             logger.debug((d, templates, cfg.NamingRule.max_path_len))
             return
         # 如果不整理文件，则保存抓取的数据到当前目录
-        if cfg.File.enable_file_move is False:
+        if cfg.File.fetch_only:
             save_dir = os.path.dirname(movie.files[0])
             filebasename = os.path.basename(movie.files[0])
             ext = os.path.splitext(filebasename)[1]
@@ -536,9 +536,9 @@ def RunNormalMode(all_movies):
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
             check_step(True)
-            if cfg.File.enable_file_move:
-                inner_bar.set_description('移动影片文件')
-                movie.rename_files()
+            if not cfg.File.fetch_only:
+                inner_bar.set_description('创建影片文件链接')
+                movie.link_files()
                 check_step(True)
                 logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
             else:
