@@ -7,9 +7,6 @@ lxml~=5.2.2
 lxml_html_clean~=0.1.1
 Pillow~=10.3.0
 pycryptodome~=3.20.0
-retina-face~=0.0.17
-tf-keras~=2.16.0
-baidu-aip~=4.16.13
 chardet~=5.2.0
 cryptography~=42.0.7
 pywin32==306

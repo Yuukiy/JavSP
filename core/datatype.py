@@ -146,20 +146,20 @@ class Movie:
             expression = f"('{self.dvdid}')"
         return __class__.__name__ + expression
 
-    def rename_files(self):
-        """根据命名规则移动（重命名）影片文件"""
-        def move_file(src:str, dst:str):
-            """移动（重命名）文件并记录信息到日志"""
+    def link_files(self):
+        """根据命名规则为影片文件创建链接"""
+        def link_file(src:str, dst:str):
+            """创建文件链接并记录信息到日志"""
             abs_dst = os.path.abspath(dst)
             # shutil.move might overwrite dst file
             if os.path.exists(abs_dst):
                 raise FileExistsError(f'File exists: {abs_dst}')
-            shutil.move(src, abs_dst)
+            os.link(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
-            logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")
+            logger.info(f"创建文件链接: '{src_rel}' -> '...{os.sep}{dst_name}'")
             # 目前StreamHandler并未设置filter，为了避免显示中出现重复的日志，这里暂时只能用debug级别
-            filemove_logger.debug(f'移动（重命名）文件: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
+            filemove_logger.debug(f'创建文件链接: \n  原路径: "{src}"\n  新路径: "{abs_dst}"')
 
         new_paths = []
         dir = os.path.dirname(self.files[0])
@@ -167,18 +167,15 @@ class Movie:
             fullpath = self.files[0]
             ext = os.path.splitext(fullpath)[1]
             newpath = os.path.join(self.save_dir, self.basename + ext)
-            move_file(fullpath, newpath)
+            link_file(fullpath, newpath)
             new_paths.append(newpath)
         else:
             for i, fullpath in enumerate(self.files, start=1):
                 ext = os.path.splitext(fullpath)[1]
                 newpath = os.path.join(self.save_dir, self.basename + f'-CD{i}' + ext)
-                move_file(fullpath, newpath)
+                link_file(fullpath, newpath)
                 new_paths.append(newpath)
         self.new_paths = new_paths
-        if len(os.listdir(dir)) == 0:
-            #如果移动文件后目录为空则删除该目录
-            os.rmdir(dir)
 
 
 class GenreMap(dict):
