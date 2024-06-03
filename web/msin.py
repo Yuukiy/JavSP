@@ -79,7 +79,7 @@ def fc2_parser(movie: MovieInfo, html):
     container = html.xpath("//div[@id='top_content']")[0]
     info = container.xpath("div/div/div[@id='movie_info_ditail']")[0]
     avid = info.xpath("div[@class='mv_fileName']/text()")[0].upper()
-    title_arr = info.xpath("//div[@class='mv_title']//text()")
+    title_arr = info.xpath("div[contains(@class, 'mv_title')]//text()")
     title = ''.join(title_arr)
     # 部分影片有预览图，但是是跳转到FC2进行预览的，且预览地址是通过js脚本解析的（带有key）
     cover_tag = container.xpath("//div[@class='movie_top']/img/@src")
