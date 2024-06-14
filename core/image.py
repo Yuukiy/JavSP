@@ -1,10 +1,11 @@
 """处理本地图片的相关功能"""
+from enum import Enum
 import os
 import logging
 from PIL import Image, ImageOps
 
 
-__all__ = ['valid_pic', 'crop_poster', 'get_pic_size', 'add_label_to_poster']
+__all__ = ['valid_pic', 'crop_poster', 'get_pic_size', 'add_label_to_poster', 'LabelPostion']
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +42,28 @@ def crop_poster(fanart_file, poster_file):
     # quality: from doc, default is 75, values above 95 should be avoided
     poster.save(poster_file, quality=95)
 
+# 位置枚举
+class LabelPostion(Enum):
+    """水印位置枚举"""
+    TOP_LEFT = 1
+    TOP_RIGHT = 2
+    BOTTOM_LEFT = 3
+    BOTTOM_RIGHT = 4
 
-def add_label_to_poster(poster_file, mark_pic_file):
+def add_label_to_poster(poster_file:str, mark_pic_file: str, pos: LabelPostion):
     """向poster中添加标签(水印)"""
     poster = Image.open(poster_file)
     mark_img = Image.open(mark_pic_file).convert('RGBA')
     r,g,b,a = mark_img.split()
-    box = (poster.size[0] - mark_img.size[0], poster.size[1] - mark_img.size[1])
+    # 计算水印位置
+    if pos == LabelPostion.TOP_LEFT:
+        box = (0, 0)
+    elif pos == LabelPostion.TOP_RIGHT:
+        box = (poster.size[0] - mark_img.size[0], 0)
+    elif pos == LabelPostion.BOTTOM_LEFT:
+        box = (0, poster.size[1] - mark_img.size[1])
+    elif pos == LabelPostion.BOTTOM_RIGHT:
+        box = (poster.size[0] - mark_img.size[0], poster.size[1] - mark_img.size[1])
     poster.paste(mark_img, box=box, mask=a)
     poster.save(poster_file, quality=95)
 
