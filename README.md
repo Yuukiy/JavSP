@@ -51,6 +51,15 @@
 	pip install -r requirements.txt
 	python JavSP.py
 	```
+- Docker?
+
+	请确保已安装Docker
+	```
+	# 直接运行
+	docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest
+	# 带命令行参数
+	docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest -h
+	```
 
 ## 使用
 
