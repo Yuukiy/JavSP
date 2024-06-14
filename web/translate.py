@@ -157,7 +157,7 @@ def google_trans(texts, to='zh_CN'):
     # API: https://www.jianshu.com/p/ce35d89c25c3
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
-    url = f"http://translate.google.com/translate_a/single?client=at&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q=" + texts
+    url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
     r = requests.get(url, proxies=cfg.Network.proxy)
     while r.status_code == 429:
         logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
@@ -169,6 +169,7 @@ def google_trans(texts, to='zh_CN'):
         result = r.json()
     else:
         result = {'error_code': r.status_code, 'error_msg': r.reason}
+    time.sleep(4) # Google翻译的API有QPS限制，因此需要等待一段时间
     return result
 
 
