@@ -15,7 +15,7 @@ pycryptodome==3.19.1
 PySocks==1.7.1
 requests==2.31.0
 tqdm==4.59.0
-urllib3==1.25.11
+urllib3==1.26.19
 pywin32==303
 pywin32-ctypes==0.2.0
 retina-face==0.0.14
