@@ -81,7 +81,19 @@ def convert_chrome_utc(chrome_utc):
     unix_utc = datetime.fromtimestamp(second)
     return unix_utc
 
-def decrypt_key(local_state):
+def decrypt_key_win(local_state):
+    """从Local State文件中提取并解密出Cookies文件的密钥"""
+    # Chrome 80+ 的Cookies解密方法参考自: https://stackoverflow.com/a/60423699/6415337
+    import win32crypt
+    with open(local_state, 'rt', encoding='utf-8') as file:
+        encrypted_key = json.loads(file.read())['os_crypt']['encrypted_key']
+    encrypted_key = base64.b64decode(encrypted_key)                                       # Base64 decoding
+    encrypted_key = encrypted_key[5:]                                                     # Remove DPAPI
+    decrypted_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]  # Decrypt key
+    return decrypted_key
+
+
+def decrypt_key_linux(local_state):
     """从Local State文件中提取并解密出Cookies文件的密钥，适用于Linux"""
     # 读取Local State文件中的密钥
     with open(local_state, 'rt', encoding='utf-8') as file:
@@ -93,6 +105,10 @@ def decrypt_key(local_state):
     aesgcm = AESGCM(key)
     decrypted_key = aesgcm.decrypt(nonce, encrypted_key, None)
     return decrypted_key
+
+
+decrypt_key = decrypt_key_win if sys.platform == 'win32' else decrypt_key_linux
+
 
 def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
     """从cookies_file文件中查找指定站点的所有Cookies"""

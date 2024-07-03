@@ -16,7 +16,6 @@ PySocks==1.7.1
 requests==2.31.0
 tqdm==4.59.0
 urllib3==1.25.11
-pywin32==303
-pywin32-ctypes==0.2.0
+cryptography==42.0.4
 retina-face==0.0.14
 keras==2.15.0
