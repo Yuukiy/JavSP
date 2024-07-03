@@ -80,6 +80,9 @@ def get_id(filepath: str) -> str:
     match = re.search(r'(T28[-_]\d{3})', filename)
     if match:
         return match.group(1)
+    match = re.search(r'(T38[-_]\d{3})', filename)
+    if match:
+        return match.group(1)
     # 尝试匹配东热n, k系列
     match = re.search(r'(n\d{4}|k\d{4})', filename, re.I)
     if match:
