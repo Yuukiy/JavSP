@@ -59,6 +59,7 @@ def translate(texts, engine='google', actress=[]):
               仅在能判断分句时有breaks字段，子句末尾可能有换行符\n
               翻译出错: {'error': 'baidu: 54000: PARAM_FROM_TO_OR_Q_EMPTY'}
     """
+    rtn = {}
     err_msg = ''
     if engine == 'baidu':
         result = baidu_translate(texts)
@@ -101,6 +102,15 @@ def translate(texts, engine='google', actress=[]):
                 trans_break = [i['trans'] for i in result['sentences']]
                 trans = ''.join(trans_break)
                 rtn = {'trans': trans, 'orig_break': orig_break, 'trans_break': trans_break}
+            else:
+                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
+        except Exception as e:
+            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+    elif engine == 'claude':
+        try:
+            result = claude_translate(texts)
+            if 'error' not in result:
+                rtn = {'trans': result}
             else:
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
@@ -169,6 +179,30 @@ def google_trans(texts, to='zh_CN'):
         result = r.json()
     else:
         result = {'error_code': r.status_code, 'error_msg': r.reason}
+    return result
+
+def claude_translate(texts, to="zh_TW"):
+    """使用Claude翻译文本（默认翻译为繁體中文）"""
+    api_url = "https://api.anthropic.com/v1/messages"
+    headers = {
+        "x-api-key": cfg.Translate.claude_key,
+        "context-type": "application/json",
+        "anthropic-version": "2023-06-01",
+    }
+    data = {
+        "model": "claude-3-haiku-20240307",
+        "system": f"Translate the following Japanese paragraph into {to}, while leaving non-Japanese text, names, or text that does not look like Japanese untranslated. Reply with the translated text only, do not add any text that is not in the original content.",
+        "max_tokens": 1024,
+        "messages": [{"role": "user", "content": texts}],
+    }
+    r = requests.post(api_url, headers=headers, json=data)
+    if r.status_code == 200:
+        result = r.json().get("content", [{}])[0].get("text", "").strip()
+    else:
+        result = {
+            "error_code": r.status_code,
+            "error_msg": r.json().get("error", {}).get("message", ""),
+        }
     return result
 
 
