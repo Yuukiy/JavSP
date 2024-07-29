@@ -190,8 +190,8 @@ def google_trans(texts, to='zh_CN'):
         result = {'error_code': r.status_code, 'error_msg': r.reason}
     return result
 
-def claude_translate(texts, to="zh_TW"):
-    """使用Claude翻译文本（默认翻译为繁體中文）"""
+def claude_translate(texts, to="zh_CN"):
+    """使用Claude翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.anthropic.com/v1/messages"
     headers = {
         "x-api-key": cfg.Translate.claude_key,
@@ -210,12 +210,12 @@ def claude_translate(texts, to="zh_TW"):
     else:
         result = {
             "error_code": r.status_code,
-            "error_msg": r.json().get("error", {}).get("message", ""),
+            "error_msg": r.json().get("error", {}).get("message", r.reason),
         }
     return result
 
-def groq_translate(texts, to="zh_TW"):
-    """使用Groq翻译文本（默认翻译为繁體中文）"""
+def groq_translate(texts, to="zh_CN"):
+    """使用Groq翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
