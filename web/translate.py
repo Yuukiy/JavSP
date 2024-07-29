@@ -109,7 +109,7 @@ def translate(texts, engine='google', actress=[]):
     elif engine == 'claude':
         try:
             result = claude_translate(texts)
-            if 'error' not in result:
+            if 'error_code' not in result:
                 rtn = {'trans': result}
             else:
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
@@ -118,10 +118,10 @@ def translate(texts, engine='google', actress=[]):
     elif engine == 'groq':
         try:
             result = groq_translate(texts)
-            if 'error' not in result:
+            if 'error_code' not in result:
                 rtn = {'trans': result}
             else:
-                err_msg = "{}: {}: {}".format(engine, result['error']['code'], result['error']['message'])
+                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
     # else:
@@ -238,11 +238,17 @@ def groq_translate(texts, to="zh_TW"):
     }
     r = requests.post(api_url, headers=headers, json=data)
     if r.status_code == 200:
-        result = r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        if 'error' in r.json():
+            result = {
+                "error_code": r.status_code,
+                "error_msg": r.json().get("error", {}).get("message", ""),
+            }
+        else:
+            result = r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
     else:
         result = {
             "error_code": r.status_code,
-            "error_msg": r.json().get("error", {}).get("message", ""),
+            "error_msg": r.reason,
         }
     return result
 
