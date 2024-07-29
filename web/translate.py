@@ -115,6 +115,15 @@ def translate(texts, engine='google', actress=[]):
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+    elif engine == 'groq':
+        try:
+            result = groq_translate(texts)
+            if 'error' not in result:
+                rtn = {'trans': result}
+            else:
+                err_msg = "{}: {}: {}".format(engine, result['error']['code'], result['error']['message'])
+        except Exception as e:
+            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
     # else:
         # 配置文件中已经检查过翻译引擎，这里不再检查，因此如果使用不在列表中的翻译引擎，会出错
     # 如果err_msg非空，说明发生了错误，返回错误消息
@@ -205,6 +214,37 @@ def claude_translate(texts, to="zh_TW"):
         }
     return result
 
+def groq_translate(texts, to="zh_TW"):
+    """使用Groq翻译文本（默认翻译为繁體中文）"""
+    api_url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {cfg.Translate.groq_key}",
+    }
+    data = {
+         "messages": [
+           {
+             "role": "system",
+             "content": f"Translate the following Japanese paragraph into {to}, while leaving non-Japanese text, names, or text that does not look like Japanese untranslated. Reply with the translated text only, do not add any text that is not in the original content."
+           },
+           {
+             "role": "user",
+             "content": texts
+           }
+         ],
+         "model": "llama-3.1-70b-versatile",
+         "temperature": 0,
+         "max_tokens": 1024,
+    }
+    r = requests.post(api_url, headers=headers, json=data)
+    if r.status_code == 200:
+        result = r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+    else:
+        result = {
+            "error_code": r.status_code,
+            "error_msg": r.json().get("error", {}).get("message", ""),
+        }
+    return result
 
 if __name__ == "__main__":
     import json
