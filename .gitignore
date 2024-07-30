@@ -133,3 +133,4 @@ ver_hook.py
 *.cache.json
 
 .idea
+.vscode

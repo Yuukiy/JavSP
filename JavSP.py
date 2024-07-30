@@ -263,32 +263,18 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     movie.info = final_info
     return True
 
-
 def generate_names(movie: Movie):
     """按照模板生成相关文件的文件名"""
     info = movie.info
     # 准备用来填充命名模板的字典
-    d = {}
-    d['num'] = info.dvdid or info.cid
-    d['title'] = info.title or cfg.NamingRule.null_for_title
-    d['rawtitle'] = info.ori_title or d['title']
+    d = info.get_info_dic(cfg)
     if info.actress and len(info.actress) > cfg.NamingRule.max_actress_count:
         logging.debug('女优人数过多，按配置保留了其中的前n个: ' + ','.join(info.actress))
         actress = info.actress[:cfg.NamingRule.max_actress_count] + ['…']
     else:
         actress = info.actress
     d['actress'] = ','.join(actress) if actress else cfg.NamingRule.null_for_actress
-    d['score'] = info.score or '0'
-    d['censor'] = cfg.NamingRule.censorship_names[info.uncensored]
-    d['serial'] = info.serial or cfg.NamingRule.null_for_serial
-    d['director'] = info.director or cfg.NamingRule.null_for_director
-    d['producer'] = info.producer or cfg.NamingRule.null_for_producer
-    d['publisher'] = info.publisher or cfg.NamingRule.null_for_publisher
-    d['date'] = info.publish_date or '0000-00-00'
-    d['year'] = d['date'].split('-')[0]
-    # cid中不会出现'-'，可以直接从d['num']拆分出label
-    num_items = d['num'].split('-')
-    d['label'] = num_items[0] if len(num_items) > 1 else '---'
+
     # 保存label供后面判断裁剪图片的方式使用
     setattr(info, 'label', d['label'].upper())
     # 处理字段：替换不能作为文件名的字符，移除首尾的空字符

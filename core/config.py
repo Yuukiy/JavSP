@@ -213,6 +213,7 @@ class Config(configparser.ConfigParser):
         check_proxy_free_url(self)
         validate_media_servers(self)
         validate_ai_config(self)
+        convert_nfo_config(self)
 
 
 def is_url(url: str):
@@ -266,6 +267,8 @@ def norm_boolean(cfg: Config):
             ('Picture', 'use_ai_crop'),
             ('Picture', 'add_label_to_cover'),
             ('NFO', 'add_genre_to_tag'),
+            ('NFO', 'add_custom_tags'),
+            ('NFO', 'add_custom_genres'),
             ('Other', 'check_update'),
             ('Other', 'auto_update'),
             ('File', 'enable_file_move'),
@@ -395,6 +398,11 @@ def check_proxy_free_url(cfg: Config):
             url = 'http://' + url
         sec[site] = url if is_url(url) else ''
 
+def convert_nfo_config(cfg: Config):
+    """NFO: 转换为字符串Template"""
+    cfg.NFO.add_custom_tags_rule = Template(cfg.NFO.add_custom_tags_rule)
+    cfg.NFO.add_custom_genres_rule = Template(cfg.NFO.add_custom_genres_rule)
+    
 
 def parse_args():
     """解析从命令行传入的参数并进行有效性验证"""

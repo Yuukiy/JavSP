@@ -8,6 +8,7 @@ import logging
 from functools import cached_property
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from core.config import Config
 from core.lib import mei_path, detect_special_attr
 
 
@@ -98,6 +99,29 @@ class MovieInfo:
             if k in attrs:
                 self.__setattr__(k, v)
 
+    def get_info_dic(self, cfg: Config):
+        """生成用来填充模板的字典"""
+        info = self
+        d = {}
+        d['num'] = info.dvdid or info.cid
+        d['title'] = info.title or cfg.NamingRule.null_for_title
+        d['rawtitle'] = info.ori_title or d['title']
+        d['actress'] = ','.join(info.actress) if info.actress else cfg.NamingRule.null_for_actress
+        d['score'] = info.score or '0'
+        d['censor'] = cfg.NamingRule.censorship_names[info.uncensored]
+        d['serial'] = info.serial or cfg.NamingRule.null_for_serial
+        d['director'] = info.director or cfg.NamingRule.null_for_director
+        d['producer'] = info.producer or cfg.NamingRule.null_for_producer
+        d['publisher'] = info.publisher or cfg.NamingRule.null_for_publisher
+        d['date'] = info.publish_date or '0000-00-00'
+        d['year'] = d['date'].split('-')[0]
+        # cid中不会出现'-'，可以直接从d['num']拆分出label
+        num_items = d['num'].split('-')
+        d['label'] = num_items[0] if len(num_items) > 1 else '---'
+        d['genre'] = ','.join(info.genre_norm if info.genre_norm else info.genre if info.genre else [])
+
+        return d
+
 
 class Movie:
     """用于关联影片文件的类"""
@@ -110,7 +134,7 @@ class Movie:
         self.cid = cid                  # DMM Content ID
         self.files = []                 # 关联到此番号的所有影片文件的列表（用于管理带有多个分片的影片）
         self.data_src = 'normal'        # 数据源：不同的数据源将使用不同的爬虫
-        self.info = None                # 抓取到的影片信息
+        self.info: MovieInfo = None     # 抓取到的影片信息
         self.save_dir = None            # 存放影片、封面、NFO的文件夹路径
         self.basename = None            # 按照命名模板生成的不包含路径和扩展名的basename
         self.nfo_file = None            # nfo文件的路径

@@ -14,6 +14,8 @@ def write_nfo(info: MovieInfo, nfo_file):
     """将存储了影片信息的'info'写入到nfo文件中"""
     # NFO spec: https://kodi.wiki/view/NFO_files/Movies
     nfo = E.movie()
+    dic = info.get_info_dic(cfg)
+
     if info.nfo_title:
         nfo.append(E.title(info.nfo_title))
     else:
@@ -53,16 +55,37 @@ def write_nfo(info: MovieInfo, nfo_file):
         nfo.append(E.uniqueid(info.cid, type='cid'))
 
     # 选择要写入的genre数据源字段：将[]作为后备结果，以确保genre结果为None时后续不会抛出异常
-    for genre in (info.genre_norm, info.genre, []):
-        if genre:
+    for genre_item in (info.genre_norm, info.genre, []):
+        if genre_item:
             break
+
+    genre = genre_item.copy()
+    # 添加自定义分类
+    if cfg.NFO.add_custom_genres:
+        custom_genres = cfg.NFO.add_custom_genres_rule.substitute(**dic)
+        if custom_genres:
+            genre += custom_genres.split(',')
+    # 分类去重
+    genre = list(set(genre))
     # 写入genre分类：优先使用genre_norm。在Jellyfin上，只有genre可以直接跳转，tag不可以
     # 也同时写入tag。TODO: 还没有研究tag和genre在Kodi上的区别
     for i in genre:
         nfo.append(E.genre(i))
+
+    tags = []
+    # 将genre写入到tag
     if cfg.NFO.add_genre_to_tag:
-        for i in genre:
-            nfo.append(E.tag(i))
+        tags += genre_item
+    # 添加自定义tag
+    if cfg.NFO.add_custom_tags:
+        custom_tags = cfg.NFO.add_custom_tags_rule.substitute(**dic)
+        if custom_tags:
+            tags += custom_tags.split(',')
+    # 去重
+    tags = list(set(tags))
+    # 写入tag
+    for i in tags:
+        nfo.append(E.tag(i))
 
     # Kodi上的country字段没说必须使用国家的代码（比如JP），所以目前暂定直接使用国家名
     nfo.append(E.country('日本'))
