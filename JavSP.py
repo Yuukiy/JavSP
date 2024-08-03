@@ -539,9 +539,8 @@ def RunNormalMode(all_movies):
 def download_cover(covers, fanart_path, big_covers=[]):
     """下载封面图片"""
     # 优先下载高清封面
-    fanart_base = os.path.splitext(fanart_path)[0] + '.'
     for url in big_covers:
-        pic_path = fanart_base + url.split('.')[-1].lower()
+        pic_path = get_pic_path(fanart_path, url)
         for _ in range(cfg.Network.retry):
             try:
                 info = download(url, pic_path)
@@ -557,7 +556,7 @@ def download_cover(covers, fanart_path, big_covers=[]):
                 break
     # 如果没有高清封面或高清封面下载失败
     for url in covers:
-        pic_path = fanart_base + url.split('.')[-1].lower()
+        pic_path = get_pic_path(fanart_path, url)
         for _ in range(cfg.Network.retry):
             try:
                 download(url, pic_path)
@@ -573,6 +572,15 @@ def download_cover(covers, fanart_path, big_covers=[]):
     logger.debug('big_covers:'+str(big_covers) + ', covers'+str(covers))
     return None
 
+def get_pic_path(fanart_path, url):
+    fanart_base = os.path.splitext(fanart_path)[0]
+    pic_extend = url.split('.')[-1]
+    # 判断 url 是否带？后面的参数
+    if '?' in pic_extend:
+        pic_extend = pic_extend.split('?')[0]
+        
+    pic_path = fanart_base + "." + pic_extend
+    return pic_path
 
 def error_exit(success, err_info):
     """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
