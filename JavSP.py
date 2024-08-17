@@ -21,6 +21,7 @@ pretty_errors.configure(display_link=True)
 
 
 from core.print import TqdmOut
+from core.baidu_aip import aip_crop_poster
 
 
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
@@ -436,20 +437,12 @@ def reviewMovieID(all_movies, root):
 
 
 SUBTITLE_MARK_FILE = os.path.abspath(mei_path('image/sub_mark.png'))
-def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False):
+UNCENSORED_MARK_FILE = os.path.abspath(mei_path('image/unc_mark.png'))
+def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False, uncensored=False):
     """包装各种海报裁剪方法，提供统一的调用"""
     if method == 'baidu':
-        from core.ai_crop.baidu_aip import aip_crop_poster
         try:
             aip_crop_poster(fanart_file, poster_file)
-        except Exception as e:
-            logger.debug('人脸识别失败，回退到常规裁剪方法')
-            logger.debug(e, exc_info=True)
-            crop_poster(fanart_file, poster_file)
-    elif method == 'retina':
-        from core.ai_crop.retina import ai_crop_poster
-        try:
-            ai_crop_poster(fanart_file, poster_file)
         except Exception as e:
             logger.debug('人脸识别失败，回退到常规裁剪方法')
             logger.debug(e, exc_info=True)
@@ -458,7 +451,9 @@ def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=Fals
         crop_poster(fanart_file, poster_file)
     if cfg.Picture.add_label_to_cover:
         if hard_sub == True:
-            add_label_to_poster(poster_file, SUBTITLE_MARK_FILE)
+            add_label_to_poster(poster_file, SUBTITLE_MARK_FILE, LabelPostion.BOTTOM_RIGHT)
+        if uncensored == True:
+            add_label_to_poster(poster_file, UNCENSORED_MARK_FILE, LabelPostion.BOTTOM_LEFT)
 
 
 def RunNormalMode(all_movies):
@@ -525,7 +520,7 @@ def RunNormalMode(all_movies):
             else:
                 inner_bar.set_description('裁剪海报封面')
                 method = 'normal'
-            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method, movie.hard_sub)
+            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method, movie.hard_sub, movie.uncensored)
             check_step(True)
 
             if 'video_station' in cfg.NamingRule.media_servers:
