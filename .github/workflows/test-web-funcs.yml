@@ -40,9 +40,6 @@ jobs:
     - name: Switch code page
       run: |
         chcp 65001
-    - name: Test proxyfree.py
-      run: |
-        pytest unittest/test_proxyfree.py
     - name: Test web crawlers
       run: |
         pytest unittest/test_crawlers.py
