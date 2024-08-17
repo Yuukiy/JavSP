@@ -15,7 +15,7 @@ pycryptodome==3.19.1
 PySocks==1.7.1
 requests==2.32.2
 tqdm==4.66.3
-urllib3==1.25.11
+urllib3==2.2.2
 pywin32==303
 pywin32-ctypes==0.2.0
 cryptography==42.0.4
