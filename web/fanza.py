@@ -63,6 +63,8 @@ def resp2html_wrapper(resp):
     html = resp2html(resp)
     if 'not available in your region' in html.text_content():
         raise SiteBlocked('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
+    elif '無料会員登録はこちら' in html.text_content():
+        raise CredentialError('此数据需要注册FANZA才能访问，或者尝试更换为日本IP')
     return html
 
 
@@ -176,7 +178,7 @@ def parse_anime_page(movie: MovieInfo, html):
     """解析动画影片的页面布局"""
     title = html.xpath("//h1[@id='title']/text()")[0]
     container = html.xpath("//table[@class='mg-b12']/tr/td")[0]
-    cover = container.xpath("//a[@name='package-image']/@href")[0]
+    cover = container.xpath("//img[@name='package-image']/@src")[0]
     date_str = container.xpath("//td[text()='発売日：']/following-sibling::td/text()")[0].strip()
     publish_date = date_str.replace('/', '-')
     duration_tag = container.xpath("//td[text()='収録時間：']/following-sibling::td/text()")
@@ -195,7 +197,7 @@ def parse_anime_page(movie: MovieInfo, html):
         genre_id.append(tag.get('href').split('=')[-1].strip('/'))
     cid = container.xpath("//td[text()='品番：']/following-sibling::td/text()")[0].strip()
     plot = container.xpath("//div[@class='mg-b20 lh4']/p")[0].text_content().strip()
-    preview_pics = container.xpath("//a[@name='sample-image']/img/@src")
+    preview_pics = container.xpath("//a[@name='sample-image']/img/@data-lazy")
     score_img = container.xpath("//td[text()='平均評価：']/following-sibling::td/img/@src")[0]
     score = int(score_img.split('/')[-1].split('.')[0]) # 00, 05 ... 50
 
@@ -222,7 +224,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo(cid='145tb017')
+    movie = MovieInfo(cid='d_aisoft3356')
     try:
         parse_data(movie)
         print(movie)

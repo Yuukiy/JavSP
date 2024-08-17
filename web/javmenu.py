@@ -33,9 +33,9 @@ def parse_data(movie: MovieInfo):
     # 竟然还在标题里插广告，真的疯了。要不是我已经写了抓取器，才懒得维护这个破站
     title = title.replace('  | JAV目錄大全 | 每日更新', '')
     title = title.replace(' 免費在線看', '').replace(' 免費AV在線看', '')
-    cover_tag = container.xpath("//div[@class='single-video']")[0]
-    video_tag = cover_tag.find('video')
-    if video_tag is not None:
+    cover_tag = container.xpath("//div[@class='single-video']")
+    if len(cover_tag) > 0:
+        video_tag = cover_tag[0].find('video')
         # URL首尾竟然也有空格……
         movie.cover = video_tag.get('data-poster').strip()
         # 预览影片改为blob了，无法获取
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('IPX-177')
+    movie = MovieInfo('FC2-718323')
     try:
         parse_data(movie)
         print(movie)

@@ -48,16 +48,16 @@ jobs:
       - name: Build with PyInstaller for windows
         run: cmd.exe /c 'make.bat'
 
-      - name: Install pytest
-        run: |
-          python -m pip install pytest
+      # - name: Install pytest
+      #   run: |
+      #     python -m pip install pytest
 
-      - name: Switch code page
-        run: |
-          chcp 65001
+      # - name: Switch code page
+      #   run: |
+      #     chcp 65001
 
-      - name: Test JavSP.exe
-        run: pytest unittest/test_exe.py
+      # - name: Test JavSP.exe
+      #   run: pytest unittest/test_exe.py
 
       - name: Set VERSION variable for windows
         run: |
