@@ -48,7 +48,7 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     # 将DVD ID和CID写入到uniqueid字段
     if info.dvdid:
-        nfo.append(E.uniqueid(info.dvdid, type='num', defult='true'))
+        nfo.append(E.uniqueid(info.dvdid, type='num', default='true'))
     if info.cid:
         nfo.append(E.uniqueid(info.cid, type='cid'))
 
