@@ -145,7 +145,7 @@ def write_csv(data):
     """将genre按照中文翻译排序后写入csv文件"""
     # data格式: {'site_name': name, 'header': ['id', 'url', 'zh_tw'...], 'record': {id1: [ls1], id2: [ls2]...}}
     record = data['record']
-    csv_name = f"data/genre_{data['site_name']}.csv"
+    csv_name = f"data/all/genres/{data['site_name']}.csv"
     csv_header = data['header'] + ['translate', 'note']
     # p[1][1] 必须是最接近最终翻译文本的那一列（如繁体中文）
     sort_record = {k: v for k, v in sorted(record.items(), key=lambda p: p[1][1])}
