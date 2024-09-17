@@ -77,7 +77,7 @@ def get_id(filepath: str) -> str:
         if match:
             return match.group(1) + '-' + match.group(2)
     # 尝试匹配TMA制作的影片（如'T28-557'，他家的番号很乱）
-    match = re.search(r'(T28[-_]\d{3})', filename)
+    match = re.search(r'(T[23]8[-_]\d{3})', filename)
     if match:
         return match.group(1)
     # 尝试匹配东热n, k系列
