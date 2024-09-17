@@ -24,9 +24,9 @@ jobs:
       PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: 3.8
     - name: Install dependencies
@@ -53,7 +53,7 @@ jobs:
       run: |
         pytest unittest/test_func.py
     - name: Upload log as artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: JavSP-basic-funcs.log
