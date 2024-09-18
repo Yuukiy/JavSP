@@ -63,8 +63,8 @@ def resp2html_wrapper(resp):
     html = resp2html(resp)
     if 'not available in your region' in html.text_content():
         raise SiteBlocked('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
-    elif '無料会員登録はこちら' in html.text_content():
-        raise CredentialError('此数据需要注册FANZA才能访问，或者尝试更换为日本IP')
+    elif '/login/' in resp.url:
+        raise SiteBlocked('FANZA要求当前IP登录账号才可访问，请尝试更换为日本IP')
     return html
 
 
