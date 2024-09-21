@@ -5,7 +5,7 @@ import logging
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html, request_get
+from web.base import get_html, request_get, resp2html
 from web.exceptions import *
 from core.config import cfg
 from core.lib import strftime_to_minutes
@@ -41,7 +41,10 @@ def parse_data(movie: MovieInfo):
     fc2_id = id_uc.replace('FC2-', '')
     # 抓取网页
     url = f'{base_url}/article/{fc2_id}/'
-    html = get_html(url)
+    resp = request_get(url)
+    if '/id.fc2.com/' in resp.url:
+        raise SiteBlocked('FC2要求当前IP登录账号才可访问，请尝试更换为日本IP')
+    html = resp2html(resp)
     container = html.xpath("//div[@class='items_article_left']")
     if len(container) > 0:
         container = container[0]
@@ -97,7 +100,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-12345')
+    movie = MovieInfo('FC2-718323')
     try:
         parse_data(movie)
         print(movie)

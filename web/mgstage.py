@@ -22,9 +22,11 @@ request.cookies = {'adc': '1'}
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     url = f'{base_url}/product/product_detail/{movie.dvdid}/'
-    resp = request.get(url)
+    resp = request.get(url, delay_raise=True)
+    if resp.status_code == 403:
+        raise SiteBlocked('mgstage不允许从当前IP所在地区访问，请尝试更换为日本地区代理')
     # url不存在时会被重定向至主页。history非空时说明发生了重定向
-    if resp.history:
+    elif resp.history:
         raise MovieNotFoundError(__name__, movie.dvdid)
 
     html = resp2html(resp)

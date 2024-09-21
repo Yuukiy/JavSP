@@ -28,6 +28,8 @@ def parse_data(movie: MovieInfo):
     if resp.status_code == 500:
         # 500错误表明prestige没有这部影片的数据，不是网络问题，因此不再重试
         raise MovieNotFoundError(__name__, movie.dvdid)
+    elif resp.status_code == 403:
+        raise SiteBlocked('prestige不允许从当前IP所在地区访问，请尝试更换为日本地区代理')
     resp.raise_for_status()
     html = resp2html(resp)
     container_tags = html.xpath("//section[@class='px-4 mb-4 md:px-8 md:mb-16']")
