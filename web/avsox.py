@@ -20,12 +20,13 @@ def parse_data(movie: MovieInfo):
     full_id = movie.dvdid
     if full_id.startswith('FC2-'):
         full_id = full_id.replace('FC2-', 'FC2-PPV-')
-    html = get_html(f'{base_url}/cn/search/{full_id}')
+    html = get_html(f'{base_url}/tw/search/{full_id}')
     ids = html.xpath("//div[@class='photo-info']/span/date[1]/text()")
     urls = html.xpath("//a[contains(@class, 'movie-box')]/@href")
     ids_lower = list(map(str.lower, ids))
     if full_id.lower() in ids_lower:
         url = urls[ids_lower.index(full_id.lower())]
+        url = url.replace('/tw/', '/cn/', 1)
     else:
         raise MovieNotFoundError(__name__, movie.dvdid, ids)
 
@@ -69,7 +70,7 @@ if __name__ == "__main__":
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-718323')
+    movie = MovieInfo('082713-417')
     try:
         parse_data(movie)
         print(movie)
