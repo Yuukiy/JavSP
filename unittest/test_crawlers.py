@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import logging
 import requests
 from urllib.parse import urlsplit
@@ -26,7 +27,7 @@ def test_crawler(crawler_params):
     except requests.exceptions.ReadTimeout:
         logger.warning(f"{site} 连接超时: {params}")
     except Exception as e:
-        if os.getenv('GITHUB_ACTIONS') and (site in ['javdb', 'javlib', 'airav']):
+        if os.getenv('GITHUB_ACTIONS') and (site in ['javlib', 'airav']):
             logger.debug(f'检测到Github actions环境，已忽略测试失败项: {params}', exc_info=True)
         else:
             raise
@@ -48,7 +49,14 @@ def compare(avid, scraper, file):
         parse_data = getattr(mod, 'parse_data')
 
     try:
-        parse_data(online)
+        for _ in range(3):
+            try:
+                parse_data(online)
+                break
+            except requests.exceptions.SSLError:
+                time.sleep(2)
+            except:
+                raise
     except SiteBlocked as e:
         logger.warning(e)
         return

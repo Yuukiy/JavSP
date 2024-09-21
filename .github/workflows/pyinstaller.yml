@@ -16,6 +16,12 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      setup_rdp:
+        type: boolean
+        description: 'Connect to runner via remote desktop'
+        required: false
+        default: false
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,47 +30,87 @@ jobs:
     # The type of runner that the job will run on
     runs-on: windows-latest
     env:
+      PYTHONIOENCODING: "utf-8"
       PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Fetch tags
-        run: git fetch --prune --unshallow --tags
+    - name: Fetch tags
+      run: git fetch --prune --unshallow --tags
 
-      - name: Setup Python 3.8
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.8
+    - name: Setup Remote Desktop
+      env:
+        RDP_PASSWORD: ${{ secrets.RDP_PASSWORD }}
+        CF_TUNNEL_TOKEN: ${{ secrets.CF_TUNNEL_TOKEN }}
+      if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.setup_rdp }}
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
+        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "$env:RDP_PASSWORD" -Force)
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install pyinstaller
+        choco feature disable -n=showDownloadProgress
+        choco install cloudflared
+        Start-Process -FilePath "cloudflared" -ArgumentList "-f tunnel run --token $env:CF_TUNNEL_TOKEN"
+        echo "Cloudflared tunnel started"
 
-      - name: Build with PyInstaller for windows
-        run: cmd.exe /c 'make.bat'
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.8
 
-      # - name: Install pytest
-      #   run: |
-      #     python -m pip install pytest
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install pyinstaller
 
-      # - name: Switch code page
-      #   run: |
-      #     chcp 65001
+    - name: Build with PyInstaller for windows
+      run: cmd.exe /c 'make.bat'
 
-      # - name: Test JavSP.exe
-      #   run: pytest unittest/test_exe.py
+    - name: Install pytest
+      run: |
+        python -m pip install pytest
 
-      - name: Set VERSION variable for windows
-        run: |
-          echo "VERSION=$(python make\gen_ver_hook.py)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    - name: Setup clash proxy
+      env:
+        CLASH_SUBSCRIPTION_URL: ${{ secrets.CLASH_SUBSCRIPTION_URL }}
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/Kuingsmile/clash-core/releases/download/1.18/clash-windows-amd64-v3-v1.18.0.zip" -OutFile "clash.zip"
+        Expand-Archive -Path "clash.zip"
+        Invoke-WebRequest -Uri "$env:CLASH_SUBSCRIPTION_URL" -OutFile "clash\clash.yaml"
+        Start-Process -FilePath "clash\clash-windows-amd64-v3.exe" -ArgumentList "-f clash\clash.yaml"
+        $iniContent = Get-Content -Path "core\config.ini" -Raw
+        $iniContent = $iniContent -replace "use_proxy = no", "use_proxy = yes"
+        $iniContent = $iniContent -replace "auto_update = yes", "auto_update = no"
+        $iniContent | Set-Content -Path "core\config.ini" -Encoding UTF8
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: JavSP-${{ env.VERSION }}-Windows-amd64
-          path: dist/JavSP.exe
+    - name: Test JavSP.exe
+      run: |
+        chcp 65001
+        if (Test-Path "core\config.ini") { Copy-Item "core\config.ini" "dist\config.ini" }
+        pytest unittest/test_exe.py
+
+    - name: Set VERSION variable for windows
+      if: ${{ !cancelled() }}
+      run: |
+        echo "VERSION=$(python make\gen_ver_hook.py)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: JavSP-${{ env.VERSION }}-Windows-amd64
+        path: dist/JavSP.exe
+
+    - name: Setup VS Code and wait RDP connection
+      if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.setup_rdp }}
+      run: |
+        choco install vscode
+        Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+        refreshenv
+        code --install-extension ms-python.python
+        code --wait --new-window .
