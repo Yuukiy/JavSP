@@ -71,6 +71,8 @@ def parse_data(movie: MovieInfo):
     if len(preview_pics) == 0:
         # 尝试搜索另一种布局下的封面，需要使用onerror过滤掉明明没有封面时网站往里面塞的默认URL
         preview_pics = html.xpath("//div/div/div[@class='col-md-3']/img[@onerror and @class='img-responsive']/@src")
+    # 有的图片链接里有多个//，网站质量堪忧……
+    preview_pics = [i[:8] + i[8:].replace('//', '/') for i in preview_pics]
     # 磁力和ed2k链接是依赖js脚本加载的，无法通过静态网页来解析
 
     movie.url = page_url
