@@ -62,7 +62,7 @@ def write_nfo(info: MovieInfo, nfo_file):
     genre = genre_item.copy()
     # 添加自定义分类
     if cfg.NFO.add_custom_genres:
-        custom_genres = cfg.NFO.add_custom_genres_rule.substitute(**dic)
+        custom_genres = cfg.NFO.add_custom_genres_fields.substitute(**dic)
         if custom_genres:
             genre += custom_genres.split(',')
     # 分类去重
@@ -73,12 +73,9 @@ def write_nfo(info: MovieInfo, nfo_file):
         nfo.append(E.genre(i))
 
     tags = []
-    # 将genre写入到tag
-    if cfg.NFO.add_genre_to_tag:
-        tags += genre_item
     # 添加自定义tag
     if cfg.NFO.add_custom_tags:
-        custom_tags = cfg.NFO.add_custom_tags_rule.substitute(**dic)
+        custom_tags = cfg.NFO.add_custom_tags_fields.substitute(**dic)
         if custom_tags:
             tags += custom_tags.split(',')
     # 去重

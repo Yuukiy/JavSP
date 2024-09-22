@@ -266,7 +266,6 @@ def norm_boolean(cfg: Config):
             ('Picture', 'use_big_cover'),
             ('Picture', 'use_ai_crop'),
             ('Picture', 'add_label_to_cover'),
-            ('NFO', 'add_genre_to_tag'),
             ('NFO', 'add_custom_tags'),
             ('NFO', 'add_custom_genres'),
             ('Other', 'check_update'),
@@ -400,8 +399,8 @@ def check_proxy_free_url(cfg: Config):
 
 def convert_nfo_config(cfg: Config):
     """NFO: 转换为字符串Template"""
-    cfg.NFO.add_custom_tags_rule = Template(cfg.NFO.add_custom_tags_rule)
-    cfg.NFO.add_custom_genres_rule = Template(cfg.NFO.add_custom_genres_rule)
+    cfg.NFO.add_custom_tags_fields = Template(cfg.NFO.add_custom_tags_fields)
+    cfg.NFO.add_custom_genres_fields = Template(cfg.NFO.add_custom_genres_fields)
     
 
 def parse_args():

@@ -45,7 +45,7 @@ from web.exceptions import *
 from web.translate import translate_movie_info
 
 actressAliasMap = {}
-if cfg.NFO.fix_actress_name:
+if cfg.Crawler.unify_actress_name:
     actressAliasFilePath = mei_path("data/actress_alias.json")
     with open(actressAliasFilePath, "r", encoding="utf-8") as file:
         actressAliasMap = json.load(file)
@@ -247,7 +247,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
             final_info.ori_title = final_info.title
 
     # 女优别名固定
-    if cfg.NFO.fix_actress_name and bool(final_info.actress_pics):
+    if cfg.Crawler.unify_actress_name and bool(final_info.actress_pics):
         final_info.actress = [resolve_alias(i) for i in final_info.actress]
         if final_info.actress_pics:
             final_info.actress_pics = {
