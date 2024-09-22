@@ -191,7 +191,7 @@ def is_connectable(url, timeout=3):
         return False
 
 
-def urlretrieve(url, filename=None, reporthook=None, data=None):
+def urlretrieve(url, filename=None, reporthook=None, headers=None):
     """使用requests实现urlretrieve"""
     # https://blog.csdn.net/qq_38282706/article/details/80253447
     with contextlib.closing(requests.get(url, headers=headers,
@@ -226,9 +226,11 @@ def download(url, output_path, desc=None):
         return info
     if not desc:
         desc = url.split('/')[-1]
+    referrer = headers.copy()
+    referrer['referer'] = url[:url.find('/', 8)+1]  # 提取base_url部分
     with DownloadProgressBar(unit='B', unit_scale=True,
                              miniters=1, desc=desc, leave=False) as t:
-        urlretrieve(url, filename=output_path, reporthook=t.update_to)
+        urlretrieve(url, filename=output_path, reporthook=t.update_to, headers=referrer)
         info = {k: t.format_dict[k] for k in ('total', 'elapsed', 'rate')}
         return info
 
@@ -246,4 +248,4 @@ webbrowser.open = open_in_chrome
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    print(is_connectable('http://www.baidu.com'))
+    download('https://www.javbus.com/pics/cover/6n54_b.jpg', 'cover.jpg')
