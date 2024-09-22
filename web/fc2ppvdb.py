@@ -6,9 +6,8 @@ from typing import List
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import get_html, request_get
+from web.base import get_html
 from web.exceptions import *
-from core.config import cfg
 from core.lib import strftime_to_minutes
 from core.datatype import MovieInfo
 

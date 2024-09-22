@@ -16,6 +16,7 @@ from requests.models import Response
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.config import cfg
+from web.exceptions import *
 
 
 __all__ = ['Request', 'get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable', 'download', 'get_resp_text']
@@ -111,7 +112,10 @@ def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False)
     """获取指定url的原始请求"""
     r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
     if not delay_raise:
-        r.raise_for_status()
+        if r.status_code == 403 and b'>Just a moment...<' in r.content:
+            raise SiteBlocked(f"403 Forbidden: 无法通过CloudFlare检测: {url}")
+        else:
+            r.raise_for_status()
     return r
 
 
@@ -140,7 +144,8 @@ def get_html(url, encoding='utf-8'):
     html.make_links_absolute(url, resolve_base_href=True)
     # 清理功能仅应在需要的时候用来调试网页（如prestige），否则可能反过来影响调试（如JavBus）
     # html = cleaner.clean_html(html)
-    # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
+    if hasattr(sys, 'javsp_debug_mode'):
+        lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
     return html
 
 
@@ -150,7 +155,8 @@ def resp2html(resp, encoding='utf-8') -> lxml.html.HtmlComment:
     html = lxml.html.fromstring(text)
     html.make_links_absolute(resp.url, resolve_base_href=True)
     # html = cleaner.clean_html(html)
-    # lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
+    if hasattr(sys, 'javsp_debug_mode'):
+        lxml.html.open_in_browser(html, encoding=encoding)  # for develop and debug
     return html
 
 
