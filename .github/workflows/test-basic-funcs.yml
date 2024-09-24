@@ -7,11 +7,9 @@ on:
   push:
     branches:
     - master
-    - premerge
   pull_request:
     branches:
     - master
-    - premerge
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -25,36 +23,43 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.8
+      with:
+        submodules: 'true'
+
+    - name: Install poetry
+      run: pipx install poetry
+
+    - name: Setup Python 3.9
       uses: actions/setup-python@v5
       with:
-        python-version: 3.8
+        python-version: 3.9
+        cache: 'poetry'
+    - name: Setup dynamic versioning
+      run: poetry self add poetry-dynamic-versioning
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest
-        python -m pip install -r requirements.txt
+        poetry install
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Switch code page
       run: |
         chcp 65001
     - name: Test avid.py
       run: |
-        pytest unittest/test_avid.py
+        poetry run pytest unittest/test_avid.py
     - name: Test file.py
       run: |
-        pytest unittest/test_file.py
+        poetry run pytest unittest/test_file.py
     - name: Test func.py
       run: |
-        pytest unittest/test_func.py
+        poetry run pytest unittest/test_func.py
     - name: Upload log as artifact
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: JavSP-basic-funcs.log
-        path: JavSP.log
+        path: javspn/JavSP.log
