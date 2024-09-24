@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "javsp"
+version = "0.0.0"
+description = "汇总多站点数据的AV元数据刮削器"
+authors = ["Yuukiy <76897913+Yuukiy@users.noreply.github.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vsc = "git"
+format = "v{base}.{distance}"
+
+[tool.poetry.dependencies]
+python = "<3.13,>=3.9"
+cloudscraper = "1.2.71"
+colorama = "0.4.4"
+pillow = "10.3.0"
+pretty-errors = "1.2.19"
+requests = "2.31.0"
+tqdm = "4.59.0"
+numpy = "^1.26.4"
+# https://stackoverflow.com/questions/446209/possible-values-from-sys-platform
+pywin32 = {version = "^306", markers = "sys_platform == 'win32'"}
+pywin32-ctypes = {version = "^0.2.2", markers = "sys_platform == 'win32'"}
+cryptography = "^42.0.5"
+pycryptodome = "^3.20.0"
+werkzeug = "^3.0.2"
+json-rpc = "^1.15.0"
+lxml = {extras = ["html-clean"], version = "^5.2.1"}
+baidu-aip = "^2.2.18.0"
+
+
+[tool.poetry.scripts]
+javsp = "javsp.__main__:entry"
+server = "javsp.server:entry"
+
+[[tool.poetry.source]]
+name = "mirrors"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"
+flake8 = "^7.0.0"
+cx-freeze = "^7.2.2"
+types-lxml = "^2024.4.14"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
