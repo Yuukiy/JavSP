@@ -8,7 +8,7 @@ on:
   push:
     branches:
     - master
-    - build-system-poetry
+    - fix-poetry-unit-test
   pull_request:
     branches:
     - master

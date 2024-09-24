@@ -5,6 +5,7 @@ import pytest
 from shutil import rmtree
 
 file_dir = os.path.dirname(__file__)
+sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 from javsp.core.avid import *
 
 
@@ -106,5 +107,5 @@ def test_by_folder_name2(prepare_files):
 
 
 @pytest.mark.parametrize('files', [('ABC-123/CDF-456.mp4',)])
-def test_by_folder_name3(prepare_files):
+def test_by_folder_name2(prepare_files):
     assert 'CDF-456' == get_id('ABC-123/CDF-456.mp4')

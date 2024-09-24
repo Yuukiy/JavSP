@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import logging
 import requests
 from urllib.parse import urlsplit
@@ -8,6 +7,7 @@ from urllib.parse import urlsplit
 
 file_dir = os.path.dirname(__file__)
 data_dir = os.path.join(file_dir, 'data')
+sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 
 from javsp.core.datatype import MovieInfo
 from javsp.web.exceptions import CrawlerError, SiteBlocked
@@ -26,7 +26,7 @@ def test_crawler(crawler_params):
     except requests.exceptions.ReadTimeout:
         logger.warning(f"{site} 连接超时: {params}")
     except Exception as e:
-        if os.getenv('GITHUB_ACTIONS') and (site in ['javlib', 'airav']):
+        if os.getenv('GITHUB_ACTIONS') and (site in ['javdb', 'javlib', 'airav']):
             logger.debug(f'检测到Github actions环境，已忽略测试失败项: {params}', exc_info=True)
         else:
             raise
@@ -39,7 +39,7 @@ def compare(avid, scraper, file):
     else:
         online = MovieInfo(cid=avid)
     # 导入抓取器模块
-    scraper_mod = 'web.' + scraper
+    scraper_mod = 'javsp.web.' + scraper
     __import__(scraper_mod)
     mod = sys.modules[scraper_mod]
     if hasattr(mod, 'parse_clean_data'):
@@ -48,14 +48,7 @@ def compare(avid, scraper, file):
         parse_data = getattr(mod, 'parse_data')
 
     try:
-        for _ in range(3):
-            try:
-                parse_data(online)
-                break
-            except requests.exceptions.SSLError:
-                time.sleep(2)
-            except:
-                raise
+        parse_data(online)
     except SiteBlocked as e:
         logger.warning(e)
         return
