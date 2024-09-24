@@ -31,7 +31,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
-          fetch-tags: 'true'
+
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
 
       - name: Install poetry
         run: pipx install poetry
