@@ -56,7 +56,7 @@ git clone https://github.com/Yuukiy/JavSP.git
 cd JavSP
 ```
 
-4. 使用poetry创建
+4. 使用poetry构建
 ```
 poetry install
 poetry run javsp
