@@ -58,7 +58,7 @@ cd JavSP
 
 4. 使用poetry创建
 ```
-poetry instsall
+poetry install
 poetry run javsp
 ```
 
