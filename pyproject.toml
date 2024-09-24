@@ -19,14 +19,11 @@ pillow = "10.3.0"
 pretty-errors = "1.2.19"
 requests = "2.31.0"
 tqdm = "4.59.0"
-numpy = "^1.26.4"
 # https://stackoverflow.com/questions/446209/possible-values-from-sys-platform
 pywin32 = {version = "^306", markers = "sys_platform == 'win32'"}
 pywin32-ctypes = {version = "^0.2.2", markers = "sys_platform == 'win32'"}
 cryptography = "^42.0.5"
 pycryptodome = "^3.20.0"
-werkzeug = "^3.0.2"
-json-rpc = "^1.15.0"
 lxml = {extras = ["html-clean"], version = "^5.2.1"}
 baidu-aip = "^2.2.18.0"
 
