@@ -38,19 +38,29 @@
 
 ## 安装
 
-- 想要快速上手？
+#### 想要快速上手？
 
-	前往[软件发布页](https://github.com/Yuukiy/JavSP/releases/latest)下载最新版本的软件，无需安装额外工具，开箱即用
+前往[软件发布页](https://github.com/Yuukiy/JavSP/releases/latest)下载最新版本的软件，无需安装额外工具，开箱即用
 
-- 更喜欢源代码？
+#### 更喜欢源代码？
+1. 请先确保您已经安装[Poetry](https://python-poetry.org/)构建系统。
 
-	请确保已安装 Python （此项目以 Python 3.8 开发）
-	```
-	git clone https://github.com/Yuukiy/JavSP.git
-	cd JavSP
-	pip install -r requirements.txt
-	python JavSP.py
-	```
+```
+pipx install poetry
+#安装poetry-dynamic-versioning以动态生成版本号。
+poetry self add poetry-dynamic-versioning
+```
+2. 克隆本项目：
+```
+git clone https://github.com/Yuukiy/JavSP.git
+cd JavSP
+```
+
+4. 使用poetry创建
+```
+poetry instsall
+poetry run javsp
+```
 
 ## 使用
 
