@@ -17,8 +17,8 @@ import csv
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import *
-from core.config import cfg
+from javsp.web.base import *
+from javsp.core.config import cfg
 
 
 def get_javbus_genre():
