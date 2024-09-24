@@ -57,7 +57,7 @@ jobs:
 
       - name: Set VERSION variable for windows
         run: |
-          echo "VERSION=$(poetry run python scripts/version.py)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "VERSION=$(poetry run python tools/version.py)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
