@@ -115,9 +115,9 @@ def translate(texts, engine='google', actress=[]):
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
-    elif engine == 'groq':
+    elif engine == 'openai':
         try:
-            result = groq_translate(texts)
+            result = openai_translate(texts)
             if 'error_code' not in result:
                 rtn = {'trans': result}
             else:
@@ -215,12 +215,12 @@ def claude_translate(texts, to="zh_CN"):
         }
     return result
 
-def groq_translate(texts, to="zh_CN"):
-    """使用Groq翻译文本（默认翻译为简体中文）"""
-    api_url = "https://api.groq.com/openai/v1/chat/completions"
+def openai_translate(texts, to="zh_CN"):
+    """使用 OpenAI 翻译文本（默认翻译为简体中文）"""
+    api_url = cfg.Translate.openai_url
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {cfg.Translate.groq_key}",
+        "Authorization": f"Bearer {cfg.Translate.openai_key}",
     }
     data = {
          "messages": [
@@ -233,7 +233,7 @@ def groq_translate(texts, to="zh_CN"):
              "content": texts
            }
          ],
-         "model": "llama-3.1-70b-versatile",
+         "model": cfg.Translate.openai_model,
          "temperature": 0,
          "max_tokens": 1024,
     }

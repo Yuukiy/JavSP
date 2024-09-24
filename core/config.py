@@ -313,7 +313,9 @@ def validate_translation(cfg: Config):
     trans.baidu_key = os.getenv('JAVSP_BAIDU_KEY', trans.baidu_key)
     trans.bing_key = os.getenv('JAVSP_BING_KEY', trans.bing_key)
     trans.claude_key = os.getenv('JAVSP_CLAUDE_KEY', trans.claude_key)
-    trans.groq_key = os.getenv('JAVSP_GROQ_KEY', trans.groq_key)
+    trans.openai_url = os.getenv('JAVSP_OPENAI_URL', trans.openai_url)
+    trans.openai_key = os.getenv('JAVSP_OPENAI_KEY', trans.openai_key)
+    trans.openai_model = os.getenv('JAVSP_OPENAI_MODEL', trans.openai_model)
     # 先获取访问凭据再判断翻译引擎，这样的话即使配置文件中未启用翻译也可以调试翻译功能
     if trans.engine == '':
         return
@@ -337,11 +339,11 @@ def validate_translation(cfg: Config):
             cfg.Translate.engine = engine_name
         else:
             logger.error('启用Claude时，key不能留空')
-    elif engine_name == 'groq':
-        if trans.groq_key:
+    elif engine_name == 'openai':
+        if trans.openai_url and trans.openai_key and trans.openai_model:
             cfg.Translate.engine = engine_name
         else:
-            logger.error('启用Groq时，key不能留空')
+            logger.error('启用 OpenAI 时，url、key、model 不能留空')
     else:
         logger.error('无效的翻译引擎: ' + engine_name)
 
