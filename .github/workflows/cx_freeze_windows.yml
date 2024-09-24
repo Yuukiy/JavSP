@@ -8,6 +8,7 @@ on:
   push:
     branches:
     - master
+    - build-system-poetry
   pull_request:
     branches:
     - master
