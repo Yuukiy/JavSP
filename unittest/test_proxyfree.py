@@ -1,8 +1,7 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.proxyfree import *
+from javsp.web.proxyfree import *
 
 
 def test_get_url():

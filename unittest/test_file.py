@@ -6,8 +6,7 @@ import pytest
 from shutil import rmtree
 
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.file import failed_items, scan_movies
+from javsp.core.file import scan_movies
 
 
 tmp_folder = 'TMP_' + ''.join(random.choices(string.ascii_uppercase, k=6))
