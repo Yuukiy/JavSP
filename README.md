@@ -1,4 +1,4 @@
-![JavSP](https://github.com/Yuukiy/JavSP/blob/master/image/javsp_logo.png?raw=true)
+![JavSP](./image/JavSP.svg)
 
 # Jav Scraper Package
 
