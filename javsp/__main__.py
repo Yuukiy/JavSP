@@ -658,11 +658,6 @@ def only_fetch():
 
 def entry():
     colorama.init(autoreset=True)
-    # python版本检查
-    import platform
-    from packaging import version
-    py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
-    error_exit(py_version_ok, '请使用3.8及以上版本的Python')
     # 检查更新
     version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
     logger.debug(version_info.center(60, '='))
