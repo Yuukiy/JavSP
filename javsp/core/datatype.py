@@ -168,7 +168,7 @@ class Movie:
             expression = f"('{self.dvdid}')"
         return __class__.__name__ + expression
 
-    def rename_files(self):
+    def rename_files(self, use_hardlink: bool = False) -> None:
         """根据命名规则移动（重命名）影片文件"""
         def move_file(src:str, dst:str):
             """移动（重命名）文件并记录信息到日志"""
@@ -176,7 +176,10 @@ class Movie:
             # shutil.move might overwrite dst file
             if os.path.exists(abs_dst):
                 raise FileExistsError(f'File exists: {abs_dst}')
-            shutil.move(src, abs_dst)
+            if (use_hardlink):
+                os.link(src, abs_dst)
+            else:
+                shutil.move(src, abs_dst)
             src_rel = os.path.relpath(src)
             dst_name = os.path.basename(dst)
             logger.info(f"重命名文件: '{src_rel}' -> '...{os.sep}{dst_name}'")

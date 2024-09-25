@@ -550,7 +550,7 @@ def RunNormalMode(all_movies):
             check_step(True)
             if cfg.File.enable_file_move:
                 inner_bar.set_description('移动影片文件')
-                movie.rename_files()
+                movie.rename_files(cfg.File.use_hardlink)
                 check_step(True)
                 logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
             else:
@@ -658,11 +658,6 @@ def only_fetch():
 
 def entry():
     colorama.init(autoreset=True)
-    # python版本检查
-    import platform
-    from packaging import version
-    py_version_ok = version.parse(platform.python_version()) >= version.parse('3.8')
-    error_exit(py_version_ok, '请使用3.8及以上版本的Python')
     # 检查更新
     version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
     logger.debug(version_info.center(60, '='))
