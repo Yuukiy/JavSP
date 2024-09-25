@@ -44,7 +44,6 @@ def scan_movies(root: str) -> List[Movie]:
                 if filesize < Cfg().scanner.minimum_size:
                     small_videos.setdefault(file, []).append(fullpath)
                     continue
-                print("OK")
                 dvdid = get_id(fullpath)
                 cid = get_cid(fullpath)
                 # 如果文件名能匹配到cid，那么将cid视为有效id，因为此时dvdid多半是错的
