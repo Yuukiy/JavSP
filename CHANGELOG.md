@@ -23,6 +23,7 @@
   ```
   env JAVSP_SCANNER.INPUT_DIRECTORY='/some/directory' poetry run javsp
   ```
+- 为了引入对类型注释的支持，最低Python版本现在为3.10
 
 ### Removed
 - Pyinstaller 打包描述文件 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
