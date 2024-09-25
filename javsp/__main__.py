@@ -33,7 +33,7 @@ for handler in root_logger.handlers:
 logger = logging.getLogger('main')
 
 
-from javsp.core.lib import mei_path
+from javsp.core.lib import resource_path
 from javsp.core.nfo import write_nfo
 from javsp.core.config import cfg, args
 from javsp.core.file import *
@@ -46,7 +46,7 @@ from javsp.web.translate import translate_movie_info
 
 actressAliasMap = {}
 if cfg.Crawler.unify_actress_name:
-    actressAliasFilePath = mei_path("data/actress_alias.json")
+    actressAliasFilePath = resource_path("data/actress_alias.json")
     with open(actressAliasFilePath, "r", encoding="utf-8") as file:
         actressAliasMap = json.load(file)
 
@@ -422,8 +422,8 @@ def reviewMovieID(all_movies, root):
         print()
 
 
-SUBTITLE_MARK_FILE = os.path.abspath(mei_path('image/sub_mark.png'))
-UNCENSORED_MARK_FILE = os.path.abspath(mei_path('image/unc_mark.png'))
+SUBTITLE_MARK_FILE = os.path.abspath(resource_path('image/sub_mark.png'))
+UNCENSORED_MARK_FILE = os.path.abspath(resource_path('image/unc_mark.png'))
 def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False, uncensored=False):
     """包装各种海报裁剪方法，提供统一的调用"""
     if method == 'baidu':

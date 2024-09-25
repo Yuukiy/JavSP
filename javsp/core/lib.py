@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-__all__ = ['re_escape', 'mei_path', 'strftime_to_minutes', 'detect_special_attr']
+__all__ = ['re_escape', 'resource_path', 'strftime_to_minutes', 'detect_special_attr']
 
 
 _special_chars_map = {i: '\\' + chr(i) for i in b'()[]{}?*+|^$\\.'}
@@ -15,7 +15,7 @@ def re_escape(s: str) -> str:
     return pattern
 
 
-def mei_path(path: str) -> str:
+def resource_path(path: str) -> str:
     """获取一个随代码打包的文件在解压后的路径"""
     if getattr(sys, "frozen", False):
         return path

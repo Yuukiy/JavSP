@@ -24,7 +24,7 @@ except ImportError:
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from javsp.web.base import *
-from javsp.core.lib import mei_path, re_escape
+from javsp.core.lib import resource_path, re_escape
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
@@ -42,7 +42,7 @@ def select_folder(default_dir=''):
         exit(1)
     window = Tk()
     window.withdraw()
-    window.iconbitmap(mei_path('image/JavSP.ico'))
+    window.iconbitmap(resource_path('image/JavSP.ico'))
     path = filedialog.askdirectory(initialdir=default_dir)
     if path != '':
         return os.path.normpath(path)

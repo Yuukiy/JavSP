@@ -7,7 +7,7 @@ import logging
 from functools import cached_property
 
 from javsp.core.config import Config
-from javsp.core.lib import mei_path, detect_special_attr
+from javsp.core.lib import resource_path, detect_special_attr
 
 
 logger = logging.getLogger(__name__)
@@ -207,7 +207,7 @@ class GenreMap(dict):
     """genre的映射表"""
     def __init__(self, file):
         genres = {}
-        with open(mei_path(file), newline='', encoding='utf-8-sig') as csvfile:
+        with open(resource_path(file), newline='', encoding='utf-8-sig') as csvfile:
             reader = csv.DictReader(csvfile)
             try:
                 for row in reader:
