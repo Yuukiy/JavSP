@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 from enum import Enum
 from typing import Dict, List
-from confz import BaseConfig, EnvSource, FileSource
+from confz import BaseConfig, CLArgSource, EnvSource, FileSource
 from pydantic import ByteSize, NonNegativeInt, PositiveInt, ValidationError
 from pydantic_extra_types.pendulum_dt import Duration
 from pydantic_core import Url
@@ -174,6 +174,7 @@ def get_config_source():
         args.config = resource_path('config.yml')
     sources.append(FileSource(file=args.config))
     sources.append(EnvSource(prefix='JAVSP_', allow_all=True))
+    sources.append(CLArgSource(prefix='o'))
     return sources
 
 class Cfg(BaseConfig):
