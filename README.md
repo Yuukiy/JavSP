@@ -17,6 +17,8 @@
 [![Latest release](https://img.shields.io/github/v/release/Yuukiy/JavSP)](https://github.com/Yuukiy/JavSP/releases/latest)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
+功能修改日志：[ChangeLog](./CHANGELOG.md)
+
 ## 功能特点
 
 下面这些是一些已实现或待实现的功能，在逐渐实现和完善，如果想到新的功能点也会加进来。
