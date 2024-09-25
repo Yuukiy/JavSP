@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- 添加无码和字幕的水印 [#73](https://github.com/Yuukiy/JavSP/commit/eaedc84049597eaab1ba064229f9b5bcf38aa504)
 - 支持刮削剧照 [#176](https://github.com/Yuukiy/JavSP/issues/176)
 - direnv 适配 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
 
