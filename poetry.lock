@@ -433,7 +433,6 @@ packaging = ">=24"
 patchelf = {version = ">=0.14", markers = "sys_platform == \"linux\" and (platform_machine == \"aarch64\" or platform_machine == \"armv7l\" or platform_machine == \"i686\" or platform_machine == \"ppc64le\" or platform_machine == \"s390x\" or platform_machine == \"x86_64\")"}
 setuptools = ">=65.6.3,<76"
 tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
-typing-extensions = {version = ">=4.10.0", markers = "python_version < \"3.10\""}
 
 [package.extras]
 dev = ["bump-my-version (==0.26.1)", "cibuildwheel (==2.21.1)", "pre-commit (>=3.5.0,<=3.8.0)"]
@@ -2005,5 +2004,5 @@ reference = "mirrors"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "<3.13,>=3.9"
-content-hash = "24cabdde84319d9473e36027a73d75d81878cdf7c50f9646a419be8c188ed825"
+python-versions = "<3.13,>=3.10"
+content-hash = "c3f4057bbbd2559af45ec852f777bd48a60ad22fae34290d381285aa65a0d6ed"

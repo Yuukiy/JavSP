@@ -12,7 +12,7 @@ vcs = "git"
 format = "v{base}.{distance}"
 
 [tool.poetry.dependencies]
-python = "<3.13,>=3.9"
+python = "<3.13,>=3.10"
 cloudscraper = "1.2.71"
 colorama = "0.4.4"
 pillow = "10.3.0"
