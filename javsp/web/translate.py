@@ -13,6 +13,7 @@ __all__ = ['translate', 'translate_movie_info']
 
 from javsp.core.config import Cfg
 from javsp.core.datatype import MovieInfo
+from javsp.web.base import read_proxy
 
 
 logger = logging.getLogger(__name__)
@@ -174,9 +175,7 @@ def google_trans(texts, to='zh_CN'):
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
     url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
-    proxy = str(Cfg().network.proxy_server)
-    proxies = {'http': proxy, 'https': proxy}
-    r = requests.get(url, proxies=proxies)
+    r = requests.get(url, proxies=read_proxy())
     while r.status_code == 429:
         logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
         time.sleep(_google_trans_wait)

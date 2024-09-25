@@ -3,7 +3,7 @@ import logging
 from urllib.parse import urlsplit
 
 
-from javsp.web.base import Request, resp2html
+from javsp.web.base import Request, read_proxy, resp2html
 from javsp.web.exceptions import *
 from javsp.web.proxyfree import get_proxy_free_url
 from javsp.core.config import Cfg, CrawlerID
@@ -26,8 +26,7 @@ def init_network_cfg():
     if proxy_free_url and proxy_free_url not in urls:
         urls.insert(1, proxy_free_url)
     # 使用代理容易触发IUAM保护，先尝试不使用代理访问
-    proxy = str(Cfg().network.proxy_server)
-    proxy_cfgs = [{}, {'https': proxy, 'http': proxy}] if Cfg().network.proxy_server else [{}]
+    proxy_cfgs = [{}, read_proxy()] if Cfg().network.proxy_server else [{}]
     for proxies in proxy_cfgs:
         request.proxies = proxies
         for url in urls:
