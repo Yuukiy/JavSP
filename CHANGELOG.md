@@ -5,6 +5,7 @@
 ### Added
 - 支持刮削剧照 [#176](https://github.com/Yuukiy/JavSP/issues/176)
 - direnv 适配 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
+- 添加硬链接支持 [#374](https://github.com/Yuukiy/JavSP/pull/374)
 
 ### Changed
 - 使用 Poetry 作为构建系统 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
