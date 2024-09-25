@@ -4,7 +4,7 @@ import logging
 
 from javsp.web.base import get_html, request_get, resp2html
 from javsp.web.exceptions import *
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.core.lib import strftime_to_minutes
 from javsp.core.datatype import MovieInfo
 
@@ -60,7 +60,7 @@ def parse_data(movie: MovieInfo):
     publish_date = date_str[-10:].replace('/', '-')  # '販売日 : 2017/11/30'
     preview_pics = container.xpath("//ul[@data-feed='sample-images']/li/a/@href")
 
-    if cfg.Crawler.hardworking_mode:
+    if Cfg().crawler.hardworking:
         # 通过评论数据来计算准确的评分
         score = get_movie_score(fc2_id)
         if score:

@@ -9,12 +9,12 @@ import requests
 
 from javsp.web.base import resp2html
 from javsp.web.exceptions import *
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_path = cfg.Crawler.fc2fan_local_path
+base_path = str(Cfg().crawler.fc2fan_local_path)
 use_local_mirror = os.path.exists(base_path)
 
 

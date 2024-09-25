@@ -11,7 +11,7 @@ from hashlib import md5
 __all__ = ['translate', 'translate_movie_info']
 
 
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.core.datatype import MovieInfo
 
 
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
     # 翻译标题
-    if info.title and cfg.Translate.translate_title and info.ori_title is None:
-        result = translate(info.title, cfg.Translate.engine, info.actress)
+    if info.title and Cfg().translator.translate_title and info.ori_title is None:
+        result = translate(info.title, Cfg().translator.engine, info.actress)
         if 'trans' in result:
             info.ori_title = info.title
             info.title = result['trans']
@@ -35,8 +35,8 @@ def translate_movie_info(info: MovieInfo):
             logger.error('翻译标题时出错: ' + result['error'])
             return False
     # 翻译简介
-    if info.plot and cfg.Translate.translate_plot:
-        result = translate(info.plot, cfg.Translate.engine, info.actress)
+    if info.plot and Cfg().translator.translate_plot:
+        result = translate(info.plot, Cfg().translator.engine, info.actress)
         if 'trans' in result:
             # 只有翻译过plot的影片才可能需要ori_plot属性，因此在运行时动态添加，而不添加到类型定义里
             setattr(info, 'ori_plot', info.plot)
@@ -134,7 +134,7 @@ def bing_translate(texts, to='zh-Hans'):
     api_url = "https://api.cognitive.microsofttranslator.com/translate"
     params = {'api-version': '3.0', 'to': to, 'includeSentenceLength': True}
     headers = {
-        'Ocp-Apim-Subscription-Key': cfg.Translate.bing_key,
+        'Ocp-Apim-Subscription-Key': Cfg().translator.bing_key,
         'Ocp-Apim-Subscription-Region': 'global',
         'Content-type': 'application/json',
         'X-ClientTraceId': str(uuid.uuid4())
@@ -149,8 +149,8 @@ def baidu_translate(texts, to='zh'):
     """使用百度翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.fanyi.baidu.com/api/trans/vip/translate"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    appid = cfg.Translate.baidu_appid
-    appkey = cfg.Translate.baidu_key
+    appid = Cfg().translator.baidu_appid
+    appkey = Cfg().translator.baidu_key
     salt = random.randint(0, 0x7FFFFFFF)
     sign_input = appid + texts + str(salt) + appkey
     sign = md5(sign_input.encode('utf-8')).hexdigest()
@@ -174,11 +174,13 @@ def google_trans(texts, to='zh_CN'):
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
     url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
-    r = requests.get(url, proxies=cfg.Network.proxy)
+    proxy = str(Cfg().network.proxy_server)
+    proxies = {'http': proxy, 'https': proxy}
+    r = requests.get(url, proxies=proxies)
     while r.status_code == 429:
         logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
         time.sleep(_google_trans_wait)
-        r = requests.get(url, proxies=cfg.Network.proxy)
+        r = requests.get(url, proxies=proxies)
         if r.status_code == 429:
             _google_trans_wait += random.randint(60, 90)
     if r.status_code == 200:
@@ -192,7 +194,7 @@ def claude_translate(texts, to="zh_CN"):
     """使用Claude翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.anthropic.com/v1/messages"
     headers = {
-        "x-api-key": cfg.Translate.claude_key,
+        "x-api-key": Cfg().translator.claude_key,
         "context-type": "application/json",
         "anthropic-version": "2023-06-01",
     }
@@ -214,10 +216,10 @@ def claude_translate(texts, to="zh_CN"):
 
 def openai_translate(texts, to="zh_CN"):
     """使用 OpenAI 翻译文本（默认翻译为简体中文）"""
-    api_url = cfg.Translate.openai_url
+    api_url = str(Cfg().translator.openai_url)
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {cfg.Translate.openai_key}",
+        "Authorization": f"Bearer {Cfg().translator.openai_key}",
     }
     data = {
          "messages": [
@@ -230,7 +232,7 @@ def openai_translate(texts, to="zh_CN"):
              "content": texts
            }
          ],
-         "model": cfg.Translate.openai_model,
+         "model": Cfg().translator.openai_model,
          "temperature": 0,
          "max_tokens": 1024,
     }

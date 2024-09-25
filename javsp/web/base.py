@@ -14,7 +14,7 @@ from lxml.html.clean import Cleaner
 from requests.models import Response
 
 
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.web.exceptions import *
 
 
@@ -37,8 +37,10 @@ class Request():
         # 必须使用copy()，否则各个模块对headers的修改都将会指向本模块中定义的headers变量，导致只有最后一个对headers的修改生效
         self.headers = headers.copy()
         self.cookies = {}
-        self.proxies = cfg.Network.proxy
-        self.timeout = cfg.Network.timeout
+
+        proxy = str(Cfg().network.proxy_server)
+        self.proxies = {'http': proxy, 'https': proxy}
+        self.timeout = Cfg().network.timeout.total_seconds()
         if not use_scraper:
             self.scraper = None
             self.__get = requests.get
@@ -107,9 +109,13 @@ class DownloadProgressBar(tqdm):
         self.update(b * bsize - self.n)
 
 
-def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
+def request_get(url, cookies={}, timeout=None, delay_raise=False):
     """获取指定url的原始请求"""
-    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
+    if timeout is None:
+        timeout = Cfg().network.timeout.seconds
+    proxy = str(Cfg().network.proxy_server)
+    proxies = {'http': proxy, 'https': proxy}
+    r = requests.get(url, headers=headers, proxies=proxies, cookies=cookies, timeout=timeout)
     if not delay_raise:
         if r.status_code == 403 and b'>Just a moment...<' in r.content:
             raise SiteBlocked(f"403 Forbidden: 无法通过CloudFlare检测: {url}")
@@ -118,9 +124,13 @@ def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False)
     return r
 
 
-def request_post(url, data, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
+def request_post(url, data, cookies={}, timeout=None, delay_raise=False):
     """向指定url发送post请求"""
-    r = requests.post(url, data=data, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
+    if timeout is None:
+        timeout = Cfg().network.timeout.seconds
+    proxy = str(Cfg().network.proxy_server)
+    proxies = {'http': proxy, 'https': proxy}
+    r = requests.post(url, data=data, headers=headers, proxies=proxies, cookies=cookies, timeout=timeout)
     if not delay_raise:
         r.raise_for_status()
     return r
@@ -198,9 +208,11 @@ def is_connectable(url, timeout=3):
 
 def urlretrieve(url, filename=None, reporthook=None, headers=None):
     """使用requests实现urlretrieve"""
+    proxy = str(Cfg().network.proxy_server)
+    proxies = {'http': proxy, 'https': proxy}
     # https://blog.csdn.net/qq_38282706/article/details/80253447
     with contextlib.closing(requests.get(url, headers=headers,
-                                         proxies=cfg.Network.proxy, stream=True)) as r:
+                                         proxies=proxies, stream=True)) as r:
         header = r.headers
         with open(filename, 'wb+') as fp:
             bs = 1024

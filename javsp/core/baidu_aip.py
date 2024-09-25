@@ -10,16 +10,17 @@ from datetime import datetime
 from aip import AipBodyAnalysis
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
-from javsp.core.config import cfg, rel_path_from_exe
+from javsp.core.config import Cfg
+from javsp.core.lib import resource_path
 
 logger = logging.getLogger(__name__)
 
 
 class AipClient():
     def __init__(self) -> None:
-        piccfg = cfg.Picture
+        piccfg = Cfg().media_sanitizer
         # 保存已经识别过的图片的结果，减少请求次数
-        self.file = rel_path_from_exe('data/baidu_aip.cache.json')
+        self.file = resource_path('data/baidu_aip.cache.json')
         dir_path = os.path.dirname(self.file)
         if (not os.path.exists(dir_path)) and piccfg.ai_engine == 'baidu':
             os.makedirs(dir_path)
@@ -52,7 +53,7 @@ class AipClient():
             return result
 
 
-ai = AipClient()
+# ai = AipClient()
 
 
 def choose_center(body_parts):

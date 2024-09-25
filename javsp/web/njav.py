@@ -4,9 +4,8 @@ import logging
 from typing import List
 
 
-from javsp.web.base import get_html, request_get
+from javsp.web.base import get_html
 from javsp.web.exceptions import *
-from javsp.core.config import cfg
 from javsp.core.lib import strftime_to_minutes
 from javsp.core.datatype import MovieInfo
 
