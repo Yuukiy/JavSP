@@ -43,8 +43,7 @@ crawler:
   selection:
     normal: [airav, avsox, javbus, javdb, javlib, jav321, mgstage, prestige]
     fc2: [fc2, avsox, javdb, javmenu, fc2ppvdb]
-    # 番号中只包含数字
-    num_id: [fanza]
+    cid: [fanza]
     getchu: [dl_getchu]
     gyutto: [gyutto]
   # 爬虫至少要获取到哪些字段才可以视为抓取成功？

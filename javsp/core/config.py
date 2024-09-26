@@ -46,7 +46,7 @@ class CrawlerSelect(BaseConfig):
         return [
             ('normal', self.normal),
             ('fc2', self.fc2),
-            ('cid', self.num_id),
+            ('cid', self.cid),
             ('getchu', self.getchu),
             ('gyutto', self.gyutto),
         ]
@@ -58,7 +58,7 @@ class CrawlerSelect(BaseConfig):
             case 'fc2':
                 return self.fc2
             case 'cid':
-                return self.num_id
+                return self.cid
             case 'getchu':
                 return self.getchu
             case 'gyutto':
@@ -67,7 +67,7 @@ class CrawlerSelect(BaseConfig):
 
     normal: list[CrawlerID]
     fc2: list[CrawlerID]
-    num_id: list[CrawlerID]
+    cid: list[CrawlerID]
     getchu: list[CrawlerID]
     gyutto: list[CrawlerID]
 

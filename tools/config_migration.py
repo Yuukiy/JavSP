@@ -91,8 +91,7 @@ crawler:
   selection:
     normal: [{', '.join(cfg['CrawlerSelect']['normal'].split(','))}]
     fc2: [{', '.join(cfg['CrawlerSelect']['fc2'].split(','))}]
-    # 番号中只包含数字
-    num_id: [{', '.join(cfg['CrawlerSelect']['cid'].split(','))}]
+    cid: [{', '.join(cfg['CrawlerSelect']['cid'].split(','))}]
     getchu: [{', '.join(cfg['CrawlerSelect']['getchu'].split(','))}]
     gyutto: [{', '.join(cfg['CrawlerSelect']['gyutto'].split(','))}]
   # 爬虫至少要获取到哪些字段才可以视为抓取成功？
