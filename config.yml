@@ -89,6 +89,8 @@ summarizer:
     length_by_byte: true
     # 路径中的{actress}字段最多包含多少名女优？
     max_actress_count: 10
+    # 是否用硬链接方式整理文件？硬链接可以节省空间，但不是所有文件系统都支持
+    hard_link: false
 
   #标题处理
   title:

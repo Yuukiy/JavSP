@@ -6,7 +6,7 @@
 
 提取影片文件名中的番号信息，自动抓取并汇总多个站点数据的 AV 元数据，按照指定的规则分类整理影片文件，并创建供 Emby、Jellyfin、Kodi 等软件使用的元数据文件
 
-**Docker & WebUI**: 由于精力所限，目前还没有做Docker的支持。此外，UI界面也不是[此项目的目标](https://github.com/Yuukiy/JavSP/issues/148)。如果你需要这两个功能，可以试试[@tetato/JavSP-Docker](https://github.com/tetato/JavSP-Docker)
+**WebUI**: UI界面不是[此项目的目标](https://github.com/Yuukiy/JavSP/issues/148)。如果你需要这个功能，可以试试[@tetato/JavSP-Docker](https://github.com/tetato/JavSP-Docker)
 
 **i18n**: This project currently supports only Chinese. However, if you're willing, you can [vote here](https://github.com/Yuukiy/JavSP/discussions/157) for the language you'd like to see added
 
@@ -62,6 +62,28 @@ cd JavSP
 ```
 poetry install
 poetry run javsp
+```
+
+#### 更喜欢Docker？
+
+请确保已安装Docker
+
+- 直接运行
+```
+docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest
+```
+
+- 带命令行参数
+```
+docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest -h
+```
+
+- 使用自己的配置文件
+
+> 注意配置文件中的`scan_dir`配置要和挂载的`/video`目录一致，也可以根据自己的需要进行修改。
+
+```
+docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video -v <YOUR_CONFIG_FILE_PATH>:/app/config.ini ghcr.io/yuukiy/javsp:latest
 ```
 
 ## 使用

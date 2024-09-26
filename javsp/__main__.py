@@ -501,7 +501,7 @@ def RunNormalMode(all_movies):
             check_step(True)
             if Cfg().summarizer.move_files:
                 inner_bar.set_description('移动影片文件')
-                movie.rename_files()
+                movie.rename_files(Cfg().summarizer.path.hard_link)
                 check_step(True)
                 logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
             else:

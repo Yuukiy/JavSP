@@ -129,6 +129,8 @@ summarizer:
     length_by_byte: {path_len_by_byte(cfg['NamingRule']['calc_path_len_by_byte'])}
     # 路径中的{{actress}}字段最多包含多少名女优？
     max_actress_count: {cfg['NamingRule']['max_actress_count']}
+    # 是否用硬链接方式整理文件？硬链接可以节省空间，但不是所有文件系统都支持
+    hard_link: {yes_to_true(cfg['File']['use_hardlink']) if 'use_hardlink' in cfg['File'] else 'false'}
 
   #标题处理
   title:
