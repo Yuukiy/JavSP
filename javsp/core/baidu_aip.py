@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 class AipClient():
     def __init__(self, app_id: str, api_key: str) -> None:
-        piccfg = Cfg().media_sanitizer
         # 保存已经识别过的图片的结果，减少请求次数
         self.file = resource_path('data/baidu_aip.cache.json')
         dir_path = os.path.dirname(self.file)
@@ -28,7 +27,7 @@ class AipClient():
                 self.cache = json.load(f)
         else:
             self.cache = {}
-        self.client = AipBodyAnalysis(app_id, api_key, piccfg.aip_secret_key)
+        self.client = AipBodyAnalysis(app_id, api_key, Cfg().summarizer.cover.crop.engine.secret_key)
 
     def analysis(self, pic_path):
         with open(pic_path, 'rb') as f:

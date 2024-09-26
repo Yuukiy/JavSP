@@ -134,19 +134,12 @@ class TitleSummarize(BaseConfig):
     remove_trailing_actor_name: bool
 
 class NFOSummarize(BaseConfig):
+    basename_pattern: str
     title_pattern: str
     custom_genres_fields: list[str]
     custom_tags_fields: list[str]
 
-class Summarizer(BaseConfig):
-    path: PathSummarize
-    default: MovieDefault
-    nfo: NFOSummarize
-    censor_options_representation: list[str]
-    title: TitleSummarize
-    move_files: bool = True
-
-class ExtraFanart(BaseConfig):
+class ExtraFanartSummarize(BaseConfig):
     enabled: bool
     scrap_interval: Duration
 
@@ -156,15 +149,29 @@ class BaiduAipEngine(BaseConfig):
     api_key: str
     secret_key: str
 
-class MediaCrop(BaseConfig):
-  engine: BaiduAipEngine | None
-  on_id_pattern: list[str]
+class CoverCrop(BaseConfig):
+    engine: BaiduAipEngine | None
+    on_id_pattern: list[str]
 
-class MediaSanitizer(BaseConfig):
-    highres_covers: bool
-    extra_fanarts: ExtraFanart
-    crop: MediaCrop
-    add_label_to_cover: bool
+class CoverSummarize(BaseConfig):
+    basename_pattern: str
+    highres: bool
+    add_label: bool
+    crop: CoverCrop
+
+class FanartSummarize(BaseConfig):
+    basename_pattern: str
+
+class Summarizer(BaseConfig):
+    default: MovieDefault
+    censor_options_representation: list[str]
+    title: TitleSummarize
+    move_files: bool = True
+    path: PathSummarize
+    nfo: NFOSummarize
+    cover: CoverSummarize
+    fanart: FanartSummarize
+    extra_fanarts: ExtraFanartSummarize
 
 class BaiduTranslateEngine(BaseConfig):
     name: Literal['baidu']
@@ -225,7 +232,6 @@ class Cfg(BaseConfig):
     network: Network
     crawler: Crawler
     summarizer: Summarizer
-    media_sanitizer: MediaSanitizer
     translator: Translator
     other: Other
     CONFIG_SOURCES=get_config_source()

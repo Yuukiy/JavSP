@@ -310,9 +310,9 @@ def generate_names(movie: Movie):
             if remaining > 0:
                 movie.save_dir = save_dir
                 movie.basename = basename
-                movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
-                movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
-                movie.poster_file = os.path.join(save_dir, 'poster.jpg')
+                movie.nfo_file = os.path.join(save_dir, Cfg().summarizer.nfo.basename_pattern.format(**copyd) + '.nfo')
+                movie.fanart_file = os.path.join(save_dir, Cfg().summarizer.fanart.basename_pattern.format(**copyd) + '.jpg')
+                movie.poster_file = os.path.join(save_dir, Cfg().summarizer.cover.basename_pattern.format(**copyd) + '.jpg')
                 if d['title'] != copyd['title']:
                     logger.info(f"自动截短标题为:\n{copyd['title']}")
                 if d['rawtitle'] != copyd['rawtitle']:
@@ -333,9 +333,11 @@ def generate_names(movie: Movie):
             basename = os.path.normpath(Cfg().summarizer.path.basename_pattern.format(**copyd)).strip()
         movie.save_dir = save_dir
         movie.basename = basename
-        movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
-        movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
-        movie.poster_file = os.path.join(save_dir, 'poster.jpg')
+
+        movie.nfo_file = os.path.join(save_dir, Cfg().summarizer.nfo.basename_pattern.format(**copyd) + '.nfo')
+        movie.fanart_file = os.path.join(save_dir, Cfg().summarizer.fanart.basename_pattern.format(**copyd) + '.jpg')
+        movie.poster_file = os.path.join(save_dir, Cfg().summarizer.cover.basename_pattern.format(**copyd) + '.jpg')
+
         if d['title'] != copyd['title']:
             logger.info(f"自动截短标题为:\n{copyd['title']}")
         if d['rawtitle'] != copyd['rawtitle']:
@@ -387,7 +389,7 @@ def crop_poster_wrapper(fanart_file, poster_file, engine: BaiduAipEngine | None,
             crop_poster(fanart_file, poster_file)
     else:
         crop_poster(fanart_file, poster_file)
-    if Cfg().media_sanitizer.add_label_to_cover:
+    if Cfg().summarizer.cover.add_label:
         if hard_sub == True:
             add_label_to_poster(poster_file, SUBTITLE_MARK_FILE, LabelPostion.BOTTOM_RIGHT)
         if uncensored == True:
@@ -407,7 +409,7 @@ def RunNormalMode(all_movies):
     total_step = 6
     if Cfg().translator.engine:
         total_step += 1
-    if Cfg().media_sanitizer.extra_fanarts.enabled:
+    if Cfg().summarizer.extra_fanarts.enabled:
         total_step += 1
 
     return_movies = []
@@ -438,7 +440,7 @@ def RunNormalMode(all_movies):
                 os.makedirs(movie.save_dir)
 
             inner_bar.set_description('下载封面图片')
-            if Cfg().media_sanitizer.highres_covers:
+            if Cfg().summarizer.cover.highres:
                 cover_dl = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
             else:
                 cover_dl = download_cover(movie.info.covers, movie.fanart_file)
@@ -454,7 +456,7 @@ def RunNormalMode(all_movies):
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
             def should_use_ai_crop_match(label):
-                for r in Cfg().media_sanitizer.crop.on_id_pattern:
+                for r in Cfg().summarizer.cover.crop.on_id_pattern:
                     re.match(r, label)
                     return True
                 return False
@@ -464,15 +466,15 @@ def RunNormalMode(all_movies):
             if (movie.info.uncensored or
                movie.data_src == 'fc2' or
                should_use_ai_crop_match(movie.info.label.upper())):
-                crop_engine = Cfg().media_sanitizer.crop.engine
+                crop_engine = Cfg().summarizer.cover.crop.engine
                 inner_bar.set_description('使用AI裁剪海报封面')
             else:
                 inner_bar.set_description('裁剪海报封面')
             crop_poster_wrapper(movie.fanart_file, movie.poster_file, crop_engine, movie.hard_sub, movie.uncensored)
             check_step(True)
 
-            if Cfg().media_sanitizer.extra_fanarts.enabled:
-                scrape_interval = Cfg().media_sanitizer.extra_fanarts.scrap_interval.total_seconds()
+            if Cfg().summarizer.extra_fanarts.enabled:
+                scrape_interval = Cfg().summarizer.extra_fanarts.scrap_interval.total_seconds()
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'

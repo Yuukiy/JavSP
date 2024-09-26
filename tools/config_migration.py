@@ -149,6 +149,8 @@ summarizer:
 
   # NFO文件生成相关的选项
   nfo:
+    # nfo文件的名称
+    basename_pattern: "movie"
     # nfo文件中的影片标题（即媒体管理工具中显示的标题）
     title_pattern: '{fix_pat(cfg['NamingRule']['nfo_title'])}'
     # 要添加到自定义分类的字段，空列表表示不添加
@@ -162,35 +164,40 @@ summarizer:
   # 依次设置 已知无码/已知有码/不确定 这三种情况下 $censor 对应的文本(可以利用此变量将有码/无码影片整理到不同文件夹)
   censor_options_representation: ['{cfg['NamingRule']['text_for_uncensored']}', '{cfg['NamingRule']['text_for_censored']}', '{cfg['NamingRule']['text_for_unknown_censorship']}']
 
+  cover:
+    # 封面文件的名称（不含拓展名），可以使用如`{{title}}`等字段
+    basename_pattern: "poster"
+    # 尽可能下载高清封面？（高清封面大小约 8-10 MiB，远大于普通封面，如果你的网络条件不佳，会降低整理速度）
+    highres: {yes_to_true(cfg['Picture']['use_big_cover'])}
+    # 在封面图上添加水印（标签），例如“字幕”
+    add_label: false
+    crop:
+      # 要使用图像识别来裁剪的番号系列需要匹配的正则表达式
+      on_id_pattern:
+{'\n'.join([f"        - '{ai_crop_pat(r)}'" for r in cfg['Picture']['use_ai_crop_labels'].split(',')])}
+      # 要使用的图像识别引擎，详细配置见文档 https://github.com/Yuukiy/JavSP/wiki/AI-%7C-%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB
+      # NOTE: 此处无法直接对应，请参照注释手动填入
+      engine: null #null表示禁用图像剪裁
+      ## 使用百度人体分析应用: {{{{{{
+      # engine: 
+      #   name: baidu_aip
+      #   # 百度人体分析应用的AppID
+      #   app_id: ''
+      #   # 百度人体分析应用的API Key
+      #   api_key: ''
+      #   # 百度人体分析应用的Secret Key
+      #   secret_key: ''
+      ## }}}}}}
 
-################################
-media_sanitizer:
-  # 尽可能下载高清封面？（高清封面大小约 8-10 MiB，远大于普通封面，如果你的网络条件不佳，会降低整理速度）
-  highres_covers: {yes_to_true(cfg['Picture']['use_big_cover'])}
+  fanart:
+    # 横版封面文件的名称（不含拓展名），可以使用如`{{title}}`等字段
+    basename_pattern: "fanart"
+
   extra_fanarts:
     # 是否下载剧照？
     enabled: {yes_to_true(cfg['Picture']['use_extra_fanarts'])}
     # 间隔的两次封面爬取请求之间应该间隔多久
     scrap_interval: PT{cfg['Picture']['extra_fanarts_scrap_interval']}S
-  crop:
-    # 要使用图像识别来裁剪的番号系列需要匹配的正则表达式
-    on_id_pattern:
-{'\n'.join([f"      - '{ai_crop_pat(r)}'" for r in cfg['Picture']['use_ai_crop_labels'].split(',')])}
-    # 要使用的图像识别引擎，详细配置见文档 https://github.com/Yuukiy/JavSP/wiki/AI-%7C-%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB
-    # NOTE: 此处无法直接对应，请参照注释手动填入
-    engine: null #null表示禁用图像剪裁
-    ## 使用百度人体分析应用: {{{{{{
-    # engine: 
-    #   name: baidu_aip
-    #   # 百度人体分析应用的AppID
-    #   app_id: ''
-    #   # 百度人体分析应用的API Key
-    #   api_key: ''
-    #   # 百度人体分析应用的Secret Key
-    #   secret_key: ''
-    ## }}}}}}
-  # 在封面图上添加水印（标签），例如“字幕”
-  add_label_to_cover: false
 
 ################################
 translator:
