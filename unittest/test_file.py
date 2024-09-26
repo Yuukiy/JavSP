@@ -13,6 +13,10 @@ from javsp.core.file import scan_movies
 tmp_folder = 'TMP_' + ''.join(random.choices(string.ascii_uppercase, k=6))
 DEFAULT_SIZE = 512*2**20    # 512 MiB
 
+def touch_file_size(path: str, size_bytes: int):
+    with open(path, 'wb') as f:
+        f.seek(size_bytes - 1)
+        f.write(b'\0')
 
 @pytest.fixture
 def prepare_files(files):
@@ -28,7 +32,7 @@ def prepare_files(files):
         folder = os.path.split(path)[0]
         if folder and (not os.path.exists(folder)):
             os.makedirs(folder)
-        os.system(f'fsutil file createnew "{path}" {size}')
+        touch_file_size(path, size)
     yield
     rmtree(tmp_folder)
     return
