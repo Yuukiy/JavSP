@@ -197,6 +197,8 @@ def is_connectable(url, timeout=3):
 
 
 def urlretrieve(url, filename=None, reporthook=None, headers=None):
+    if "arzon" in url:
+        headers["Referer"] = "https://www.arzon.jp/"
     """使用requests实现urlretrieve"""
     # https://blog.csdn.net/qq_38282706/article/details/80253447
     with contextlib.closing(requests.get(url, headers=headers,
