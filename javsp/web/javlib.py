@@ -6,8 +6,8 @@ from urllib.parse import urlsplit
 from javsp.web.base import Request, read_proxy, resp2html
 from javsp.web.exceptions import *
 from javsp.web.proxyfree import get_proxy_free_url
-from javsp.core.config import Cfg, CrawlerID
-from javsp.core.datatype import  MovieInfo
+from javsp.config import Cfg, CrawlerID
+from javsp.datatype import  MovieInfo
 
 
 # 初始化Request实例

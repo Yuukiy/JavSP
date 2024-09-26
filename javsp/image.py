@@ -5,7 +5,7 @@ import logging
 from PIL import Image, ImageOps
 
 
-__all__ = ['valid_pic', 'crop_poster', 'get_pic_size', 'add_label_to_poster', 'LabelPostion']
+__all__ = ['valid_pic', 'get_pic_size', 'add_label_to_poster', 'LabelPostion']
 
 logger = logging.getLogger(__name__)
 
@@ -21,27 +21,6 @@ def valid_pic(pic_path):
         return False
 
 
-def crop_poster(fanart_file, poster_file):
-    """将给定的fanart图片文件裁剪为适合poster尺寸的图片"""
-    # Kodi的宽高比为2:3，但是按照这个比例来裁剪会导致poster画面不完整，
-    # 因此按照poster画面比例来裁剪，这样的话虽然在显示时可能有轻微变形，但是画面是完整的
-    fanart = Image.open(fanart_file)
-    fanart_w, fanart_h = fanart.size
-    # 1.42 = 2535/1785（高清封面）, 539/379（普通封面）
-    poster_w = int(fanart_h / 1.42)
-    if poster_w <= fanart_w:
-        poster_h = fanart_h
-    else:
-        # 图片太“瘦”时以宽度来定裁剪高度
-        poster_w, poster_h = fanart_w, int(fanart_w * 1.42)
-    # (left, upper, right, lower)
-    box = (fanart_w-poster_w, 0, fanart_w, poster_h)
-    poster = fanart.crop(box)
-    if poster.mode != 'RGB':
-        poster = poster.convert('RGB')
-    # quality: from doc, default is 75, values above 95 should be avoided
-    poster.save(poster_file, quality=95)
-
 # 位置枚举
 class LabelPostion(Enum):
     """水印位置枚举"""
@@ -50,10 +29,9 @@ class LabelPostion(Enum):
     BOTTOM_LEFT = 3
     BOTTOM_RIGHT = 4
 
-def add_label_to_poster(poster_file:str, mark_pic_file: str, pos: LabelPostion):
+def add_label_to_poster(poster: Image.Image, mark_pic_file: Image.Image, pos: LabelPostion) -> Image.Image:
     """向poster中添加标签(水印)"""
-    poster = Image.open(poster_file)
-    mark_img = Image.open(mark_pic_file).convert('RGBA')
+    mark_img = mark_pic_file.convert('RGBA')
     r,g,b,a = mark_img.split()
     # 计算水印位置
     if pos == LabelPostion.TOP_LEFT:
@@ -65,7 +43,7 @@ def add_label_to_poster(poster_file:str, mark_pic_file: str, pos: LabelPostion):
     elif pos == LabelPostion.BOTTOM_RIGHT:
         box = (poster.size[0] - mark_img.size[0], poster.size[1] - mark_img.size[1])
     poster.paste(mark_img, box=box, mask=a)
-    poster.save(poster_file, quality=95)
+    return poster
 
 
 def get_pic_size(pic_path):

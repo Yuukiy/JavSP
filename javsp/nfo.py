@@ -3,8 +3,8 @@ from lxml.etree import tostring
 from lxml.builder import E
 
 
-from javsp.core.datatype import MovieInfo
-from javsp.core.config import Cfg
+from javsp.datatype import MovieInfo
+from javsp.config import Cfg
 
 
 def write_nfo(info: MovieInfo, nfo_file):

@@ -6,8 +6,8 @@ from typing import List
 
 from javsp.web.base import get_html
 from javsp.web.exceptions import *
-from javsp.core.lib import strftime_to_minutes
-from javsp.core.datatype import MovieInfo
+from javsp.lib import strftime_to_minutes
+from javsp.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
