@@ -51,7 +51,7 @@ def _get_javbus_urls() -> list:
 
 
 def _get_javlib_urls() -> list:
-    html = get_html('https://kkgithub.com/javlibcom')
+    html = get_html('https://github.com/javlibcom')
     print(html)
     text = html.xpath("//div[@class='p-note user-profile-bio mb-3 js-user-profile-bio f4']")[0].text_content()
     match = re.search(r'[\w\.]+', text, re.A)
