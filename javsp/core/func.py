@@ -13,6 +13,7 @@ import platform
 from datetime import datetime
 from packaging import version
 from colorama import Style
+from pathlib import Path
 import importlib.metadata as meta
 
 # 判断系统是否可以使用tk
@@ -24,7 +25,7 @@ except ImportError:
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from javsp.web.base import *
-from javsp.core.lib import mei_path, re_escape
+from javsp.core.lib import re_escape, resource_path
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
@@ -42,18 +43,18 @@ def select_folder(default_dir=''):
         exit(1)
     window = Tk()
     window.withdraw()
-    window.iconbitmap(mei_path('image/JavSP.ico'))
+    window.iconbitmap(resource_path('image/JavSP.ico'))
     path = filedialog.askdirectory(initialdir=default_dir)
     if path != '':
         return os.path.normpath(path)
 
 
-def get_scan_dir(cfg_scan_dir):
+def get_scan_dir(cfg_scan_dir: Path | None) -> str | None:
     """综合命令参数、配置文件等信息，返回要扫描影片的文件夹"""
     # 目前config模块负责处理来自命令行和来自文件的配置，cfg_scan_dir已经是综合了这两处后得到的结果
     if cfg_scan_dir:
-        if os.path.isdir(cfg_scan_dir):
-            return cfg_scan_dir
+        if cfg_scan_dir.exists():
+            return str(cfg_scan_dir)
         else:
             logger.error(f"配置的待整理文件夹无效：'{cfg_scan_dir}'")
     else:

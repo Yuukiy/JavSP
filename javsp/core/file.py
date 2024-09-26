@@ -1,5 +1,6 @@
 """与文件相关的各类功能"""
 import os
+from pathlib import Path
 import re
 import ctypes
 import logging
@@ -14,14 +15,14 @@ __all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_ill
 
 from javsp.core.avid import *
 from javsp.core.lib import re_escape
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.core.datatype import Movie
 
 logger = logging.getLogger(__name__)
 failed_items = []
 
 
-def scan_movies(root: str, only_scan = False, data_cache_file = "") -> List[Movie]:
+def scan_movies(root: str) -> List[Movie]:
     """获取文件夹内的所有影片的列表（自动探测同一文件夹内的分片）"""
     # 由于实现的限制: 
     # 1. 以数字编号最多支持10个分片，字母编号最多支持26个分片
@@ -30,17 +31,18 @@ def scan_movies(root: str, only_scan = False, data_cache_file = "") -> List[Movi
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # avid: [abspath1, abspath2...]
     small_videos = {}
+    ignore_folder_name_pattern = re.compile('|'.join(Cfg().scanner.ignored_folder_name_pattern))
     for dirpath, dirnames, filenames in os.walk(root):
         for name in dirnames.copy():
-            if name.startswith('.') or name in cfg.File.ignore_folder:
+            if ignore_folder_name_pattern.match(name):
                 dirnames.remove(name)
         for file in filenames:
             ext = os.path.splitext(file)[1].lower()
-            if ext in cfg.File.media_ext:
+            if ext in Cfg().scanner.filename_extensions:
                 fullpath = os.path.join(dirpath, file)
                 # 忽略小于指定大小的文件
                 filesize = os.path.getsize(fullpath)
-                if filesize < cfg.File.ignore_video_file_less_than:
+                if filesize < Cfg().scanner.minimum_size:
                     small_videos.setdefault(file, []).append(fullpath)
                     continue
                 dvdid = get_id(fullpath)
@@ -144,17 +146,6 @@ def scan_movies(root: str, only_scan = False, data_cache_file = "") -> List[Movi
         mov.data_src = src
         logger.debug(f'影片数据源类型: {avid}: {src}')
         movies.append(mov)
-    if only_scan:
-        # 仅识别，将结果转json存入缓存文件
-        store_movies = []
-        for m in movies:
-            store_movies.append(m.__dict__)
-        for m in failed_items:
-            store_movies.append(m.__dict__)
-        json_str = json.dumps(store_movies)
-        # 打开文件进行写入
-        with open(data_cache_file, 'w', encoding='utf-8') as file:
-            file.write(json_str)  # 将数据写入文件
     return movies
 
 
@@ -206,12 +197,8 @@ def get_remaining_path_len(path):
     #TODO: 支持不同的操作系统
     fullpath = os.path.abspath(path)
     # Windows: If the length exceeds ~256 characters, you will be able to see the path/files via Windows/File Explorer, but may not be able to delete/move/rename these paths/files
-    if cfg.NamingRule.calc_path_len_by_byte == 'auto':
-        is_remote = is_remote_drive(path)
-        logger.debug(f"目标路径{['不是', '是'][is_remote]}远程文件系统")
-        cfg.NamingRule.calc_path_len_by_byte = is_remote
-    length = len(fullpath.encode('utf-8')) if cfg.NamingRule.calc_path_len_by_byte else len(fullpath)
-    remaining = cfg.NamingRule.max_path_len - length
+    length = len(fullpath.encode('utf-8')) if Cfg().summarizer.path.length_by_byte else len(fullpath)
+    remaining = Cfg().summarizer.path.length_maximum - length
     return remaining
 
 

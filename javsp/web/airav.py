@@ -6,7 +6,7 @@ from html import unescape
 
 from javsp.web.base import Request
 from javsp.web.exceptions import *
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.core.datatype import MovieInfo
 
 # 初始化Request实例
@@ -83,7 +83,7 @@ def parse_data(movie: MovieInfo):
     if data['factories']:
         movie.producer = data['factories'][0]['name']
 
-    if cfg.Crawler.hardworking_mode:
+    if Cfg().crawler.hardworking:
         # 注意这里用的是获取的dvdid，而不是传入的movie.dvdid（如'1pondo_012717_472'与'012717_472'）
         video_url = f"{base_url}/api/video/getVideoMedia?barcode={dvdid}&vid={data['vid']}"
         resp = request.get(video_url).json()

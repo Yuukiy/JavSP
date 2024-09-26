@@ -12,7 +12,7 @@ vcs = "git"
 format = "v{base}.{distance}"
 
 [tool.poetry.dependencies]
-python = "<3.13,>=3.9"
+python = "<3.13,>=3.10"
 cloudscraper = "1.2.71"
 colorama = "0.4.4"
 pillow = "10.3.0"
@@ -26,6 +26,9 @@ cryptography = "^42.0.5"
 pycryptodome = "^3.20.0"
 lxml = {extras = ["html-clean"], version = "^5.2.1"}
 baidu-aip = "^2.2.18.0"
+confz = "^2.0.1"
+pydantic-extra-types = "^2.9.0"
+pendulum = "^3.0.0"
 
 
 [tool.poetry.scripts]

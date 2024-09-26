@@ -3,12 +3,12 @@ import logging
 
 from javsp.web.base import get_html
 from javsp.web.exceptions import *
-from javsp.core.config import cfg
+from javsp.core.config import Cfg, CrawlerID
 from javsp.core.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_url = cfg.ProxyFree.avsox
+base_url = Cfg().network.proxy_free[CrawlerID.avsox]
 
 
 def parse_data(movie: MovieInfo):
@@ -17,7 +17,7 @@ def parse_data(movie: MovieInfo):
     full_id = movie.dvdid
     if full_id.startswith('FC2-'):
         full_id = full_id.replace('FC2-', 'FC2-PPV-')
-    html = get_html(f'{base_url}/tw/search/{full_id}')
+    html = get_html(f'{base_url}tw/search/{full_id}')
     ids = html.xpath("//div[@class='photo-info']/span/date[1]/text()")
     urls = html.xpath("//a[contains(@class, 'movie-box')]/@href")
     ids_lower = list(map(str.lower, ids))

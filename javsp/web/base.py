@@ -14,11 +14,11 @@ from lxml.html.clean import Cleaner
 from requests.models import Response
 
 
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.web.exceptions import *
 
 
-__all__ = ['Request', 'get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable', 'download', 'get_resp_text']
+__all__ = ['Request', 'get_html', 'post_html', 'request_get', 'resp2html', 'is_connectable', 'download', 'get_resp_text', 'read_proxy']
 
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'}
@@ -27,6 +27,12 @@ logger = logging.getLogger(__name__)
 # 删除js脚本相关的tag，避免网页检测到没有js运行环境时强行跳转，影响调试
 cleaner = Cleaner(kill_tags=['script', 'noscript'])
 
+def read_proxy():
+    if Cfg().network.proxy_server is None:
+        return {}
+    else:
+        proxy = str(Cfg().network.proxy_server)
+        return {'http': proxy, 'https': proxy}
 
 # 与网络请求相关的功能汇总到一个模块中以方便处理，但是不同站点的抓取器又有自己的需求（针对不同网站
 # 需要使用不同的UA、语言等）。每次都传递参数很麻烦，而且会面临函数参数越加越多的问题。因此添加这个
@@ -37,8 +43,9 @@ class Request():
         # 必须使用copy()，否则各个模块对headers的修改都将会指向本模块中定义的headers变量，导致只有最后一个对headers的修改生效
         self.headers = headers.copy()
         self.cookies = {}
-        self.proxies = cfg.Network.proxy
-        self.timeout = cfg.Network.timeout
+
+        self.proxies = read_proxy()
+        self.timeout = Cfg().network.timeout.total_seconds()
         if not use_scraper:
             self.scraper = None
             self.__get = requests.get
@@ -107,9 +114,12 @@ class DownloadProgressBar(tqdm):
         self.update(b * bsize - self.n)
 
 
-def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
+def request_get(url, cookies={}, timeout=None, delay_raise=False):
     """获取指定url的原始请求"""
-    r = requests.get(url, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
+    if timeout is None:
+        timeout = Cfg().network.timeout.seconds
+    
+    r = requests.get(url, headers=headers, proxies=read_proxy(), cookies=cookies, timeout=timeout)
     if not delay_raise:
         if r.status_code == 403 and b'>Just a moment...<' in r.content:
             raise SiteBlocked(f"403 Forbidden: 无法通过CloudFlare检测: {url}")
@@ -118,9 +128,11 @@ def request_get(url, cookies={}, timeout=cfg.Network.timeout, delay_raise=False)
     return r
 
 
-def request_post(url, data, cookies={}, timeout=cfg.Network.timeout, delay_raise=False):
+def request_post(url, data, cookies={}, timeout=None, delay_raise=False):
     """向指定url发送post请求"""
-    r = requests.post(url, data=data, headers=headers, proxies=cfg.Network.proxy, cookies=cookies, timeout=timeout)
+    if timeout is None:
+        timeout = Cfg().network.timeout.seconds
+    r = requests.post(url, data=data, headers=headers, proxies=read_proxy(), cookies=cookies, timeout=timeout)
     if not delay_raise:
         r.raise_for_status()
     return r
@@ -202,7 +214,7 @@ def urlretrieve(url, filename=None, reporthook=None, headers=None):
     """使用requests实现urlretrieve"""
     # https://blog.csdn.net/qq_38282706/article/details/80253447
     with contextlib.closing(requests.get(url, headers=headers,
-                                         proxies=cfg.Network.proxy, stream=True)) as r:
+                                         proxies=read_proxy(), stream=True)) as r:
         header = r.headers
         with open(filename, 'wb+') as fp:
             bs = 1024

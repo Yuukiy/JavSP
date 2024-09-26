@@ -1,4 +1,5 @@
 """定义数据类型和一些通用性的对数据类型的操作"""
+from enum import Enum
 import os
 import csv
 import json
@@ -6,13 +7,12 @@ import shutil
 import logging
 from functools import cached_property
 
-from javsp.core.config import Config
-from javsp.core.lib import mei_path, detect_special_attr
+from javsp.core.config import Cfg
+from javsp.core.lib import resource_path, detect_special_attr
 
 
 logger = logging.getLogger(__name__)
 filemove_logger = logging.getLogger('filemove')
-
 
 class MovieInfo:
     def __init__(self, dvdid: str = None, /, *, cid: str = None, from_file=None):
@@ -97,20 +97,20 @@ class MovieInfo:
             if k in attrs:
                 self.__setattr__(k, v)
 
-    def get_info_dic(self, cfg: Config):
+    def get_info_dic(self):
         """生成用来填充模板的字典"""
         info = self
         d = {}
         d['num'] = info.dvdid or info.cid
-        d['title'] = info.title or cfg.NamingRule.null_for_title
+        d['title'] = info.title or Cfg().summarizer.default.title
         d['rawtitle'] = info.ori_title or d['title']
-        d['actress'] = ','.join(info.actress) if info.actress else cfg.NamingRule.null_for_actress
+        d['actress'] = ','.join(info.actress) if info.actress else Cfg().summarizer.default.actress
         d['score'] = info.score or '0'
-        d['censor'] = cfg.NamingRule.censorship_names[info.uncensored]
-        d['serial'] = info.serial or cfg.NamingRule.null_for_serial
-        d['director'] = info.director or cfg.NamingRule.null_for_director
-        d['producer'] = info.producer or cfg.NamingRule.null_for_producer
-        d['publisher'] = info.publisher or cfg.NamingRule.null_for_publisher
+        d['censor'] = Cfg().summarizer.censor_options_representation[1 if info.uncensored else 0]
+        d['serial'] = info.serial or Cfg().summarizer.default.series
+        d['director'] = info.director or Cfg().summarizer.default.director
+        d['producer'] = info.producer or Cfg().summarizer.default.producer
+        d['publisher'] = info.publisher or Cfg().summarizer.default.publisher
         d['date'] = info.publish_date or '0000-00-00'
         d['year'] = d['date'].split('-')[0]
         # cid中不会出现'-'，可以直接从d['num']拆分出label
@@ -210,7 +210,7 @@ class GenreMap(dict):
     """genre的映射表"""
     def __init__(self, file):
         genres = {}
-        with open(mei_path(file), newline='', encoding='utf-8-sig') as csvfile:
+        with open(resource_path(file), newline='', encoding='utf-8-sig') as csvfile:
             reader = csv.DictReader(csvfile)
             try:
                 for row in reader:

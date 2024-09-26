@@ -4,9 +4,10 @@ import sys
 import json
 import time
 import logging
+from pydantic import ValidationError
+from pydantic_extra_types.pendulum_dt import Duration
 import requests
 import threading
-from shutil import copyfile
 from typing import Dict, List
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -33,9 +34,8 @@ for handler in root_logger.handlers:
 logger = logging.getLogger('main')
 
 
-from javsp.core.lib import mei_path
+from javsp.core.lib import resource_path
 from javsp.core.nfo import write_nfo
-from javsp.core.config import cfg, args
 from javsp.core.file import *
 from javsp.core.func import *
 from javsp.core.image import *
@@ -44,12 +44,9 @@ from javsp.web.base import download
 from javsp.web.exceptions import *
 from javsp.web.translate import translate_movie_info
 
-actressAliasMap = {}
-if cfg.Crawler.unify_actress_name:
-    actressAliasFilePath = mei_path("data/actress_alias.json")
-    with open(actressAliasFilePath, "r", encoding="utf-8") as file:
-        actressAliasMap = json.load(file)
+from javsp.core.config import BaiduAipEngine, Cfg, CrawlerID
 
+actressAliasMap = {}
 
 def resolve_alias(name):
     """将别名解析为固定的名字"""
@@ -59,26 +56,22 @@ def resolve_alias(name):
     return name  # 如果找不到别名对应的固定名字，则返回原名
 
 
-def import_crawlers(cfg):
+def import_crawlers():
     """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
     unknown_mods = []
-    for typ, cfg_str in cfg.CrawlerSelect.items():
-        mods = cfg_str.split(',')
-        if 'airav' in mods:
-            mods.sort(key=lambda x:x=='airav', reverse=cfg.Crawler.title__chinese_first)
+    for _, mods in Cfg().crawler.selection.items():
         valid_mods = []
         for name in mods:
             try:
                 # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
-                # if name == 'fc2fan' and (not os.path.isdir(cfg.Crawler.fc2fan_local_path)):
+                # if name == 'fc2fan' and (not os.path.isdir(Cfg().Crawler.fc2fan_local_path)):
                 #     logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
                 #     continue
-                import_name = 'web.' + name
+                import_name = 'javsp.web.' + name
                 __import__(import_name)
                 valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
             except ModuleNotFoundError:
                 unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
-        cfg._sections['CrawlerSelect'][typ] = tuple(valid_mods)
     if unknown_mods:
         logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
 
@@ -116,41 +109,44 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                 logger.exception(e)
 
     # 根据影片的数据源获取对应的抓取器
-    crawler_mods = cfg.CrawlerSelect[movie.data_src]
-    all_info = {i: MovieInfo(movie) for i in crawler_mods}
+    crawler_mods: List[CrawlerID] = Cfg().crawler.selection[movie.data_src]
+
+    all_info = {i.value: MovieInfo(movie) for i in crawler_mods}
     # 番号为cid但同时也有有效的dvdid时，也尝试使用普通模式进行抓取
     if movie.data_src == 'cid' and movie.dvdid:
-        crawler_mods = crawler_mods + cfg.CrawlerSelect['normal']
+        crawler_mods = crawler_mods + Cfg().crawler.selection.normal
         for i in all_info.values():
             i.dvdid = None
-        for i in cfg.CrawlerSelect['normal']:
+        for i in Cfg().crawler.selection.normal:
             all_info[i] = MovieInfo(movie.dvdid)
     thread_pool = []
-    for mod, info in all_info.items():
+    for mod_partial, info in all_info.items():
+        mod = f"javsp.web.{mod_partial}"
         parser = getattr(sys.modules[mod], 'parse_data')
         # 将all_info中的info实例传递给parser，parser抓取完成后，info实例的值已经完成更新
         # TODO: 抓取器如果带有parse_data_raw，说明它已经自行进行了重试处理，此时将重试次数设置为1
         if hasattr(sys.modules[mod], 'parse_data_raw'):
             th = threading.Thread(target=wrapper, name=mod, args=(parser, info, 1))
         else:
-            th = threading.Thread(target=wrapper, name=mod, args=(parser, info, cfg.Network.retry))
+            th = threading.Thread(target=wrapper, name=mod, args=(parser, info, Cfg().network.retry))
         th.start()
         thread_pool.append(th)
     # 等待所有线程结束
-    timeout = cfg.Network.retry * cfg.Network.timeout
+    timeout = Cfg().network.retry * Cfg().network.timeout.total_seconds()
     for th in thread_pool:
+        th: threading.Thread
         th.join(timeout=timeout)
     # 根据抓取结果更新影片类型判定
     if movie.data_src == 'cid' and movie.dvdid:
-        titles = [all_info[i].title for i in cfg.CrawlerSelect[movie.data_src]]
+        titles = [all_info[i].title for i in Cfg().crawler.selection[movie.data_src]]
         if any(titles):
             movie.dvdid = None
-            all_info = {k: v for k, v in all_info.items() if k in cfg.CrawlerSelect['cid']}
+            all_info = {k: v for k, v in all_info.items() if k in Cfg().crawler.selection['cid']}
         else:
             logger.debug(f'自动更正影片数据源类型: {movie.dvdid} ({movie.cid}): normal')
             movie.data_src = 'normal'
             movie.cid = None
-            all_info = {k: v for k, v in all_info.items() if k not in cfg.CrawlerSelect['cid']}
+            all_info = {k: v for k, v in all_info.items() if k not in Cfg().crawler.selection['cid']}
     # 删除抓取失败的站点对应的数据
     all_info = {k:v for k,v in all_info.items() if hasattr(v, 'success')}
     for info in all_info.values():
@@ -169,7 +165,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         final_info.genre = all_info['javdb'].genre
 
     ########## 移除所有抓取器数据中，标题尾部的女优名 ##########
-    if cfg.Crawler.title__remove_actor:
+    if Cfg().summarizer.title.remove_trailing_actor_name:
         for name, data in all_info.items():
             data.title = remove_trail_actor_in_title(data.title, data.actress)
     ########## 然后检查所有字段，如果某个字段还是默认值，则按照优先级选取数据 ##########
@@ -202,7 +198,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         if absorbed:
             logger.debug(f"从'{name}'中获取了字段: " + ' '.join(absorbed))
     # 使用网站的番号作为番号
-    if cfg.Crawler.respect_site_avid:
+    if Cfg().crawler.respect_site_avid:
         id_weight = {}
         for name, data in all_info.items():
             if data.title:
@@ -221,11 +217,13 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     # javdb封面有水印，优先采用其他站点的封面
     javdb_cover = getattr(all_info.get('javdb'), 'cover', None)
     if javdb_cover is not None:
-        if cfg.Crawler.ignore_javdb_cover == 'auto':
-            covers.remove(javdb_cover)
-            covers.append(javdb_cover)
-        elif cfg.getboolean('Crawler', 'ignore_javdb_cover'):
-            covers.remove(javdb_cover)
+        match Cfg().crawler.use_javdb_cover:
+            case UseJavDBCover.fallback:
+                covers.remove(javdb_cover)
+                covers.append(javdb_cover)
+            case UseJavDBCover.no:
+                covers.remove(javdb_cover)
+
     setattr(final_info, 'covers', covers)
     setattr(final_info, 'big_covers', big_covers)
     # 对cover和big_cover赋值，避免后续检查必须字段时出错
@@ -241,13 +239,9 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         final_info.genre.append('内嵌字幕')
     if movie.uncensored:
         final_info.genre.append('无码流出/破解')
-    # title
-    if cfg.Crawler.title__chinese_first and 'airav' in all_info:
-        if all_info['airav'].title and final_info.title != all_info['airav'].title:
-            final_info.ori_title = final_info.title
 
     # 女优别名固定
-    if cfg.Crawler.unify_actress_name and bool(final_info.actress_pics):
+    if Cfg().crawler.normalize_actress_name and bool(final_info.actress_pics):
         final_info.actress = [resolve_alias(i) for i in final_info.actress]
         if final_info.actress_pics:
             final_info.actress_pics = {
@@ -255,7 +249,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
             }
 
     # 检查是否所有必需的字段都已经获得了值
-    for attr in cfg.Crawler.required_keys:
+    for attr in Cfg().crawler.required_keys:
         if not getattr(final_info, attr, None):
             logger.error(f"所有抓取器均未获取到字段: '{attr}'，抓取失败")
             return False
@@ -267,13 +261,13 @@ def generate_names(movie: Movie):
     """按照模板生成相关文件的文件名"""
     info = movie.info
     # 准备用来填充命名模板的字典
-    d = info.get_info_dic(cfg)
-    if info.actress and len(info.actress) > cfg.NamingRule.max_actress_count:
+    d = info.get_info_dic()
+    if info.actress and len(info.actress) > Cfg().summarizer.path.max_actress_count:
         logging.debug('女优人数过多，按配置保留了其中的前n个: ' + ','.join(info.actress))
-        actress = info.actress[:cfg.NamingRule.max_actress_count] + ['…']
+        actress = info.actress[:Cfg().summarizer.path.max_actress_count] + ['…']
     else:
         actress = info.actress
-    d['actress'] = ','.join(actress) if actress else cfg.NamingRule.null_for_actress
+    d['actress'] = ','.join(actress) if actress else Cfg().summarizer.default.actress
 
     # 保存label供后面判断裁剪图片的方式使用
     setattr(info, 'label', d['label'].upper())
@@ -282,7 +276,7 @@ def generate_names(movie: Movie):
         d[k] = replace_illegal_chars(v.strip())
 
     # 生成nfo文件中的影片标题
-    nfo_title = cfg.NamingRule.nfo_title.substitute(**d)
+    nfo_title = Cfg().summarizer.nfo.title_pattern.format(**d)
     setattr(info, 'nfo_title', nfo_title)
     
     # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
@@ -302,31 +296,23 @@ def generate_names(movie: Movie):
         copyd['rawtitle'] = replace_illegal_chars(''.join(ori_title_break[:end]).strip())
         for sub_end in range(len(title_break), 0, -1):
             copyd['title'] = replace_illegal_chars(''.join(title_break[:sub_end]).strip())
-            # 如果不整理文件，则保存抓取的数据到当前目录
-            if cfg.File.enable_file_move is False:
+            if Cfg().summarizer.move_files:
+                save_dir = os.path.normpath(Cfg().summarizer.path.output_folder_pattern.format(**copyd)).strip()
+                basename = os.path.normpath(Cfg().summarizer.path.basename_pattern.format(**copyd)).strip()
+            else:
+                # 如果不整理文件，则保存抓取的数据到当前目录
                 save_dir = os.path.dirname(movie.files[0])
                 filebasename = os.path.basename(movie.files[0])
                 ext = os.path.splitext(filebasename)[1]
                 basename = filebasename.replace(ext, '')
-            else:
-                save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
-                basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd).strip())
-            if 'universal' in cfg.NamingRule.media_servers:
-                long_path = os.path.join(save_dir, basename+longest_ext)
-            else:
-                long_path = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
+            long_path = os.path.join(save_dir, basename+longest_ext)
             remaining = get_remaining_path_len(os.path.abspath(long_path))
             if remaining > 0:
                 movie.save_dir = save_dir
                 movie.basename = basename
-                if 'universal' in cfg.NamingRule.media_servers:
-                    movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
-                    movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
-                    movie.poster_file = os.path.join(save_dir, 'poster.jpg')
-                else:
-                    movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
-                    movie.fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
-                    movie.poster_file = os.path.join(save_dir, f'{basename}{cdx}-poster.jpg')
+                movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
+                movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
+                movie.poster_file = os.path.join(save_dir, 'poster.jpg')
                 if d['title'] != copyd['title']:
                     logger.info(f"自动截短标题为:\n{copyd['title']}")
                 if d['rawtitle'] != copyd['rawtitle']:
@@ -334,60 +320,26 @@ def generate_names(movie: Movie):
                 return
     else:
         # 以防万一，当整理路径非常深或者标题起始很长一段没有标点符号时，硬性截短生成的名称
-        templates = cfg.NamingRule.save_dir.template + os.sep + cfg.NamingRule.filename.template
         copyd['title'] = copyd['title'][:remaining]
         copyd['rawtitle'] = copyd['rawtitle'][:remaining]
-        if (copyd['title'] == '' and '$title' in templates) or (copyd['rawtitle'] == '' and '$rawtitle' in templates):
-            logger.error("命名规则导致标题被截断至空，请增大'max_path_len'或减小'max_actress_count'配置项后重试")
-            logger.debug((d, templates, cfg.NamingRule.max_path_len))
-            return
         # 如果不整理文件，则保存抓取的数据到当前目录
-        if cfg.File.enable_file_move is False:
+        if not Cfg().summarizer.move_files:
             save_dir = os.path.dirname(movie.files[0])
             filebasename = os.path.basename(movie.files[0])
             ext = os.path.splitext(filebasename)[1]
             basename = filebasename.replace(ext, '')
         else:
-            save_dir = os.path.normpath(cfg.NamingRule.save_dir.substitute(copyd)).strip()
-            basename = os.path.normpath(cfg.NamingRule.filename.substitute(copyd)).strip()
+            save_dir = os.path.normpath(Cfg().summarizer.path.output_folder_pattern.format(**copyd)).strip()
+            basename = os.path.normpath(Cfg().summarizer.path.basename_pattern.format(**copyd)).strip()
         movie.save_dir = save_dir
         movie.basename = basename
-        if 'universal' in cfg.NamingRule.media_servers:
-            movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
-            movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
-            movie.poster_file = os.path.join(save_dir, 'poster.jpg')
-        else:
-            movie.nfo_file = os.path.join(save_dir, f'{basename}{cdx}.nfo')
-            movie.fanart_file = os.path.join(save_dir, f'{basename}{cdx}-fanart.jpg')
-            movie.poster_file = os.path.join(save_dir, f'{basename}{cdx}-poster.jpg')
+        movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
+        movie.fanart_file = os.path.join(save_dir, 'fanart.jpg')
+        movie.poster_file = os.path.join(save_dir, 'poster.jpg')
         if d['title'] != copyd['title']:
             logger.info(f"自动截短标题为:\n{copyd['title']}")
         if d['rawtitle'] != copyd['rawtitle']:
             logger.info(f"自动截短原始标题为:\n{copyd['rawtitle']}")
-
-
-def postStep_videostation(movie: Movie):
-    """使用群晖Video Station时，生成额外的影片poster、fanart文件"""
-    fanart_ext = os.path.splitext(movie.fanart_file)[1]
-    for file in movie.new_paths:
-        # 创建与影片同名的fanart
-        samename_fanart = os.path.splitext(file)[0] + fanart_ext
-        copyfile(movie.fanart_file, samename_fanart)
-        # 将现有poster以新名字复制一份
-        samename_poster = os.path.splitext(file)[0] + '.png'
-        crop_poster(movie.poster_file, samename_poster)
-
-
-def postStep_MultiMoviePoster(movie: Movie):
-    """为多分片的影片创建额外的poster图片"""
-    # Jellyfin将多分片影片视作CD1的附加部分，nfo文件名、fanart均使用的CD1的文件名，
-    # 只有poster是为各个分片创建的
-    # Jellyfin 10.8.9版本, 经测试分片可以自动使用poster.jpg，不必为每个分片创建单独的poster
-    return
-    for i, _ in enumerate(movie.files[1:], start=2):
-        cdx_poster = os.path.join(movie.save_dir, f'{movie.basename}-CD{i}-poster.jpg')
-        copyfile(movie.poster_file, cdx_poster)
-
 
 def reviewMovieID(all_movies, root):
     """人工检查每一部影片的番号"""
@@ -422,20 +374,20 @@ def reviewMovieID(all_movies, root):
         print()
 
 
-SUBTITLE_MARK_FILE = os.path.abspath(mei_path('image/sub_mark.png'))
-UNCENSORED_MARK_FILE = os.path.abspath(mei_path('image/unc_mark.png'))
-def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False, uncensored=False):
+SUBTITLE_MARK_FILE = os.path.abspath(resource_path('image/sub_mark.png'))
+UNCENSORED_MARK_FILE = os.path.abspath(resource_path('image/unc_mark.png'))
+def crop_poster_wrapper(fanart_file, poster_file, engine: BaiduAipEngine | None, hard_sub=False, uncensored=False):
     """包装各种海报裁剪方法，提供统一的调用"""
-    if method == 'baidu':
+    if engine is BaiduAipEngine:
         try:
-            aip_crop_poster(fanart_file, poster_file)
+            aip_crop_poster(fanart_file, engine.app_id, engine.api_key, poster=poster_file)
         except Exception as e:
             logger.debug('人脸识别失败，回退到常规裁剪方法')
             logger.debug(e, exc_info=True)
             crop_poster(fanart_file, poster_file)
     else:
         crop_poster(fanart_file, poster_file)
-    if cfg.Picture.add_label_to_cover:
+    if Cfg().media_sanitizer.add_label_to_cover:
         if hard_sub == True:
             add_label_to_poster(poster_file, SUBTITLE_MARK_FILE, LabelPostion.BOTTOM_RIGHT)
         if uncensored == True:
@@ -453,9 +405,9 @@ def RunNormalMode(all_movies):
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     total_step = 6
-    if cfg.Translate.engine:
+    if Cfg().translator.engine:
         total_step += 1
-    if cfg.Picture.use_extra_fanarts == 'yes':
+    if Cfg().media_sanitizer.extra_fanarts.enabled:
         total_step += 1
 
     return_movies = []
@@ -468,14 +420,14 @@ def RunNormalMode(all_movies):
             # 依次执行各个步骤
             inner_bar.set_description(f'启动并发任务')
             all_info = parallel_crawler(movie, inner_bar)
-            msg = f'为其配置的{len(cfg.CrawlerSelect[movie.data_src])}个抓取器均未获取到影片信息'
+            msg = f'为其配置的{len(Cfg().crawler.selection[movie.data_src])}个抓取器均未获取到影片信息'
             check_step(all_info, msg)
 
             inner_bar.set_description('汇总数据')
             has_required_keys = info_summary(movie, all_info)
             check_step(has_required_keys)
 
-            if cfg.Translate.engine:
+            if Cfg().translator.engine:
                 inner_bar.set_description('翻译影片信息')
                 success = translate_movie_info(movie.info)
                 check_step(success)
@@ -486,7 +438,7 @@ def RunNormalMode(all_movies):
                 os.makedirs(movie.save_dir)
 
             inner_bar.set_description('下载封面图片')
-            if cfg.Picture.use_big_cover:
+            if Cfg().media_sanitizer.highres_covers:
                 cover_dl = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
             else:
                 cover_dl = download_cover(movie.info.covers, movie.fanart_file)
@@ -501,32 +453,31 @@ def RunNormalMode(all_movies):
                 actual_ext = os.path.splitext(pic_path)[1]
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
-            if cfg.Picture.use_ai_crop and (
-                    movie.info.uncensored or
-                    movie.data_src == 'fc2' or
-                    movie.info.label.upper() in cfg.Picture.use_ai_crop_labels or
-                    (R'\d' in cfg.Picture.use_ai_crop_labels and re.match(r'(\d{6}[-_]\d{3})', movie.info.dvdid))):
-                method = cfg.Picture.ai_engine
+            def should_use_ai_crop_match(label):
+                for r in Cfg().media_sanitizer.crop.on_id_pattern:
+                    re.match(r, label)
+                    return True
+                return False
+
+            crop_engine = None
+
+            if (movie.info.uncensored or
+               movie.data_src == 'fc2' or
+               should_use_ai_crop_match(movie.info.label.upper())):
+                crop_engine = Cfg().media_sanitizer.crop.engine
                 inner_bar.set_description('使用AI裁剪海报封面')
             else:
                 inner_bar.set_description('裁剪海报封面')
-                method = 'normal'
-            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method, movie.hard_sub, movie.uncensored)
+            crop_poster_wrapper(movie.fanart_file, movie.poster_file, crop_engine, movie.hard_sub, movie.uncensored)
             check_step(True)
 
-            if 'video_station' in cfg.NamingRule.media_servers:
-                postStep_videostation(movie)
-            if len(movie.files) > 1 and 'universal' not in cfg.NamingRule.media_servers:
-                postStep_MultiMoviePoster(movie)
-
-            if cfg.Picture.use_extra_fanarts == 'yes':
-                scrape_interval = float(cfg.Picture.extra_fanarts_scrap_interval)
+            if Cfg().media_sanitizer.extra_fanarts.enabled:
+                scrape_interval = Cfg().media_sanitizer.extra_fanarts.scrap_interval.total_seconds()
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'
                     os.mkdir(extrafanartdir)
                     for (id, pic_url) in enumerate(movie.info.preview_pics):
-                        logger.info(f"I got {pic_url}")
                         inner_bar.set_description(f"Downloading extrafanart {id} from url: {pic_url}")
                                                                                                                                 
                         fanart_destination = f"{extrafanartdir}/{id}.png"
@@ -548,20 +499,20 @@ def RunNormalMode(all_movies):
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
             check_step(True)
-            if cfg.File.enable_file_move:
+            if Cfg().summarizer.move_files:
                 inner_bar.set_description('移动影片文件')
-                movie.rename_files(cfg.File.use_hardlink)
+                movie.rename_files(Cfg().summarizer.path.hard_link)
                 check_step(True)
                 logger.info(f'整理完成，相关文件已保存到: {movie.save_dir}\n')
             else:
                 logger.info(f'刮削完成，相关文件已保存到: {movie.nfo_file}\n')
 
-            if movie != all_movies[-1] and cfg.Crawler.sleep_after_scraping > 0:
-                time.sleep(cfg.Crawler.sleep_after_scraping)
+            if movie != all_movies[-1] and Cfg().crawler.sleep_after_scraping > Duration(0):
+                time.sleep(Cfg().crawler.sleep_after_scraping.total_seconds())
             return_movies.append(movie)
-        except Exception as e:
-            logger.debug(e, exc_info=True)
-            logger.error(f'整理失败: {e}')
+        # except Exception as e:
+        #     logger.debug(e, exc_info=True)
+        #     logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
     return return_movies
@@ -572,7 +523,7 @@ def download_cover(covers, fanart_path, big_covers=[]):
     # 优先下载高清封面
     for url in big_covers:
         pic_path = get_pic_path(fanart_path, url)
-        for _ in range(cfg.Network.retry):
+        for _ in range(Cfg().network.retry):
             try:
                 info = download(url, pic_path)
                 if valid_pic(pic_path):
@@ -588,7 +539,7 @@ def download_cover(covers, fanart_path, big_covers=[]):
     # 如果没有高清封面或高清封面下载失败
     for url in covers:
         pic_path = get_pic_path(fanart_path, url)
-        for _ in range(cfg.Network.retry):
+        for _ in range(Cfg().network.retry):
             try:
                 download(url, pic_path)
                 if valid_pic(pic_path):
@@ -617,84 +568,43 @@ def error_exit(success, err_info):
     """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
     if not success:
         logger.error(err_info)
-        sys_exit(1)
+        sys.exit(1)
 
-
-def sys_exit(code):
-    # 脚本退出机制：检查是否需要关机 → 若不需要，检查是否需要保持当前窗口
-    if args.shutdown:
-        shutdown()
-    elif not (args.auto_exit or cfg.Other.auto_exit):
-        os.system('pause')
-    # 最后传退出码退出
-    sys.exit(code)
-
-def only_fetch():
-    # 1. 读取缓存文件
-    movie_list: List[dict] = []
-    movies: List[Movie] = []
-    with open(args.data_cache_file, encoding='utf-8') as f:
-        movie_list = json.load(f)
-    # 2. 重新实例化Movie
-    if len(movie_list) == 0:
-        return 0
-    for mov in movie_list:
-        movie = Movie(mov['dvdid'])
-        for k, v in mov.items():
-            setattr(movie, k, v)
-        movies.append(movie)
-    rmovies = RunNormalMode(movies)
-    # 将数据回写到缓存文件
-    store_movies = []
-    for m in rmovies:
-        d = m.__dict__
-        d['info'] = {'title': m.info.title}
-        store_movies.append(d)
-    json_str = json.dumps(store_movies, ensure_ascii=False)
-    # 打开文件进行写入
-    with open(args.data_cache_file, 'w', encoding='utf-8') as file:
-        file.write(json_str)  # 将数据写入文件
-    return 0
 
 def entry():
+    try:
+        Cfg()
+    except ValidationError as e:
+        print(e.errors())
+        exit(1)
+
+    global actressAliasMap
+    if Cfg().crawler.normalize_actress_name:
+        actressAliasFilePath = resource_path("data/actress_alias.json")
+        with open(actressAliasFilePath, "r", encoding="utf-8") as file:
+            actressAliasMap = json.load(file)
+
     colorama.init(autoreset=True)
+
     # 检查更新
     version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
     logger.debug(version_info.center(60, '='))
-    check_update(cfg.Other.check_update, cfg.Other.auto_update)
-    root = get_scan_dir(cfg.File.scan_dir)
+    check_update(Cfg().other.check_update, Cfg().other.auto_update)
+    root = get_scan_dir(Cfg().scanner.input_directory)
     error_exit(root, '未选择要扫描的文件夹')
     # 导入抓取器，必须在chdir之前
-    import_crawlers(cfg)
+    import_crawlers()
     os.chdir(root)
 
-    if args.only_fetch == True:
-        #仅刮削
-        sys_exit(only_fetch())
-
     print(f'扫描影片文件...')
-    recognized = scan_movies(root, args.only_scan, args.data_cache_file)
+    recognized = scan_movies(root)
     movie_count = len(recognized)
-    # 手动模式下先让用户处理无法识别番号的影片（无论是all还是failed）
-    if args.manual:
-        recognize_fail = get_failed_when_scan()
-        fail_count = len(recognize_fail)
-        if fail_count > 0:
-            reviewMovieID(recognize_fail, root)
-            movie_count += fail_count
-    else:
-        recognize_fail = []
+    recognize_fail = []
     error_exit(movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    if args.only_scan == True:
-        #仅识别，不刮削
-        sys_exit(0)
-
-    if args.manual == 'all':
-        reviewMovieID(recognized, root)
     RunNormalMode(recognized + recognize_fail)
 
-    sys_exit(0)
+    sys.exit(0)
 
 if __name__ == "__main__":
     entry()

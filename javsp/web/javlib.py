@@ -3,11 +3,11 @@ import logging
 from urllib.parse import urlsplit
 
 
-from javsp.web.base import Request, resp2html
+from javsp.web.base import Request, read_proxy, resp2html
 from javsp.web.exceptions import *
 from javsp.web.proxyfree import get_proxy_free_url
-from javsp.core.config import cfg
-from javsp.core.datatype import MovieInfo
+from javsp.core.config import Cfg, CrawlerID
+from javsp.core.datatype import  MovieInfo
 
 
 # 初始化Request实例
@@ -22,11 +22,11 @@ def init_network_cfg():
     """设置合适的代理模式和base_url"""
     request.timeout = 5
     proxy_free_url = get_proxy_free_url('javlib')
-    urls = [cfg.ProxyFree.javlib, permanent_url]
+    urls = [str(Cfg().network.proxy_free[CrawlerID.javlib]), permanent_url]
     if proxy_free_url and proxy_free_url not in urls:
         urls.insert(1, proxy_free_url)
     # 使用代理容易触发IUAM保护，先尝试不使用代理访问
-    proxy_cfgs = [{}, cfg.Network.proxy] if cfg.Network.proxy else [{}]
+    proxy_cfgs = [{}, read_proxy()] if Cfg().network.proxy_server else [{}]
     for proxies in proxy_cfgs:
         request.proxies = proxies
         for url in urls:
@@ -35,12 +35,12 @@ def init_network_cfg():
             try:
                 resp = request.get(url, delay_raise=True)
                 if resp.status_code == 200:
-                    request.timeout = cfg.Network.timeout
+                    request.timeout = Cfg().network.timeout.seconds
                     return url
             except Exception as e:
                 logger.debug(f"Fail to connect to '{url}': {e}")
     logger.warning('无法绕开JavLib的反爬机制')
-    request.timeout = cfg.Network.timeout
+    request.timeout = Cfg().network.timeout.seconds
     return permanent_url
 
 
@@ -132,12 +132,10 @@ def parse_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.root.handlers[1].level = logging.DEBUG
-
     base_url = permanent_url
     movie = MovieInfo('IPX-177')
     try:
         parse_data(movie)
         print(movie)
     except CrawlerError as e:
-        logger.error(e, exc_info=1)
+        print(e)

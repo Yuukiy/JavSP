@@ -2,7 +2,7 @@
 import re
 import sys
 
-from javsp.web.base import *
+from javsp.web.base import is_connectable, get_html, get_resp_text, request_get
 
 
 def get_proxy_free_url(site_name: str, prefer_url=None) -> str:
@@ -52,6 +52,7 @@ def _get_javbus_urls() -> list:
 
 def _get_javlib_urls() -> list:
     html = get_html('https://github.com/javlibcom')
+    print(html)
     text = html.xpath("//div[@class='p-note user-profile-bio mb-3 js-user-profile-bio f4']")[0].text_content()
     match = re.search(r'[\w\.]+', text, re.A)
     if match:
@@ -61,6 +62,7 @@ def _get_javlib_urls() -> list:
 
 def _get_javdb_urls() -> list:
     html = get_html('https://jav524.app')
+    print(html)
     js_links = html.xpath("//script[@src]/@src")
     for link in js_links:
         if '/js/index' in link:

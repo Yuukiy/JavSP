@@ -12,7 +12,7 @@
 
 ![License](https://img.shields.io/github/license/Yuukiy/JavSP)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
-![Python 3.9](https://img.shields.io/badge/python-3.9-green.svg)
+![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)
 [![Crawlers test](https://img.shields.io/github/actions/workflow/status/Yuukiy/JavSP/test-web-funcs.yml?label=crawlers%20test)](https://github.com/Yuukiy/JavSP/actions/workflows/test-web-funcs.yml)
 [![Latest release](https://img.shields.io/github/v/release/Yuukiy/JavSP)](https://github.com/Yuukiy/JavSP/releases/latest)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)

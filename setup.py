@@ -9,9 +9,9 @@ proj_root = os.path.abspath(os.path.dirname(__file__))
 
 
 include_files: List[Tuple[str, str]] = [
-    (f"{proj_root}/javsp/core/config.ini", 'config.ini'),
-    (f"{proj_root}/data", 'data'),
-    (f"{proj_root}/image", 'image')
+    (f'{proj_root}/config.yml', 'config.yml'),
+    (f'{proj_root}/data', 'data'),
+    (f'{proj_root}/image', 'image')
 ]
 
 includes = []
@@ -21,17 +21,22 @@ for file in os.listdir('javsp/web'):
     if ext == '.py':
         includes.append('javsp.web.' + name)
 
+packages = [ 
+    'pendulum' # pydantic_extra_types depends on pendulum
+]
+
 build_exe = {
     'include_files': include_files,
-    "includes": includes,
-    "excludes": ["unittest"],
+    'includes': includes,
+    'excludes': ['unittest'],
+    'packages': packages,
 }
 
 javsp = Executable(
-    "./javsp/__main__.py", 
+    './javsp/__main__.py', 
     target_name='JavSP', 
     base=base,
-    icon="./image/JavSP.ico",
+    icon='./image/JavSP.ico',
 )
 
 setup(

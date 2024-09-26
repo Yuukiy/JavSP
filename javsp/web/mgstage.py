@@ -5,7 +5,7 @@ import logging
 
 from javsp.web.base import Request, resp2html
 from javsp.web.exceptions import *
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 from javsp.core.datatype import MovieInfo
 
 
@@ -76,7 +76,7 @@ def parse_data(movie: MovieInfo):
     plot = ''.join(plots).strip()
     preview_pics = container.xpath("//a[@class='sample_image']/@href")
 
-    if cfg.Crawler.hardworking_mode:
+    if Cfg().crawler.hardworking:
         # 预览视频是点击按钮后再加载的，不在静态网页中
         btn_url = container.xpath("//a[@class='button_sample']/@href")[0]
         video_pid = btn_url.split('/')[-1]

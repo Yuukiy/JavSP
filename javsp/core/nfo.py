@@ -4,14 +4,14 @@ from lxml.builder import E
 
 
 from javsp.core.datatype import MovieInfo
-from javsp.core.config import cfg
+from javsp.core.config import Cfg
 
 
 def write_nfo(info: MovieInfo, nfo_file):
     """将存储了影片信息的'info'写入到nfo文件中"""
     # NFO spec: https://kodi.wiki/view/NFO_files/Movies
     nfo = E.movie()
-    dic = info.get_info_dic(cfg)
+    dic = info.get_info_dic()
 
     if info.nfo_title:
         nfo.append(E.title(info.nfo_title))
@@ -58,10 +58,8 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     genre = genre_item.copy()
     # 添加自定义分类
-    if cfg.NFO.add_custom_genres:
-        custom_genres = cfg.NFO.add_custom_genres_fields.substitute(**dic)
-        if custom_genres:
-            genre += custom_genres.split(',')
+    for genre_new in Cfg().summarizer.nfo.custom_genres_fields:
+        genre.append(genre_new.format(**dic))
     # 分类去重
     genre = list(set(genre))
     # 写入genre分类：优先使用genre_norm。在Jellyfin上，只有genre可以直接跳转，tag不可以
@@ -71,10 +69,8 @@ def write_nfo(info: MovieInfo, nfo_file):
 
     tags = []
     # 添加自定义tag
-    if cfg.NFO.add_custom_tags:
-        custom_tags = cfg.NFO.add_custom_tags_fields.substitute(**dic)
-        if custom_tags:
-            tags += custom_tags.split(',')
+    for tag_new in Cfg().summarizer.nfo.custom_tags_fields:
+            tags.append(tag_new.format(**dic))
     # 去重
     tags = list(set(tags))
     # 写入tag

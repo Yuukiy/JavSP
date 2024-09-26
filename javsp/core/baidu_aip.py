@@ -10,25 +10,25 @@ from datetime import datetime
 from aip import AipBodyAnalysis
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
-from javsp.core.config import cfg, rel_path_from_exe
+from javsp.core.config import Cfg
+from javsp.core.lib import resource_path
 
 logger = logging.getLogger(__name__)
 
 
 class AipClient():
-    def __init__(self) -> None:
-        piccfg = cfg.Picture
+    def __init__(self, app_id: str, api_key: str) -> None:
+        piccfg = Cfg().media_sanitizer
         # 保存已经识别过的图片的结果，减少请求次数
-        self.file = rel_path_from_exe('data/baidu_aip.cache.json')
+        self.file = resource_path('data/baidu_aip.cache.json')
         dir_path = os.path.dirname(self.file)
-        if (not os.path.exists(dir_path)) and piccfg.ai_engine == 'baidu':
-            os.makedirs(dir_path)
+        os.makedirs(dir_path)
         if os.path.exists(self.file):
             with open(self.file, 'rt', encoding='utf-8') as f:
                 self.cache = json.load(f)
         else:
             self.cache = {}
-        self.client = AipBodyAnalysis(piccfg.aip_appid, piccfg.aip_api_key, piccfg.aip_secret_key)
+        self.client = AipBodyAnalysis(app_id, api_key, piccfg.aip_secret_key)
 
     def analysis(self, pic_path):
         with open(pic_path, 'rb') as f:
@@ -50,9 +50,6 @@ class AipClient():
             with open(self.file, 'wt', encoding='utf-8') as f:
                 json.dump(self.cache, f, ensure_ascii=False)
             return result
-
-
-ai = AipClient()
 
 
 def choose_center(body_parts):
@@ -119,8 +116,11 @@ def fit_crop_box(box, persons):
     return (left, top, right, bottom)
 
 
-def aip_crop_poster(fanart, poster='', hw_ratio=1.42):
+def aip_crop_poster(fanart, app_id: str, api_key: str, poster='', hw_ratio=1.42):
     """将给定的fanart图片文件裁剪为适合poster尺寸的图片"""
+
+    ai = AipClient(app_id, api_key)
+
     r = ai.analysis(fanart)
     im = ImageOps.exif_transpose(Image.open(fanart))
     # 计算识别到的各人体框区域的权重
@@ -234,13 +234,14 @@ def draw_marks(im0, data):
 
 
 if __name__ == "__main__":
-    import pretty_errors
-    pretty_errors.configure(display_link=True)
-    baidu_aip_debug = True
-    files = sys.argv[1:] or ["FC2-1283407-fanart.jpg"]
-    for file in files:
-        if os.path.exists(file):
-            base, ext = os.path.splitext(file)
-            poster = base.replace('_fanart', '') + '_poster' + ext
-            aip_crop_poster(file, poster)
-            print('Crop poster to: ' + poster)
+    pass
+    # import pretty_errors
+    # pretty_errors.configure(display_link=True)
+    # baidu_aip_debug = True
+    # files = sys.argv[1:] or ["FC2-1283407-fanart.jpg"]
+    # for file in files:
+    #     if os.path.exists(file):
+    #         base, ext = os.path.splitext(file)
+    #         poster = base.replace('_fanart', '') + '_poster' + ext
+    #         aip_crop_poster(file, poster)
+    #         print('Crop poster to: ' + poster)

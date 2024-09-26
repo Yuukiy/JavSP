@@ -6,7 +6,7 @@ from shutil import rmtree
 
 file_dir = os.path.dirname(__file__)
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
-from javsp.core.avid import *
+from javsp.core.avid import get_id, get_cid
 
 
 @pytest.fixture
@@ -79,7 +79,7 @@ def test_from_file():
                 if ignore:
                     print(f"Ignored: {guess_id} != {avid}\t'{filename}'")
                 else:
-                    assert guess_id == avid, f'AV ID not match at line {line_no}'
+                    assert guess_id == avid.upper(), f'AV ID not match at line {line_no}'
     if write_back:
         with open(datafile, 'wt', encoding='utf-8') as f:
             f.writelines(rewrite_lines)
@@ -107,5 +107,5 @@ def test_by_folder_name2(prepare_files):
 
 
 @pytest.mark.parametrize('files', [('ABC-123/CDF-456.mp4',)])
-def test_by_folder_name2(prepare_files):
+def test_by_folder_name3(prepare_files):
     assert 'CDF-456' == get_id('ABC-123/CDF-456.mp4')

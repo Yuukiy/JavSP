@@ -13,6 +13,10 @@ from javsp.core.file import scan_movies
 tmp_folder = 'TMP_' + ''.join(random.choices(string.ascii_uppercase, k=6))
 DEFAULT_SIZE = 512*2**20    # 512 MiB
 
+def touch_file_size(path: str, size_bytes: int):
+    with open(path, 'wb') as f:
+        f.seek(size_bytes - 1)
+        f.write(b'\0')
 
 @pytest.fixture
 def prepare_files(files):
@@ -28,7 +32,7 @@ def prepare_files(files):
         folder = os.path.split(path)[0]
         if folder and (not os.path.exists(folder)):
             os.makedirs(folder)
-        os.system(f'fsutil file createnew "{path}" {size}')
+        touch_file_size(path, size)
     yield
     rmtree(tmp_folder)
     return
@@ -101,7 +105,7 @@ def test_scan_movies__cdx(prepare_files):
 def test_scan_movies__cdx_without_delimeter(prepare_files):
     movies = scan_movies(tmp_folder)
     assert len(movies) == 1
-    assert movies[0].dvdid == 'abc-123'
+    assert movies[0].dvdid == 'ABC-123'
     assert len(movies[0].files) == 2
     basenames = [os.path.basename(i) for i in movies[0].files]
     assert basenames[0] == 'abc123cd1.mp4'
