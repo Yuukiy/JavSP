@@ -20,6 +20,8 @@ cfg.read(args.input)
 
 ignore_regexes: list[str] = cfg['MovieID']['ignore_regex'].split(';')
 ignore_regexes += cfg['MovieID']['ignore_whole_word'].split(';')
+ignore_regexes.append('(144|240|360|480|720|1080)[Pp]')
+ignore_regexes.append('[24][Kk]')
 
 input_directory = cfg['File']['scan_dir']
 input_directory = 'null' if len(input_directory) == 0 else f"'{input_directory}'"
@@ -57,7 +59,7 @@ scanner:
   # 推测番号前忽略文件名中的特定字符串（忽略大小写，以英文分号;分隔）
   # 大多数情况软件能够自动识别番号，只有当文件名中特定的部分导致番号识别错误时才需要更新此设置
   # 要忽略的正则表达式（如果你不熟悉正则表达式，请不要修改此配置，否则可能严重影响番号识别效果）
-  ignored_id_pattern:
+  ignored_id_pattern: #请手动清除重复的pattern
 {'\n'.join([f"    - '{r}'" for r in ignore_regexes])}
   # 整理哪个文件夹下的影片？（此项留空时将在运行时询问）
   input_directory: {input_directory}
