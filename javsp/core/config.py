@@ -34,6 +34,8 @@ class CrawlerID(str, Enum):
     mgstage = 'mgstage'
     njav = 'njav'
     prestige = 'prestige'
+    arzon = 'arzon'
+    arzon_iv = 'arzon_iv'
 
 class Network(BaseConfig):
     proxy_server: Url | None
