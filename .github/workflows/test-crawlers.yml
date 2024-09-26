@@ -1,0 +1,59 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: "Unit Test: Crawlers"
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+  schedule:
+  # Web crawlers might be outdated because of website updating, so run periodically to follow the changes
+  - cron: '9 9 * * 3,6,0'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  test-web-crawlers:
+
+    runs-on: windows-latest
+    env:
+      PYTHONIOENCODING: "utf-8"
+      PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Install poetry
+      run: pipx install poetry
+
+    - name: Setup Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'poetry'
+    - name: Setup dynamic versioning
+      run: poetry self add poetry-dynamic-versioning
+    - name: Install dependencies
+      run: |
+        poetry install
+    - name: Switch code page
+      run: |
+        chcp 65001
+    - name: Public IP
+      id: ip
+      uses: haythem/public-ip@v1.3
+    - name: Test web crawlers
+      run: |
+        poetry run pytest unittest/test_crawlers.py
+    - name: Upload log as artifact
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: JavSP-web-funcs.log
+        path: javspn/JavSP.log
