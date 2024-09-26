@@ -105,7 +105,7 @@ def test_scan_movies__cdx(prepare_files):
 def test_scan_movies__cdx_without_delimeter(prepare_files):
     movies = scan_movies(tmp_folder)
     assert len(movies) == 1
-    assert movies[0].dvdid == 'abc-123'
+    assert movies[0].dvdid == 'ABC-123'
     assert len(movies[0].files) == 2
     basenames = [os.path.basename(i) for i in movies[0].files]
     assert basenames[0] == 'abc123cd1.mp4'
