@@ -14,7 +14,7 @@ def get_id(filepath: str) -> str:
     """从给定的文件路径中提取番号（DVD ID）"""
     # 通常是接收文件的路径，当然如果是普通字符串也可以
     filename = os.path.basename(filepath)
-    ignore_pattern = re.compile('|'.join(Cfg().id_sanitizer.ignore_regexes))
+    ignore_pattern = re.compile('|'.join(Cfg().scanner.ignored_id_pattern))
     filename = ignore_pattern.sub('', filename)
     filename_lc = filename.lower()
     if 'fc2' in filename_lc:

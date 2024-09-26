@@ -1,9 +1,11 @@
 """网页翻译接口"""
 # 由于翻译服务不走代理，而且需要自己的错误处理机制，因此不通过base.py来管理网络请求
 import time
+from typing import Union
 import uuid
 import random
 import logging
+from pydantic_core import Url
 import requests
 from hashlib import md5
 
@@ -11,7 +13,7 @@ from hashlib import md5
 __all__ = ['translate', 'translate_movie_info']
 
 
-from javsp.core.config import Cfg
+from javsp.core.config import BaiduTranslateEngine, BingTranslateEngine, Cfg, ClaudeTranslateEngine, GoogleTranslateEngine, OpenAITranslateEngine, TranslateEngine
 from javsp.core.datatype import MovieInfo
 from javsp.web.base import read_proxy
 
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
     # 翻译标题
-    if info.title and Cfg().translator.translate_title and info.ori_title is None:
+    if info.title and Cfg().translator.fields.title and info.ori_title is None:
         result = translate(info.title, Cfg().translator.engine, info.actress)
         if 'trans' in result:
             info.ori_title = info.title
@@ -36,7 +38,7 @@ def translate_movie_info(info: MovieInfo):
             logger.error('翻译标题时出错: ' + result['error'])
             return False
     # 翻译简介
-    if info.plot and Cfg().translator.translate_plot:
+    if info.plot and Cfg().translator.fields.plot:
         result = translate(info.plot, Cfg().translator.engine, info.actress)
         if 'trans' in result:
             # 只有翻译过plot的影片才可能需要ori_plot属性，因此在运行时动态添加，而不添加到类型定义里
@@ -47,8 +49,13 @@ def translate_movie_info(info: MovieInfo):
             return False
     return True
 
-
-def translate(texts, engine='google', actress=[]):
+def translate(texts, engine: Union[
+        BaiduTranslateEngine,
+        BingTranslateEngine,
+        ClaudeTranslateEngine,
+        OpenAITranslateEngine,
+        None
+    ], actress=[]):
     """
     翻译入口：对错误进行处理并且统一返回格式
 
@@ -59,19 +66,21 @@ def translate(texts, engine='google', actress=[]):
     """
     rtn = {}
     err_msg = ''
-    if engine == 'baidu':
-        result = baidu_translate(texts)
+    if engine is None:
+        return {'trans': texts}
+    elif engine is BaiduTranslateEngine:
+        result = baidu_translate(texts, engine.app_id, engine.api_key)
         if 'error_code' not in result:
             # 百度翻译的结果中的组表示的是按换行符分隔的不同段落，而不是句子
             paragraphs = [i['dst'] for i in result['trans_result']]
             rtn = {'trans': '\n'.join(paragraphs)}
         else:
             err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
-    elif engine == 'bing':
+    elif engine is BingTranslateEngine:
         # 使用动态词典保护原文中的女优名，防止翻译后认不出来
         for i in actress:
             texts = texts.replace(i, f'<mstrans:dictionary translation="{i}">{i}</mstrans:dictionary>')
-        result = bing_translate(texts)
+        result = bing_translate(texts, api_key=engine.api_key)
         if 'error' not in result:
             sentLen = result[0]['translations'][0]['sentLen']
             orig_break, trans_break = [], []
@@ -90,7 +99,25 @@ def translate(texts, engine='google', actress=[]):
             rtn = {'trans': trans, 'orig_break': orig_break, 'trans_break': trans_break}
         else:
             err_msg = "{}: {}: {}".format(engine, result['error']['code'], result['error']['message'])
-    elif engine == 'google':
+    elif engine is ClaudeTranslateEngine:
+        try:
+            result = claude_translate(texts, engine.api_key)
+            if 'error_code' not in result:
+                rtn = {'trans': result}
+            else:
+                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
+        except Exception as e:
+            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+    elif engine is OpenAITranslateEngine:
+        try:
+            result = openai_translate(texts, engine.url, engine.api_key, engine.model)
+            if 'error_code' not in result:
+                rtn = {'trans': result}
+            else:
+                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
+        except Exception as e:
+            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+    elif engine is GoogleTranslateEngine:
         try:
             result = google_trans(texts)
             # 经测试，翻译成功时会带有'sentences'字段；失败时不带，也没有故障码
@@ -104,58 +131,15 @@ def translate(texts, engine='google', actress=[]):
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
-    elif engine == 'claude':
-        try:
-            result = claude_translate(texts)
-            if 'error_code' not in result:
-                rtn = {'trans': result}
-            else:
-                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
-        except Exception as e:
-            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
-    elif engine == 'openai':
-        try:
-            result = openai_translate(texts)
-            if 'error_code' not in result:
-                rtn = {'trans': result}
-            else:
-                err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
-        except Exception as e:
-            err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
-    # else:
-        # 配置文件中已经检查过翻译引擎，这里不再检查，因此如果使用不在列表中的翻译引擎，会出错
-    # 如果err_msg非空，说明发生了错误，返回错误消息
-    if err_msg != '':
-        rtn = {'error': err_msg}
-    return rtn
 
-
-def bing_translate(texts, to='zh-Hans'):
-    """使用Bing翻译文本（默认翻译为简体中文）"""
-    api_url = "https://api.cognitive.microsofttranslator.com/translate"
-    params = {'api-version': '3.0', 'to': to, 'includeSentenceLength': True}
-    headers = {
-        'Ocp-Apim-Subscription-Key': Cfg().translator.bing_key,
-        'Ocp-Apim-Subscription-Region': 'global',
-        'Content-type': 'application/json',
-        'X-ClientTraceId': str(uuid.uuid4())
-    }
-    body = [{'text': texts}]
-    r = requests.post(api_url, params=params, headers=headers, json=body)
-    result = r.json()
-    return result
-
-
-def baidu_translate(texts, to='zh'):
+def baidu_translate(texts, app_id, api_key, to='zh'):
     """使用百度翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.fanyi.baidu.com/api/trans/vip/translate"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    appid = Cfg().translator.baidu_appid
-    appkey = Cfg().translator.baidu_key
     salt = random.randint(0, 0x7FFFFFFF)
-    sign_input = appid + texts + str(salt) + appkey
+    sign_input = app_id + texts + str(salt) + api_key
     sign = md5(sign_input.encode('utf-8')).hexdigest()
-    payload = {'appid': appid, 'q': texts, 'from': 'auto', 'to': to, 'salt': salt, 'sign': sign}
+    payload = {'appid': app_id, 'q': texts, 'from': 'auto', 'to': to, 'salt': salt, 'sign': sign}
     # 由于百度标准版限制QPS为1，连续翻译标题和简介会超限，因此需要添加延时
     now = time.perf_counter()
     last_access = getattr(baidu_translate, '_last_access', -1)
@@ -168,6 +152,22 @@ def baidu_translate(texts, to='zh'):
     return result
 
 
+def bing_translate(texts, api_key, to='zh-Hans'):
+    """使用Bing翻译文本（默认翻译为简体中文）"""
+    api_url = "https://api.cognitive.microsofttranslator.com/translate"
+    params = {'api-version': '3.0', 'to': to, 'includeSentenceLength': True}
+    headers = {
+        'Ocp-Apim-Subscription-Key': api_key,
+        'Ocp-Apim-Subscription-Region': 'global',
+        'Content-type': 'application/json',
+        'X-ClientTraceId': str(uuid.uuid4())
+    }
+    body = [{'text': texts}]
+    r = requests.post(api_url, params=params, headers=headers, json=body)
+    result = r.json()
+    return result
+
+
 _google_trans_wait = 60
 def google_trans(texts, to='zh_CN'):
     """使用Google翻译文本（默认翻译为简体中文）"""
@@ -175,7 +175,8 @@ def google_trans(texts, to='zh_CN'):
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
     url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
-    r = requests.get(url, proxies=read_proxy())
+    proxies = read_proxy()
+    r = requests.get(url, proxies=proxies)
     while r.status_code == 429:
         logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
         time.sleep(_google_trans_wait)
@@ -189,11 +190,11 @@ def google_trans(texts, to='zh_CN'):
     time.sleep(4) # Google翻译的API有QPS限制，因此需要等待一段时间
     return result
 
-def claude_translate(texts, to="zh_CN"):
+def claude_translate(texts, api_key, to="zh_CN"):
     """使用Claude翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.anthropic.com/v1/messages"
     headers = {
-        "x-api-key": Cfg().translator.claude_key,
+        "x-api-key": api_key,
         "context-type": "application/json",
         "anthropic-version": "2023-06-01",
     }
@@ -213,12 +214,12 @@ def claude_translate(texts, to="zh_CN"):
         }
     return result
 
-def openai_translate(texts, to="zh_CN"):
+def openai_translate(texts, url: Url, api_key: str, model: str, to="zh_CN"):
     """使用 OpenAI 翻译文本（默认翻译为简体中文）"""
-    api_url = str(Cfg().translator.openai_url)
+    api_url = str(url)
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {Cfg().translator.openai_key}",
+        "Authorization": f"Bearer {api_key}",
     }
     data = {
          "messages": [
@@ -231,7 +232,7 @@ def openai_translate(texts, to="zh_CN"):
              "content": texts
            }
          ],
-         "model": Cfg().translator.openai_model,
+         "model": model,
          "temperature": 0,
          "max_tokens": 1024,
     }
@@ -250,10 +251,3 @@ def openai_translate(texts, to="zh_CN"):
             "error_msg": r.reason,
         }
     return result
-
-if __name__ == "__main__":
-    import json
-    orig = "Hello World! World Hello!"
-    for engine in ('google', 'bing', 'baidu'):
-        res = translate(orig, engine)
-        print(f"{engine}: ", json.dumps(res, indent=2, ensure_ascii=False))

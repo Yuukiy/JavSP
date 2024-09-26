@@ -102,15 +102,15 @@ class MovieInfo:
         info = self
         d = {}
         d['num'] = info.dvdid or info.cid
-        d['title'] = info.title or Cfg().summarizer.null_for_title
+        d['title'] = info.title or Cfg().summarizer.default.title
         d['rawtitle'] = info.ori_title or d['title']
-        d['actress'] = ','.join(info.actress) if info.actress else Cfg().summarizer.null_for_actress
+        d['actress'] = ','.join(info.actress) if info.actress else Cfg().summarizer.default.actress
         d['score'] = info.score or '0'
-        d['censor'] = Cfg().summarizer.censor_texts[1 if info.uncensored else 0]
-        d['serial'] = info.serial or Cfg().summarizer.null_for_series
-        d['director'] = info.director or Cfg().summarizer.null_for_director
-        d['producer'] = info.producer or Cfg().summarizer.null_for_producer
-        d['publisher'] = info.publisher or Cfg().summarizer.null_for_publisher
+        d['censor'] = Cfg().summarizer.censor_options_representation[1 if info.uncensored else 0]
+        d['serial'] = info.serial or Cfg().summarizer.default.series
+        d['director'] = info.director or Cfg().summarizer.default.director
+        d['producer'] = info.producer or Cfg().summarizer.default.producer
+        d['publisher'] = info.publisher or Cfg().summarizer.default.publisher
         d['date'] = info.publish_date or '0000-00-00'
         d['year'] = d['date'].split('-')[0]
         # cid中不会出现'-'，可以直接从d['num']拆分出label

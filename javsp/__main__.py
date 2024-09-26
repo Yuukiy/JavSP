@@ -4,6 +4,7 @@ import sys
 import json
 import time
 import logging
+from pydantic import ValidationError
 from pydantic_extra_types.pendulum_dt import Duration
 import requests
 import threading
@@ -43,7 +44,7 @@ from javsp.web.base import download
 from javsp.web.exceptions import *
 from javsp.web.translate import translate_movie_info
 
-from javsp.core.config import Cfg, CrawlerID
+from javsp.core.config import BaiduAipEngine, Cfg, CrawlerID
 
 actressAliasMap = {}
 
@@ -58,9 +59,7 @@ def resolve_alias(name):
 def import_crawlers():
     """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
     unknown_mods = []
-    for _, mods in Cfg().crawler_select.items():
-        if 'airav' in mods:
-            mods.sort(key=lambda x:x=='airav', reverse=Cfg().crawler.title_chinese_first)
+    for _, mods in Cfg().crawler.selection.items():
         valid_mods = []
         for name in mods:
             try:
@@ -110,15 +109,15 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
                 logger.exception(e)
 
     # 根据影片的数据源获取对应的抓取器
-    crawler_mods: List[CrawlerID] = Cfg().crawler_select[movie.data_src]
+    crawler_mods: List[CrawlerID] = Cfg().crawler.selection[movie.data_src]
 
     all_info = {i.value: MovieInfo(movie) for i in crawler_mods}
     # 番号为cid但同时也有有效的dvdid时，也尝试使用普通模式进行抓取
     if movie.data_src == 'cid' and movie.dvdid:
-        crawler_mods = crawler_mods + Cfg().crawler_select.normal
+        crawler_mods = crawler_mods + Cfg().crawler.selection.normal
         for i in all_info.values():
             i.dvdid = None
-        for i in Cfg().crawler_select.normal:
+        for i in Cfg().crawler.selection.normal:
             all_info[i] = MovieInfo(movie.dvdid)
     thread_pool = []
     for mod_partial, info in all_info.items():
@@ -139,15 +138,15 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         th.join(timeout=timeout)
     # 根据抓取结果更新影片类型判定
     if movie.data_src == 'cid' and movie.dvdid:
-        titles = [all_info[i].title for i in Cfg().crawler_select[movie.data_src]]
+        titles = [all_info[i].title for i in Cfg().crawler.selection[movie.data_src]]
         if any(titles):
             movie.dvdid = None
-            all_info = {k: v for k, v in all_info.items() if k in Cfg().crawler_select['cid']}
+            all_info = {k: v for k, v in all_info.items() if k in Cfg().crawler.selection['cid']}
         else:
             logger.debug(f'自动更正影片数据源类型: {movie.dvdid} ({movie.cid}): normal')
             movie.data_src = 'normal'
             movie.cid = None
-            all_info = {k: v for k, v in all_info.items() if k not in Cfg().crawler_select['cid']}
+            all_info = {k: v for k, v in all_info.items() if k not in Cfg().crawler.selection['cid']}
     # 删除抓取失败的站点对应的数据
     all_info = {k:v for k,v in all_info.items() if hasattr(v, 'success')}
     for info in all_info.values():
@@ -166,7 +165,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         final_info.genre = all_info['javdb'].genre
 
     ########## 移除所有抓取器数据中，标题尾部的女优名 ##########
-    if Cfg().crawler.title_remove_actor:
+    if Cfg().summarizer.title.remove_trailing_actor_name:
         for name, data in all_info.items():
             data.title = remove_trail_actor_in_title(data.title, data.actress)
     ########## 然后检查所有字段，如果某个字段还是默认值，则按照优先级选取数据 ##########
@@ -240,13 +239,9 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
         final_info.genre.append('内嵌字幕')
     if movie.uncensored:
         final_info.genre.append('无码流出/破解')
-    # title
-    if Cfg().crawler.title_chinese_first and 'airav' in all_info:
-        if all_info['airav'].title and final_info.title != all_info['airav'].title:
-            final_info.ori_title = final_info.title
 
     # 女优别名固定
-    if Cfg().crawler.unify_actress_name and bool(final_info.actress_pics):
+    if Cfg().crawler.normalize_actress_name and bool(final_info.actress_pics):
         final_info.actress = [resolve_alias(i) for i in final_info.actress]
         if final_info.actress_pics:
             final_info.actress_pics = {
@@ -267,12 +262,12 @@ def generate_names(movie: Movie):
     info = movie.info
     # 准备用来填充命名模板的字典
     d = info.get_info_dic()
-    if info.actress and len(info.actress) > Cfg().summarizer.max_actress_count:
+    if info.actress and len(info.actress) > Cfg().summarizer.path.max_actress_count:
         logging.debug('女优人数过多，按配置保留了其中的前n个: ' + ','.join(info.actress))
-        actress = info.actress[:Cfg().summarizer.max_actress_count] + ['…']
+        actress = info.actress[:Cfg().summarizer.path.max_actress_count] + ['…']
     else:
         actress = info.actress
-    d['actress'] = ','.join(actress) if actress else Cfg().summarizer.null_for_actress
+    d['actress'] = ','.join(actress) if actress else Cfg().summarizer.default.actress
 
     # 保存label供后面判断裁剪图片的方式使用
     setattr(info, 'label', d['label'].upper())
@@ -281,7 +276,7 @@ def generate_names(movie: Movie):
         d[k] = replace_illegal_chars(v.strip())
 
     # 生成nfo文件中的影片标题
-    nfo_title = Cfg().summarizer.nfo_title_pattern.format(**d)
+    nfo_title = Cfg().summarizer.nfo.title_pattern.format(**d)
     setattr(info, 'nfo_title', nfo_title)
     
     # 使用字典填充模板，生成相关文件的路径（多分片影片要考虑CD-x部分）
@@ -301,9 +296,9 @@ def generate_names(movie: Movie):
         copyd['rawtitle'] = replace_illegal_chars(''.join(ori_title_break[:end]).strip())
         for sub_end in range(len(title_break), 0, -1):
             copyd['title'] = replace_illegal_chars(''.join(title_break[:sub_end]).strip())
-            if Cfg().scanner.move_files:
-                save_dir = os.path.normpath(Cfg().summarizer.output_root / Cfg().summarizer.path_pattern.format(**copyd))
-                basename = os.path.normpath(Cfg().summarizer.name_pattern.format(**copyd))
+            if Cfg().summarizer.move_files:
+                save_dir = os.path.normpath(Cfg().summarizer.path.output_folder_pattern.format(**copyd)).strip()
+                basename = os.path.normpath(Cfg().summarizer.path.basename_pattern.format(**copyd)).strip()
             else:
                 # 如果不整理文件，则保存抓取的数据到当前目录
                 save_dir = os.path.dirname(movie.files[0])
@@ -328,14 +323,14 @@ def generate_names(movie: Movie):
         copyd['title'] = copyd['title'][:remaining]
         copyd['rawtitle'] = copyd['rawtitle'][:remaining]
         # 如果不整理文件，则保存抓取的数据到当前目录
-        if not Cfg().scanner.move_files:
+        if not Cfg().summarizer.move_files:
             save_dir = os.path.dirname(movie.files[0])
             filebasename = os.path.basename(movie.files[0])
             ext = os.path.splitext(filebasename)[1]
             basename = filebasename.replace(ext, '')
         else:
-            save_dir = os.path.normpath(Cfg().summarizer.path_pattern.format(copyd)).strip()
-            basename = os.path.normpath(Cfg().summarizer.path_pattern.format(copyd)).strip()
+            save_dir = os.path.normpath(Cfg().summarizer.path.output_folder_pattern.format(**copyd)).strip()
+            basename = os.path.normpath(Cfg().summarizer.path.basename_pattern.format(**copyd)).strip()
         movie.save_dir = save_dir
         movie.basename = basename
         movie.nfo_file = os.path.join(save_dir, 'movie.nfo')
@@ -381,11 +376,11 @@ def reviewMovieID(all_movies, root):
 
 SUBTITLE_MARK_FILE = os.path.abspath(resource_path('image/sub_mark.png'))
 UNCENSORED_MARK_FILE = os.path.abspath(resource_path('image/unc_mark.png'))
-def crop_poster_wrapper(fanart_file, poster_file, method='normal', hard_sub=False, uncensored=False):
+def crop_poster_wrapper(fanart_file, poster_file, engine: BaiduAipEngine | None, hard_sub=False, uncensored=False):
     """包装各种海报裁剪方法，提供统一的调用"""
-    if method == 'baidu':
+    if engine is BaiduAipEngine:
         try:
-            aip_crop_poster(fanart_file, poster_file)
+            aip_crop_poster(fanart_file, engine.app_id, engine.api_key, poster=poster_file)
         except Exception as e:
             logger.debug('人脸识别失败，回退到常规裁剪方法')
             logger.debug(e, exc_info=True)
@@ -412,7 +407,7 @@ def RunNormalMode(all_movies):
     total_step = 6
     if Cfg().translator.engine:
         total_step += 1
-    if Cfg().media_sanitizer.store_extra_fanarts:
+    if Cfg().media_sanitizer.extra_fanarts.enabled:
         total_step += 1
 
     return_movies = []
@@ -425,7 +420,7 @@ def RunNormalMode(all_movies):
             # 依次执行各个步骤
             inner_bar.set_description(f'启动并发任务')
             all_info = parallel_crawler(movie, inner_bar)
-            msg = f'为其配置的{len(Cfg().crawler_select[movie.data_src])}个抓取器均未获取到影片信息'
+            msg = f'为其配置的{len(Cfg().crawler.selection[movie.data_src])}个抓取器均未获取到影片信息'
             check_step(all_info, msg)
 
             inner_bar.set_description('汇总数据')
@@ -443,7 +438,7 @@ def RunNormalMode(all_movies):
                 os.makedirs(movie.save_dir)
 
             inner_bar.set_description('下载封面图片')
-            if Cfg().media_sanitizer.prefer_big_covers:
+            if Cfg().media_sanitizer.highres_covers:
                 cover_dl = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
             else:
                 cover_dl = download_cover(movie.info.covers, movie.fanart_file)
@@ -459,25 +454,25 @@ def RunNormalMode(all_movies):
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
             def should_use_ai_crop_match(label):
-                for r in Cfg().media_sanitizer.ai_crop_match_regexes:
+                for r in Cfg().media_sanitizer.crop.on_id_pattern:
                     re.match(r, label)
                     return True
                 return False
 
-            if Cfg().media_sanitizer.use_ai_crop and (
-                    movie.info.uncensored or
-                    movie.data_src == 'fc2' or
-                    should_use_ai_crop_match(movie.info.label.upper())):
-                method = Cfg().media_sanitizer.ai_engine
+            crop_engine = None
+
+            if (movie.info.uncensored or
+               movie.data_src == 'fc2' or
+               should_use_ai_crop_match(movie.info.label.upper())):
+                crop_engine = Cfg().media_sanitizer.crop.engine
                 inner_bar.set_description('使用AI裁剪海报封面')
             else:
                 inner_bar.set_description('裁剪海报封面')
-                method = 'normal'
-            crop_poster_wrapper(movie.fanart_file, movie.poster_file, method, movie.hard_sub, movie.uncensored)
+            crop_poster_wrapper(movie.fanart_file, movie.poster_file, crop_engine, movie.hard_sub, movie.uncensored)
             check_step(True)
 
-            if Cfg().media_sanitizer.store_extra_fanarts:
-                scrape_interval = Cfg().media_sanitizer.extra_fanarts_scrap_interval.total_seconds()
+            if Cfg().media_sanitizer.extra_fanarts.enabled:
+                scrape_interval = Cfg().media_sanitizer.extra_fanarts.scrap_interval.total_seconds()
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'
@@ -504,7 +499,7 @@ def RunNormalMode(all_movies):
             inner_bar.set_description('写入NFO')
             write_nfo(movie.info, movie.nfo_file)
             check_step(True)
-            if Cfg().scanner.move_files:
+            if Cfg().summarizer.move_files:
                 inner_bar.set_description('移动影片文件')
                 movie.rename_files()
                 check_step(True)
@@ -577,8 +572,14 @@ def error_exit(success, err_info):
 
 
 def entry():
+    try:
+        Cfg()
+    except ValidationError as e:
+        print(e.errors())
+        exit(1)
+
     global actressAliasMap
-    if Cfg().crawler.unify_actress_name:
+    if Cfg().crawler.normalize_actress_name:
         actressAliasFilePath = resource_path("data/actress_alias.json")
         with open(actressAliasFilePath, "r", encoding="utf-8") as file:
             actressAliasMap = json.load(file)

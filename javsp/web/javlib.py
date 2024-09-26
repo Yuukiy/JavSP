@@ -132,12 +132,10 @@ def parse_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.root.handlers[1].level = logging.DEBUG
-
     base_url = permanent_url
     movie = MovieInfo('IPX-177')
     try:
         parse_data(movie)
         print(movie)
     except CrawlerError as e:
-        logger.error(e, exc_info=1)
+        print(e)

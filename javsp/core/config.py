@@ -1,40 +1,39 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Literal, TypeAlias, Union
 from confz import BaseConfig, CLArgSource, EnvSource, FileSource
-from pydantic import ByteSize, NonNegativeInt, PositiveInt, ValidationError
+from pydantic import ByteSize, Discriminator, Field, NonNegativeInt, PositiveInt, field_validator
 from pydantic_extra_types.pendulum_dt import Duration
 from pydantic_core import Url
 from pathlib import Path
 
 from javsp.core.lib import resource_path
-# from argparse import ArgumentParser, RawTextHelpFormatter
-
-class IDSanitizer(BaseConfig):
-    ignore_regexes: List[str]
 
 class Scanner(BaseConfig):
+    ignored_id_pattern: List[str]
     input_directory: Path | None = None
     filename_extensions: List[str]
-    ignore_folder: List[Path]
+    ignored_folder_name_pattern: List[str]
     minimum_size: ByteSize
-    move_files: bool = True
 
 class CrawlerID(str, Enum):
     airav = 'airav'
     avsox = 'avsox'
+    avwiki = 'avwiki'
+    dl_getchu = 'dl_getchu'
+    fanza = 'fanza'
+    fc2 = 'fc2'
+    fc2fan = 'fc2fan'
+    fc2ppvdb = 'fc2ppvdb'
+    gyutto = 'gyutto'
+    jav321 = 'jav321'
     javbus = 'javbus'
     javdb = 'javdb'
     javlib = 'javlib'
-    jav321 = 'jav321'
-    mgstage = 'mgstage'
-    prestige = 'prestige'
-    fc2 = 'fc2'
-    fc2ppvdb = 'fc2ppvdb'
     javmenu = 'javmenu'
-    fanza = 'fanza'
-    dl_getchu = 'dl_getchu'
-    gyutto = 'gyutto'
+    mgstage = 'mgstage'
+    njav = 'njav'
+    prestige = 'prestige'
 
 class Network(BaseConfig):
     proxy_server: Url | None
@@ -104,62 +103,103 @@ class UseJavDBCover(str, Enum):
     fallback = "fallback"
 
 class Crawler(BaseConfig):
+    selection: CrawlerSelect
     required_keys: list[MovieInfoField]
     hardworking: bool
     respect_site_avid: bool
     fc2fan_local_path: Path | None
-    title_remove_actor: bool
-    title_chinese_first: bool
     sleep_after_scraping: Duration
     use_javdb_cover: UseJavDBCover
-    unify_actress_name: bool
+    normalize_actress_name: bool
+
+class MovieDefault(BaseConfig):
+    title: str
+    actress: str
+    series: str
+    director: str
+    producer: str
+    publisher: str
+
+class PathSummarize(BaseConfig):
+    output_folder_pattern: str
+    basename_pattern: str
+    length_maximum: PositiveInt
+    length_by_byte: bool
+    max_actress_count: PositiveInt = 10
+
+class TitleSummarize(BaseConfig):
+    remove_trailing_actor_name: bool
+
+class NFOSummarize(BaseConfig):
+    title_pattern: str
+    custom_genres_fields: list[str]
+    custom_tags_fields: list[str]
 
 class Summarizer(BaseConfig):
-    output_root: Path
-    path_pattern: str
-    name_pattern: str
-    max_path_length: PositiveInt
-    path_length_by_byte: bool
-    max_actress_count: PositiveInt = 10
-    nfo_title_pattern: str
-    censor_texts: list[str]
-    null_for_title: str
-    null_for_actress: str
-    null_for_series: str
-    null_for_director: str
-    null_for_producer: str
-    null_for_publisher: str
+    path: PathSummarize
+    default: MovieDefault
+    nfo: NFOSummarize
+    censor_options_representation: list[str]
+    title: TitleSummarize
+    move_files: bool = True
+
+class ExtraFanart(BaseConfig):
+    enabled: bool
+    scrap_interval: Duration
+
+class BaiduAipEngine(BaseConfig):
+    name: Literal['baidu_aip']
+    app_id: str
+    api_key: str
+    secret_key: str
+
+class MediaCrop(BaseConfig):
+  engine: BaiduAipEngine | None
+  on_id_pattern: list[str]
 
 class MediaSanitizer(BaseConfig):
-    prefer_big_covers: bool
-    store_extra_fanarts: bool
-    extra_fanarts_scrap_interval: Duration
-    use_ai_crop: bool
-    ai_crop_match_regexes: list[str]
-    ai_engine: str
-    aip_appid: str
-    aip_api_key: str
-    aip_secret_key: str
+    highres_covers: bool
+    extra_fanarts: ExtraFanart
+    crop: MediaCrop
     add_label_to_cover: bool
 
+class BaiduTranslateEngine(BaseConfig):
+    name: Literal['baidu']
+    app_id: str
+    api_key: str
+
+class BingTranslateEngine(BaseConfig):
+    name: Literal['bing']
+    api_key: str
+
+class ClaudeTranslateEngine(BaseConfig):
+    name: Literal['claude']
+    api_key: str
+
+class OpenAITranslateEngine(BaseConfig):
+    name: Literal['openai']
+    url: Url
+    api_key: str
+    model: str
+
+class GoogleTranslateEngine(BaseConfig):
+    name: Literal['google']
+
+TranslateEngine: TypeAlias = Union[
+        BaiduTranslateEngine,
+        BingTranslateEngine,
+        ClaudeTranslateEngine,
+        OpenAITranslateEngine,
+        GoogleTranslateEngine,
+        None]
+
+class TranslateField(BaseConfig):
+    title: bool
+    plot: bool
+
 class Translator(BaseConfig):
-    engine: str
-    translate_title: bool
-    translate_plot: bool
-    baidu_appid: str
-    baidu_key: str
-    bing_key: str
-    claude_key: str
-    openai_url: Url
-    openai_key: str
-    openai_model: str
-
-class NFO(BaseConfig):
-    add_custom_genres: bool
-    add_custom_genres_fields: list[str]
-    add_custom_tags: bool
-    add_custom_tags_fields: list[str]
-
+    engine: TranslateEngine = Field(..., discriminator='name')
+    fields: TranslateField
 
 class Other(BaseConfig):
     check_update: bool
@@ -170,7 +210,7 @@ def get_config_source():
     parser.add_argument('-c', '--config', help='使用指定的配置文件')
     args, _ = parser.parse_known_args()
     sources = []
-    if args.config == '' or args.config is None:
+    if args.config is None:
         args.config = resource_path('config.yml')
     sources.append(FileSource(file=args.config))
     sources.append(EnvSource(prefix='JAVSP_', allow_all=True))
@@ -178,14 +218,11 @@ def get_config_source():
     return sources
 
 class Cfg(BaseConfig):
-    id_sanitizer: IDSanitizer
     scanner: Scanner
     network: Network
-    crawler_select: CrawlerSelect
     crawler: Crawler
     summarizer: Summarizer
     media_sanitizer: MediaSanitizer
     translator: Translator
-    nfo: NFO
     other: Other
     CONFIG_SOURCES=get_config_source()

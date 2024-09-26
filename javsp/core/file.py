@@ -31,9 +31,10 @@ def scan_movies(root: str) -> List[Movie]:
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # avid: [abspath1, abspath2...]
     small_videos = {}
+    ignore_folder_name_pattern = re.compile('|'.join(Cfg().scanner.ignored_folder_name_pattern))
     for dirpath, dirnames, filenames in os.walk(root):
         for name in dirnames.copy():
-            if Path(name) in Cfg().scanner.ignore_folder:
+            if ignore_folder_name_pattern.match(name):
                 dirnames.remove(name)
         for file in filenames:
             ext = os.path.splitext(file)[1].lower()
@@ -196,8 +197,8 @@ def get_remaining_path_len(path):
     #TODO: 支持不同的操作系统
     fullpath = os.path.abspath(path)
     # Windows: If the length exceeds ~256 characters, you will be able to see the path/files via Windows/File Explorer, but may not be able to delete/move/rename these paths/files
-    length = len(fullpath.encode('utf-8')) if Cfg().summarizer.path_length_by_byte else len(fullpath)
-    remaining = Cfg().summarizer.max_path_length - length
+    length = len(fullpath.encode('utf-8')) if Cfg().summarizer.path.length_by_byte else len(fullpath)
+    remaining = Cfg().summarizer.path.length_maximum - length
     return remaining
 
 
