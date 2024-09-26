@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-web-crawlers:
+  test-proxyfree:
 
     runs-on: windows-latest
     env:
@@ -55,5 +55,5 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: JavSP-web-funcs.log
+        name: JavSP-proxyfree.log
         path: javspn/JavSP.log
