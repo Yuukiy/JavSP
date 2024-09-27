@@ -29,6 +29,7 @@ confz = "^2.0.1"
 pydantic-extra-types = "^2.9.0"
 pendulum = "^3.0.0"
 slimeface = "^2024.9.27"
+ruff = "^0.6.8"
 
 [tool.poetry.scripts]
 javsp = "javsp.__main__:entry"
@@ -42,7 +43,6 @@ priority = "primary"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
-flake8 = "^7.0.0"
 cx-freeze = "^7.2.2"
 types-lxml = "^2024.4.14"
 types-pillow = "^10.2.0.20240822"
