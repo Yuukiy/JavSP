@@ -1,7 +1,5 @@
 """从arzon抓取数据"""
 
-import os
-import sys
 import logging
 import re
 

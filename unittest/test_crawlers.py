@@ -25,7 +25,7 @@ def test_crawler(crawler_params):
         compare(*crawler_params)
     except requests.exceptions.ReadTimeout:
         logger.warning(f"{site} 连接超时: {params}")
-    except Exception as e:
+    except Exception:
         if os.getenv("GITHUB_ACTIONS") and (site in ["javdb", "javlib", "airav"]):
             logger.debug(
                 f"检测到Github actions环境，已忽略测试失败项: {params}", exc_info=True

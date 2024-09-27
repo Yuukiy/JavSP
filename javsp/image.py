@@ -1,7 +1,6 @@
 """处理本地图片的相关功能"""
 
 from enum import Enum
-import os
 import logging
 from PIL import Image, ImageOps
 

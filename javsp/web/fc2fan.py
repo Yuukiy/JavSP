@@ -37,7 +37,7 @@ def parse_data(movie: MovieInfo):
     try:
         container = html.xpath("//div[@class='col-sm-8']")[0]
     except IndexError:
-        raise WebsiteError(f"fc2fan: 站点不可用")
+        raise WebsiteError("fc2fan: 站点不可用")
     title = container.xpath("h3/text()")[0]
     score_str = container.xpath("h5/strong[text()='影片评分']")[0].tail.strip()
     match = re.search(r"\d+", score_str)

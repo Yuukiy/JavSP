@@ -1,12 +1,10 @@
 """与文件相关的各类功能"""
 
 import os
-from pathlib import Path
 import re
 import ctypes
 import logging
 import itertools
-import json
 from sys import platform
 from typing import List
 

@@ -1,8 +1,6 @@
 """从fanza抓取数据"""
 
-import os
 import re
-import sys
 import json
 import logging
 from typing import Dict, List, Tuple
@@ -73,7 +71,7 @@ def get_urls_of_cid(cid: str) -> Tuple[str, str]:
                 break
     if cid not in parsed_result:
         if len(result) > 0:
-            logger.debug(f"Unknown URL in search result: " + ", ".join(result))
+            logger.debug("Unknown URL in search result: " + ", ".join(result))
         raise MovieNotFoundError(__name__, cid)
     sorted_result = sort_search_result(parsed_result[cid])
     return sorted_result

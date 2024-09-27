@@ -1,15 +1,15 @@
 """网页翻译接口"""
 
 # 由于翻译服务不走代理，而且需要自己的错误处理机制，因此不通过base.py来管理网络请求
-import time
-from typing import Union
-import uuid
-import random
 import logging
-from pydantic_core import Url
-import requests
+import random
+import time
+import uuid
 from hashlib import md5
+from typing import Union
 
+import requests
+from pydantic_core import Url
 
 __all__ = ["translate", "translate_movie_info"]
 
@@ -21,11 +21,9 @@ from javsp.config import (
     ClaudeTranslateEngine,
     GoogleTranslateEngine,
     OpenAITranslateEngine,
-    TranslateEngine,
 )
 from javsp.datatype import MovieInfo
 from javsp.web.base import read_proxy
-
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +64,7 @@ def translate(
         BingTranslateEngine,
         ClaudeTranslateEngine,
         OpenAITranslateEngine,
+        GoogleTranslateEngine,
         None,
     ],
     actress=[],
