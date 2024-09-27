@@ -4,7 +4,6 @@ import sys
 import logging
 import re
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from javsp.web.base import request_get
 from javsp.web.exceptions import *
 from javsp.datatype import MovieInfo

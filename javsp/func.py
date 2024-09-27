@@ -23,7 +23,6 @@ try:
 except ImportError:
     USE_GUI = False
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from javsp.web.base import *
 from javsp.lib import re_escape, resource_path
 

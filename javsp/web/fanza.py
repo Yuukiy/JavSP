@@ -7,7 +7,6 @@ import logging
 from typing import Dict, List, Tuple
 
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from javsp.web.base import Request, resp2html
 from javsp.web.exceptions import *
 from javsp.config import Cfg
