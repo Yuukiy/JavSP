@@ -41,52 +41,7 @@
 - [ ] 不同的运行模式（抓取数据+整理，仅抓取数据）
 - [ ] 可选：所有站点均抓取失败时由人工介入
 
-## 安装
-
-#### 想要快速上手？
-
-前往[软件发布页](https://github.com/Yuukiy/JavSP/releases/latest)下载最新版本的软件，无需安装额外工具，开箱即用
-
-#### 更喜欢源代码？
-1. 请先确保您已经安装[Poetry](https://python-poetry.org/)构建系统。
-
-```
-pipx install poetry
-poetry self add poetry-dynamic-versioning #安装poetry-dynamic-versioning以动态生成版本号。
-```
-2. 克隆本项目：
-```
-git clone https://github.com/Yuukiy/JavSP.git
-cd JavSP
-```
-
-4. 使用poetry构建
-```
-poetry install
-poetry run javsp
-```
-
-#### 更喜欢Docker？
-
-请确保已安装Docker
-
-- 直接运行
-```
-docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest
-```
-
-- 带命令行参数
-```
-docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest -h
-```
-
-- 使用自己的配置文件
-
-> 注意配置文件中的`scanner.input_directory`要和挂载的`/video`目录一致，也可以根据自己的需要进行修改。
-
-```
-docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video -v <YOUR_CONFIG_FILE_PATH>:/app/config.yml ghcr.io/yuukiy/javsp:latest
-```
+## [安装并运行JavSP](https://github.com/Yuukiy/JavSP/wiki/%E5%AE%89%E8%A3%85%E5%B9%B6%E8%BF%90%E8%A1%8CJavSP)
 
 ## 使用
 
