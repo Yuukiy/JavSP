@@ -1,4 +1,5 @@
 """从FC2官网抓取数据"""
+
 import logging
 
 
@@ -10,12 +11,12 @@ from javsp.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_url = 'https://adult.contents.fc2.com'
+base_url = "https://adult.contents.fc2.com"
 
 
 def get_movie_score(fc2_id):
     """通过评论数据来计算FC2的影片评分（10分制），无法获得评分时返回None"""
-    html = get_html(f'{base_url}/article/{fc2_id}/review')
+    html = get_html(f"{base_url}/article/{fc2_id}/review")
     review_tags = html.xpath("//ul[@class='items_comment_headerReviewInArea']/li")
     reviews = {}
     for tag in review_tags:
@@ -23,9 +24,9 @@ def get_movie_score(fc2_id):
         vote = int(tag.xpath("span")[0].text_content())
         reviews[score] = vote
     total_votes = sum(reviews.values())
-    if (total_votes >= 2):   # 至少也该有两个人评价才有参考意义一点吧
-        summary = sum([k*v for k, v in reviews.items()])
-        final_score = summary / total_votes * 2   # 乘以2转换为10分制
+    if total_votes >= 2:  # 至少也该有两个人评价才有参考意义一点吧
+        summary = sum([k * v for k, v in reviews.items()])
+        final_score = summary / total_votes * 2  # 乘以2转换为10分制
         return final_score
 
 
@@ -33,14 +34,14 @@ def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # 去除番号中的'FC2'字样
     id_uc = movie.dvdid.upper()
-    if not id_uc.startswith('FC2-'):
-        raise ValueError('Invalid FC2 number: ' + movie.dvdid)
-    fc2_id = id_uc.replace('FC2-', '')
+    if not id_uc.startswith("FC2-"):
+        raise ValueError("Invalid FC2 number: " + movie.dvdid)
+    fc2_id = id_uc.replace("FC2-", "")
     # 抓取网页
-    url = f'{base_url}/article/{fc2_id}/'
+    url = f"{base_url}/article/{fc2_id}/"
     resp = request_get(url)
-    if '/id.fc2.com/' in resp.url:
-        raise SiteBlocked('FC2要求当前IP登录账号才可访问，请尝试更换为日本IP')
+    if "/id.fc2.com/" in resp.url:
+        raise SiteBlocked("FC2要求当前IP登录账号才可访问，请尝试更换为日本IP")
     html = resp2html(resp)
     container = html.xpath("//div[@class='items_article_left']")
     if len(container) > 0:
@@ -49,7 +50,7 @@ def parse_data(movie: MovieInfo):
         raise MovieNotFoundError(__name__, movie.dvdid)
     # FC2 标题增加反爬乱码，使用数组合并标题
     title_arr = container.xpath("//div[@class='items_article_headerInfo']/h3/text()")
-    title = ''.join(title_arr)
+    title = "".join(title_arr)
     thumb_tag = container.xpath("//div[@class='items_article_MainitemThumb']")[0]
     thumb_pic = thumb_tag.xpath("span/img/@src")[0]
     duration_str = thumb_tag.xpath("span/p[@class='items_article_info']/text()")[0]
@@ -57,25 +58,31 @@ def parse_data(movie: MovieInfo):
     producer = container.xpath("//li[text()='by ']/a/text()")[0]
     genre = container.xpath("//a[@class='tag tagTag']/text()")
     date_str = container.xpath("//div[@class='items_article_Releasedate']/p/text()")[0]
-    publish_date = date_str[-10:].replace('/', '-')  # '販売日 : 2017/11/30'
+    publish_date = date_str[-10:].replace("/", "-")  # '販売日 : 2017/11/30'
     preview_pics = container.xpath("//ul[@data-feed='sample-images']/li/a/@href")
 
     if Cfg().crawler.hardworking:
         # 通过评论数据来计算准确的评分
         score = get_movie_score(fc2_id)
         if score:
-            movie.score = f'{score:.2f}'
+            movie.score = f"{score:.2f}"
         # 预览视频是动态加载的，不在静态网页中
-        desc_frame_url = container.xpath("//section[@class='items_article_Contents']/iframe/@src")[0]
-        key = desc_frame_url.split('=')[-1]     # /widget/article/718323/description?ac=60fc08fa...
-        api_url = f'{base_url}/api/v2/videos/{fc2_id}/sample?key={key}'
+        desc_frame_url = container.xpath(
+            "//section[@class='items_article_Contents']/iframe/@src"
+        )[0]
+        key = desc_frame_url.split("=")[
+            -1
+        ]  # /widget/article/718323/description?ac=60fc08fa...
+        api_url = f"{base_url}/api/v2/videos/{fc2_id}/sample?key={key}"
         r = request_get(api_url).json()
-        movie.preview_video = r['path']
+        movie.preview_video = r["path"]
     else:
         # 获取影片评分。影片页面的评分只能粗略到星级，且没有分数，要通过类名来判断，如'items_article_Star5'表示5星
-        score_tag_attr = container.xpath("//a[@class='items_article_Stars']/p/span/@class")[0]
+        score_tag_attr = container.xpath(
+            "//a[@class='items_article_Stars']/p/span/@class"
+        )[0]
         score = int(score_tag_attr[-1]) * 2
-        movie.score = f'{score:.2f}'
+        movie.score = f"{score:.2f}"
 
     movie.dvdid = id_uc
     movie.url = url
@@ -94,10 +101,11 @@ def parse_data(movie: MovieInfo):
 
 if __name__ == "__main__":
     import pretty_errors
+
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('FC2-718323')
+    movie = MovieInfo("FC2-718323")
     try:
         parse_data(movie)
         print(movie)

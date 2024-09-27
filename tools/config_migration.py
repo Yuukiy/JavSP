@@ -3,55 +3,68 @@ from argparse import ArgumentParser
 import re
 
 arg_parser = ArgumentParser(
-    prog='config migration',
-    description='migration your javsp config to yaml')
+    prog="config migration", description="migration your javsp config to yaml"
+)
 
-arg_parser.add_argument('-i', '--input', help='path to config.ini')
-arg_parser.add_argument('-o', '--output', help='path to output config', default="config.yml")
+arg_parser.add_argument("-i", "--input", help="path to config.ini")
+arg_parser.add_argument(
+    "-o", "--output", help="path to output config", default="config.yml"
+)
 
 args, _ = arg_parser.parse_known_args()
 
-if(args.input is None):
+if args.input is None:
     print("Expecting an input config file, try `config_migration.py -h` to see help.")
     exit(1)
 
 cfg = ConfigParser()
 cfg.read(args.input)
 
-ignore_regexes: list[str] = cfg['MovieID']['ignore_regex'].split(';')
-ignore_regexes += cfg['MovieID']['ignore_whole_word'].split(';')
-ignore_regexes.append('(144|240|360|480|720|1080)[Pp]')
-ignore_regexes.append('[24][Kk]')
+ignore_regexes: list[str] = cfg["MovieID"]["ignore_regex"].split(";")
+ignore_regexes += cfg["MovieID"]["ignore_whole_word"].split(";")
+ignore_regexes.append("(144|240|360|480|720|1080)[Pp]")
+ignore_regexes.append("[24][Kk]")
 
-input_directory = cfg['File']['scan_dir']
-input_directory = 'null' if len(input_directory) == 0 else f"'{input_directory}'"
+input_directory = cfg["File"]["scan_dir"]
+input_directory = "null" if len(input_directory) == 0 else f"'{input_directory}'"
 
-filename_extensions = cfg['File']['media_ext'].split(';')
+filename_extensions = cfg["File"]["media_ext"].split(";")
 
-ignored_folders = cfg['File']['ignore_folder'].split(';')
+ignored_folders = cfg["File"]["ignore_folder"].split(";")
 
-proxy_disabled = cfg['Network']['use_proxy'] == 'no' or cfg['Network']['proxy'] == ''
+proxy_disabled = cfg["Network"]["use_proxy"] == "no" or cfg["Network"]["proxy"] == ""
+
 
 def yes_to_true(s):
-    return 'true' if s == 'yes' else 'false'
+    return "true" if s == "yes" else "false"
+
 
 def use_javdb_cover(s):
-    if s == 'yes': return 'no' 
-    elif s == 'no': return 'yes' 
-    elif s == 'auto': return 'fallback' 
+    if s == "yes":
+        return "no"
+    elif s == "no":
+        return "yes"
+    elif s == "auto":
+        return "fallback"
+
 
 def path_len_by_byte(s):
-    if s == 'no': return 'false'
-    else: return 'true' 
+    if s == "no":
+        return "false"
+    else:
+        return "true"
+
 
 def ai_crop_pat(s):
-    if s == r'\d':
-        return r'^\d{6}[-_]\d{3}$'
+    if s == r"\d":
+        return r"^\d{6}[-_]\d{3}$"
     else:
-        return '^' + s
+        return "^" + s
+
 
 def fix_pat(p):
-    return re.sub(r'\$([a-z]+)', r'{\1}', p)
+    return re.sub(r"\$([a-z]+)", r"{\1}", p)
+
 
 config_str = f"""# vim:foldmethod=marker 
 ################################
@@ -242,6 +255,5 @@ other:
   # 是否允许检查到新版本时自动下载
   auto_update: {yes_to_true(cfg['Other']['auto_update'])}"""
 
-with open(args.output, mode ="w") as file:
+with open(args.output, mode="w") as file:
     file.write(config_str)
-

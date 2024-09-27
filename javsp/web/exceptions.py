@@ -1,6 +1,15 @@
 """网页抓取相关的异常"""
-__all__ = ['CrawlerError', 'MovieNotFoundError', 'MovieDuplicateError', 'SiteBlocked',
-           'SitePermissionError', 'CredentialError', 'WebsiteError', 'OtherError']
+
+__all__ = [
+    "CrawlerError",
+    "MovieNotFoundError",
+    "MovieDuplicateError",
+    "SiteBlocked",
+    "SitePermissionError",
+    "CredentialError",
+    "WebsiteError",
+    "OtherError",
+]
 
 
 class CrawlerError(Exception):
@@ -9,6 +18,7 @@ class CrawlerError(Exception):
 
 class MovieNotFoundError(CrawlerError):
     """表示某个站点没有抓取到某部影片"""
+
     # 保持异常消息的简洁，同时又支持使用'logger.info(e, exc_info=True)'记录完整信息
     def __init__(self, mod, avid, *args) -> None:
         msg = f"{mod}: 未找到影片: '{avid}'"
@@ -20,6 +30,7 @@ class MovieNotFoundError(CrawlerError):
 
 class MovieDuplicateError(CrawlerError):
     """影片重复"""
+
     def __init__(self, mod, avid, dup_count, *args) -> None:
         msg = f"{mod}: '{avid}': 存在{dup_count}个完全匹配目标番号的搜索结果"
         super().__init__(msg, *args)

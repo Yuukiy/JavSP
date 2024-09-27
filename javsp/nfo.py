@@ -1,4 +1,5 @@
 """与操作nfo文件相关的功能"""
+
 from lxml.etree import tostring
 from lxml.builder import E
 
@@ -43,13 +44,13 @@ def write_nfo(info: MovieInfo, nfo_file):
     # 但是Emby不支持此特性，Jellyfin的文档和社区都比较弱，没找到相关说明，推测多半也不支持
 
     # fanart通常也是通过给fanart图片命名来匹配
-    nfo.append(E.mpaa('NC-17'))     # 分级
+    nfo.append(E.mpaa("NC-17"))  # 分级
 
     # 将DVD ID和CID写入到uniqueid字段
     if info.dvdid:
-        nfo.append(E.uniqueid(info.dvdid, type='num', default='true'))
+        nfo.append(E.uniqueid(info.dvdid, type="num", default="true"))
     if info.cid:
-        nfo.append(E.uniqueid(info.cid, type='cid'))
+        nfo.append(E.uniqueid(info.cid, type="cid"))
 
     # 选择要写入的genre数据源字段：将[]作为后备结果，以确保genre结果为None时后续不会抛出异常
     for genre_item in (info.genre_norm, info.genre, []):
@@ -70,7 +71,7 @@ def write_nfo(info: MovieInfo, nfo_file):
     tags = []
     # 添加自定义tag
     for tag_new in Cfg().summarizer.nfo.custom_tags_fields:
-            tags.append(tag_new.format(**dic))
+        tags.append(tag_new.format(**dic))
     # 去重
     tags = list(set(tags))
     # 写入tag
@@ -78,7 +79,7 @@ def write_nfo(info: MovieInfo, nfo_file):
         nfo.append(E.tag(i))
 
     # Kodi上的country字段没说必须使用国家的代码（比如JP），所以目前暂定直接使用国家名
-    nfo.append(E.country('日本'))
+    nfo.append(E.country("日本"))
 
     if info.serial:
         # 部分影片有系列。set字段支持overview作为介绍，但是目前没发现有地方可以获取到系列的介绍
@@ -109,13 +110,20 @@ def write_nfo(info: MovieInfo, nfo_file):
             else:
                 nfo.append(E.actor(E.name(i)))
 
-    with open(nfo_file, 'wt', encoding='utf-8') as f:
-        f.write(tostring(nfo, encoding='unicode', pretty_print=True,
-                         doctype='<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'))
+    with open(nfo_file, "wt", encoding="utf-8") as f:
+        f.write(
+            tostring(
+                nfo,
+                encoding="unicode",
+                pretty_print=True,
+                doctype='<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>',
+            )
+        )
 
 
 if __name__ == "__main__":
     import pretty_errors
+
     pretty_errors.configure(display_link=True)
-    info = MovieInfo(from_file=R'unittest\data\IPX-177 (javbus).json')
+    info = MovieInfo(from_file=R"unittest\data\IPX-177 (javbus).json")
     write_nfo(info)

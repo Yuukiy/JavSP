@@ -1,9 +1,10 @@
 """改写内置的print函数，将其输出重定向到tqdm"""
+
 import tqdm
 import inspect
 
 
-__all__ = ['TqdmOut']
+__all__ = ["TqdmOut"]
 
 
 # 普通输出和tqdm的输出混在一起会导致显示错乱，故在使用tqdm时要使用tqdm.write方法。
@@ -13,17 +14,22 @@ __all__ = ['TqdmOut']
 # 在单个模块内，不执行导入，这样的话在各个模块内仍然可以直接使用print
 
 builtin_print = print
+
+
 def flex_print(*args, **kwargs):
     try:
         tqdm.tqdm.write(*args, **kwargs)
     except:
-        builtin_print(*args, ** kwargs)
+        builtin_print(*args, **kwargs)
+
+
 # 替换内置的print
 inspect.builtins.print = flex_print
 
 
 class TqdmOut:
     """用于将logging的stream输出重定向到tqdm"""
+
     @classmethod
     def write(cls, s, file=None, nolock=False):
-        tqdm.tqdm.write(s, file=file, end='', nolock=nolock)
+        tqdm.tqdm.write(s, file=file, end="", nolock=nolock)

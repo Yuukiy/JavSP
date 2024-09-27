@@ -1,4 +1,5 @@
 """从NJAV抓取数据"""
+
 import re
 import logging
 from typing import List
@@ -11,12 +12,13 @@ from javsp.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_url = 'https://njav.tv/ja'
+base_url = "https://njav.tv/ja"
+
 
 def search_video(movie: MovieInfo):
     id_uc = movie.dvdid
     # 抓取网页
-    url = f'{base_url}/search?keyword={id_uc}'
+    url = f"{base_url}/search?keyword={id_uc}"
     html = get_html(url)
     list = html.xpath("//div[@class='box-item']/div[@class='detail']/a")
     video_url = None
@@ -26,13 +28,14 @@ def search_video(movie: MovieInfo):
             video_url = item.xpath("@href")
             break
         if id_uc.startswith("FC2-"):
-            fc2id = id_uc.replace('FC2-', '')
+            fc2id = id_uc.replace("FC2-", "")
             if "FC2" in search_title and fc2id in search_title:
                 video_url = item.xpath("@href")
                 break
-    
+
     return get_list_first(video_url)
-    
+
+
 def parse_data(movie: MovieInfo):
     """解析指定番号的影片数据"""
     # 抓取网页
@@ -45,8 +48,10 @@ def parse_data(movie: MovieInfo):
         container = container[0]
     else:
         raise MovieNotFoundError(__name__, movie.dvdid)
-    
-    title = container.xpath("//div[@class='d-flex justify-content-between align-items-start']/div/h1/text()")[0]
+
+    title = container.xpath(
+        "//div[@class='d-flex justify-content-between align-items-start']/div/h1/text()"
+    )[0]
     thumb_pic = container.xpath("//div[@id='player']/@data-poster")
     plot = " ".join(container.xpath("//div[@class='description']/p/text()"))
     magnet = container.xpath("//div[@class='magnet']/a/@href")
@@ -64,13 +69,13 @@ def parse_data(movie: MovieInfo):
 
     detail_dic = {}
     for item in container.xpath("//div[@class='detail-item']/div"):
-        item_title = item.xpath('span/text()')[0]
+        item_title = item.xpath("span/text()")[0]
         if "タグ:" in item_title:
             genre += item.xpath("span")[1].xpath("a/text()")
         elif "ジャンル:" in item_title:
             genre += item.xpath("span")[1].xpath("a/text()")
         elif "レーベル:" in item_title:
-            genre += item.xpath("span")[1].xpath("a/text()")    
+            genre += item.xpath("span")[1].xpath("a/text()")
         elif "女優:" in item_title:
             actress = item.xpath("span")[1].xpath("a/text()")
         elif "シリーズ:" in item_title:
@@ -83,18 +88,18 @@ def parse_data(movie: MovieInfo):
             publish_date = get_list_first(item.xpath("span")[1].xpath("text()"))
         elif "再生時間:" in item_title:
             duration_str = get_list_first(item.xpath("span")[1].xpath("text()"))
-    
+
     # 清除标题里的番号字符
     keywords = [real_id, " "]
     if movie.dvdid.startswith("FC2"):
-        keywords += ["FC2","PPV","-"] + [movie.dvdid.split("-")[-1]]
+        keywords += ["FC2", "PPV", "-"] + [movie.dvdid.split("-")[-1]]
     for keyword in keywords:
-       title = re.sub(re.escape(keyword), "", title, flags=re.I)
+        title = re.sub(re.escape(keyword), "", title, flags=re.I)
 
     # 判断是否无码
     uncensored_arr = magnet + [title]
     for uncensored_str in uncensored_arr:
-        if 'uncensored' in uncensored_str.lower():
+        if "uncensored" in uncensored_str.lower():
             uncensored = True
 
     movie.url = url
@@ -118,15 +123,18 @@ def parse_data(movie: MovieInfo):
     else:
         movie.cover = get_list_first(thumb_pic)
 
-def get_list_first(list:List):
+
+def get_list_first(list: List):
     return list[0] if list and len(list) > 0 else None
+
 
 if __name__ == "__main__":
     import pretty_errors
+
     pretty_errors.configure(display_link=True)
     logger.root.handlers[1].level = logging.DEBUG
 
-    movie = MovieInfo('012023_002')
+    movie = MovieInfo("012023_002")
     try:
         parse_data(movie)
         print(movie)

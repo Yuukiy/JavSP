@@ -1,4 +1,5 @@
 """解析Chromium系浏览器Cookies的相关函数"""
+
 import os
 import sys
 import json
@@ -9,7 +10,7 @@ from glob import glob
 from shutil import copyfile
 from datetime import datetime
 
-__all__ = ['get_browsers_cookies']
+__all__ = ["get_browsers_cookies"]
 
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -18,15 +19,16 @@ from Crypto.Cipher import AES
 logger = logging.getLogger(__name__)
 
 
-class Decrypter():
+class Decrypter:
     def __init__(self, key):
         self.key = key
+
     def decrypt(self, encrypted_value):
-        nonce = encrypted_value[3:3+12]
-        ciphertext = encrypted_value[3+12:-16]
+        nonce = encrypted_value[3 : 3 + 12]
+        ciphertext = encrypted_value[3 + 12 : -16]
         tag = encrypted_value[-16:]
         cipher = AES.new(self.key, AES.MODE_GCM, nonce=nonce)
-        plaintext = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
+        plaintext = cipher.decrypt_and_verify(ciphertext, tag).decode("utf-8")
         return plaintext
 
 
@@ -34,32 +36,38 @@ def get_browsers_cookies():
     """获取系统上的所有Chromium系浏览器的JavDB的Cookies"""
     # 不予支持: Opera, 360安全&极速, 搜狗使用非标的用户目录或数据格式; QQ浏览器屏蔽站点
     user_data_dirs = {
-        'Chrome':        '/Google/Chrome/User Data',
-        'Chrome Beta':   '/Google/Chrome Beta/User Data',
-        'Chrome Canary': '/Google/Chrome SxS/User Data',
-        'Chromium':      '/Google/Chromium/User Data',
-        'Edge':          '/Microsoft/Edge/User Data',
-        'Vivaldi':       '/Vivaldi/User Data'
+        "Chrome": "/Google/Chrome/User Data",
+        "Chrome Beta": "/Google/Chrome Beta/User Data",
+        "Chrome Canary": "/Google/Chrome SxS/User Data",
+        "Chromium": "/Google/Chromium/User Data",
+        "Edge": "/Microsoft/Edge/User Data",
+        "Vivaldi": "/Vivaldi/User Data",
     }
-    LocalAppDataDir = os.getenv('LOCALAPPDATA')
+    LocalAppDataDir = os.getenv("LOCALAPPDATA")
     all_browser_cookies = []
     exceptions = []
     for brw, path in user_data_dirs.items():
         user_dir = LocalAppDataDir + path
-        cookies_files = glob(user_dir+'/*/Cookies') + glob(user_dir+'/*/Network/Cookies')
-        local_state = user_dir+'/Local State'
+        cookies_files = glob(user_dir + "/*/Cookies") + glob(
+            user_dir + "/*/Network/Cookies"
+        )
+        local_state = user_dir + "/Local State"
         if os.path.exists(local_state):
             key = decrypt_key(local_state)
             decrypter = Decrypter(key)
             for file in cookies_files:
-                profile = brw + ": " + file.split('User Data')[1].split(os.sep)[1]
+                profile = brw + ": " + file.split("User Data")[1].split(os.sep)[1]
                 file = os.path.normpath(file)
                 try:
                     records = get_cookies(file, decrypter)
                     if records:
                         # 将records转换为便于使用的格式
                         for site, cookies in records.items():
-                            entry = {'profile': profile, 'site': site, 'cookies': cookies}
+                            entry = {
+                                "profile": profile,
+                                "site": site,
+                                "cookies": cookies,
+                            }
                             all_browser_cookies.append(entry)
                 except Exception as e:
                     exceptions.append(e)
@@ -78,45 +86,51 @@ def convert_chrome_utc(chrome_utc):
     unix_utc = datetime.fromtimestamp(second)
     return unix_utc
 
+
 def decrypt_key_win(local_state):
     """从Local State文件中提取并解密出Cookies文件的密钥"""
     # Chrome 80+ 的Cookies解密方法参考自: https://stackoverflow.com/a/60423699/6415337
     import win32crypt
-    with open(local_state, 'rt', encoding='utf-8') as file:
-        encrypted_key = json.loads(file.read())['os_crypt']['encrypted_key']
-    encrypted_key = base64.b64decode(encrypted_key)                                       # Base64 decoding
-    encrypted_key = encrypted_key[5:]                                                     # Remove DPAPI
-    decrypted_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]  # Decrypt key
+
+    with open(local_state, "rt", encoding="utf-8") as file:
+        encrypted_key = json.loads(file.read())["os_crypt"]["encrypted_key"]
+    encrypted_key = base64.b64decode(encrypted_key)  # Base64 decoding
+    encrypted_key = encrypted_key[5:]  # Remove DPAPI
+    decrypted_key = win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[
+        1
+    ]  # Decrypt key
     return decrypted_key
 
 
 def decrypt_key_linux(local_state):
     """从Local State文件中提取并解密出Cookies文件的密钥，适用于Linux"""
     # 读取Local State文件中的密钥
-    with open(local_state, 'rt', encoding='utf-8') as file:
-        encrypted_key = json.loads(file.read())['os_crypt']['encrypted_key']
+    with open(local_state, "rt", encoding="utf-8") as file:
+        encrypted_key = json.loads(file.read())["os_crypt"]["encrypted_key"]
     encrypted_key = base64.b64decode(encrypted_key)
     encrypted_key = encrypted_key[5:]
     key = encrypted_key
-    nonce = b' ' * 12
+    nonce = b" " * 12
     aesgcm = AESGCM(key)
     decrypted_key = aesgcm.decrypt(nonce, encrypted_key, None)
     return decrypted_key
 
 
-decrypt_key = decrypt_key_win if sys.platform == 'win32' else decrypt_key_linux
+decrypt_key = decrypt_key_win if sys.platform == "win32" else decrypt_key_linux
 
 
-def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
+def get_cookies(cookies_file, decrypter, host_pattern="javdb%.com"):
     """从cookies_file文件中查找指定站点的所有Cookies"""
     # 复制Cookies文件到临时目录，避免直接操作原始的Cookies文件
-    temp_dir = os.getenv('TMPDIR', os.getenv('TEMP', os.getenv('TMP', '.')))
-    temp_cookie = os.path.join(temp_dir, 'Cookies')
+    temp_dir = os.getenv("TMPDIR", os.getenv("TEMP", os.getenv("TMP", ".")))
+    temp_cookie = os.path.join(temp_dir, "Cookies")
     copyfile(cookies_file, temp_cookie)
     # 连接数据库进行查询
     conn = sqlite3.connect(temp_cookie)
     cursor = conn.cursor()
-    cursor.execute(f'SELECT host_key, name, encrypted_value, expires_utc FROM cookies WHERE host_key LIKE "{host_pattern}"')
+    cursor.execute(
+        f'SELECT host_key, name, encrypted_value, expires_utc FROM cookies WHERE host_key LIKE "{host_pattern}"'
+    )
     # 将查询结果按照host_key进行组织
     now = datetime.now()
     records = {}
@@ -127,7 +141,7 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
         if expires > now:
             d[name] = decrypter.decrypt(encrypted_value)
     # Cookies的核心字段是'_jdb_session'，因此如果records中缺失此字段（说明已过期），则对应的Cookies不再有效
-    valid_records = {k: v for k, v in records.items() if '_jdb_session' in v}
+    valid_records = {k: v for k, v in records.items() if "_jdb_session" in v}
     conn.close()
     os.remove(temp_cookie)
     return valid_records
@@ -136,5 +150,4 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
 if __name__ == "__main__":
     all_cookies = get_browsers_cookies()
     for d in all_cookies:
-        print('{:<20}{}'.format(d['profile'], d['site']))
-
+        print("{:<20}{}".format(d["profile"], d["site"]))
