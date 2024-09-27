@@ -16,10 +16,11 @@ on:
 jobs:
   test-basic-funcs:
 
-    runs-on: windows-latest
-    env:
-      PYTHONIOENCODING: "utf-8"
-      PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
+    name: Test basic funcs on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13]
 
     steps:
     - uses: actions/checkout@v4
@@ -45,9 +46,6 @@ jobs:
         poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Switch code page
-      run: |
-        chcp 65001
     - name: Test avid.py
       run: |
         poetry run pytest unittest/test_avid.py
@@ -61,5 +59,5 @@ jobs:
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: JavSP-basic-funcs.log
+        name: JavSP-basic-funcs-${{ matrix.os }}.log
         path: javspn/JavSP.log
