@@ -1,11 +1,12 @@
 from PIL import Image
 from javsp.cropper.interface import Cropper, DefaultCropper
 from javsp.cropper.utils import get_bound_box_by_face
-from slimeface import detectRGB
 
 class SlimefaceCropper(Cropper):
     def crop_specific(self, fanart: Image.Image, ratio: float) -> Image.Image:
         try: 
+            # defer the libary import so we don't break if missing dependencies 
+            from slimeface import detectRGB
             bbox_confs = detectRGB(fanart.width, fanart.height, fanart.convert('RGB').tobytes())
             bbox_confs.sort(key=lambda conf_bbox: -conf_bbox[4]) # last arg stores confidence
             face = bbox_confs[0][:-1]
