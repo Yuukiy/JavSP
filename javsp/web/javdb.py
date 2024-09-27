@@ -22,7 +22,7 @@ permanent_url = 'https://javdb.com'
 if Cfg().network.proxy_server is not None:
     base_url = permanent_url
 else:
-    base_url = Cfg().network.proxy_free[CrawlerID.javdb]
+    base_url = str(Cfg().network.proxy_free[CrawlerID.javdb])
 
 
 def get_html_wrapper(url):
@@ -324,14 +324,10 @@ def collect_actress_alias(type=0, use_original=True):
 
 
 if __name__ == "__main__":
-    import pretty_errors
-    pretty_errors.configure(display_link=True)
-    logger.root.handlers[1].level = logging.DEBUG
-
     # collect_actress_alias()
     movie = MovieInfo('FC2-2735981')
     try:
         parse_clean_data(movie)
         print(movie)
     except CrawlerError as e:
-        logger.error(e, exc_info=1)
+        print(repr(e))
