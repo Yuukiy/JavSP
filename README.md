@@ -52,8 +52,7 @@
 
 ```
 pipx install poetry
-#安装poetry-dynamic-versioning以动态生成版本号。
-poetry self add poetry-dynamic-versioning
+poetry self add poetry-dynamic-versioning #安装poetry-dynamic-versioning以动态生成版本号。
 ```
 2. 克隆本项目：
 ```
@@ -83,17 +82,17 @@ docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video ghcr.io/yuukiy/javsp:latest 
 
 - 使用自己的配置文件
 
-> 注意配置文件中的`scan_dir`配置要和挂载的`/video`目录一致，也可以根据自己的需要进行修改。
+> 注意配置文件中的`scanner.input_directory`要和挂载的`/video`目录一致，也可以根据自己的需要进行修改。
 
 ```
-docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video -v <YOUR_CONFIG_FILE_PATH>:/app/config.ini ghcr.io/yuukiy/javsp:latest
+docker run -it --rm -v <YOUR_VIDEO_DIR_PATH>:/video -v <YOUR_CONFIG_FILE_PATH>:/app/config.yml ghcr.io/yuukiy/javsp:latest
 ```
 
 ## 使用
 
-软件开箱即用，首次运行时会在软件目录下生成默认的配置文件 ```config.ini```。如果想让软件更符合你的使用需求，也许你需要更改配置文件:
+软件开箱即用。如果想让软件更符合你的使用需求，也许你需要更改配置文件:
 
-> 以任意文本编辑器打开 ```config.ini```，根据各个配置项的说明选择你需要的配置即可。
+> 以任意文本编辑器打开 ```config.yml```，根据各个配置项的说明选择你需要的配置即可。
 
 此外软件也支持从命令行指定运行参数（命令行参数的优先级高于配置文件）。运行 ```JavSP -h``` 查看支持的参数列表
 
