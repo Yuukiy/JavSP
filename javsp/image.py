@@ -50,14 +50,3 @@ def get_pic_size(pic_path):
     """获取图片文件的分辨率"""
     pic = ImageOps.exif_transpose(Image.open(pic_path))
     return pic.size
-
-
-if __name__ == "__main__":
-    import os, sys
-    import pretty_errors
-    pretty_errors.configure(display_link=True)
-    for file in sys.argv[1:]:
-        if os.path.exists(file):
-            base, ext = os.path.splitext(file)
-            poster = base.replace('_fanart', '') + '_poster' + ext
-            crop_poster(file, poster)
