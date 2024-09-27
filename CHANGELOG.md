@@ -12,6 +12,7 @@
   参见[Package javsp](https://github.com/Yuukiy/JavSP/pkgs/container/javsp)。
 - 添加新的爬虫`arzon`, `arzon_iv` [#377](https://github.com/Yuukiy/JavSP/pull/377)
 - Slimeface人脸识别 [#380](https://github.com/Yuukiy/JavSP/pull/380)
+- 支持Linux和MacOS(x64)二进制 [a754e1c](https://github.com/Yuukiy/JavSP/commit/a754e1ce0f14b0ca9dcc6d43d8e7d322a3da1c43)
 
 ### Changed
 - 使用 Poetry 作为构建系统 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
