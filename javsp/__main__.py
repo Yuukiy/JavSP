@@ -45,7 +45,7 @@ from javsp.web.base import download
 from javsp.web.exceptions import *
 from javsp.web.translate import translate_movie_info
 
-from javsp.config import YufaceEngine, Cfg, CrawlerID
+from javsp.config import Cfg, CrawlerID
 
 actressAliasMap = {}
 

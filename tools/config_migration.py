@@ -178,9 +178,9 @@ summarizer:
       # 要使用的图像识别引擎，详细配置见文档 https://github.com/Yuukiy/JavSP/wiki/AI-%7C-%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB
       # NOTE: 此处无法直接对应，请参照注释手动填入
       engine: null #null表示禁用图像剪裁
-      ## 使用Yuface: {{{{{{
+      ## 使用Slimeface: {{{{{{
       # engine: 
-      #   name: yuface
+      #   name: slimeface
       ## }}}}}}
 
   fanart:

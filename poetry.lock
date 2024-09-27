@@ -1710,6 +1710,45 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "mirrors"
 
 [[package]]
+name = "slimeface"
+version = "2024.9.27"
+description = "A face detection library based on libfacedetection"
+optional = false
+python-versions = "*"
+files = [
+    {file = "slimeface-2024.9.27-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:65b94d86df4efe5b1b2340c460fa565e034ec206f7047b8a9638655994a046f6"},
+    {file = "slimeface-2024.9.27-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bbd603962459d3d8bee82e6bbafc97c5a16bb6c85c7081c3c0272ff04775b8e2"},
+    {file = "slimeface-2024.9.27-cp310-cp310-win_amd64.whl", hash = "sha256:e8a7d75bfb308c15342e8471c26fa3bcb36b26670079590fd3c53c4386b1d052"},
+    {file = "slimeface-2024.9.27-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:0a8c1157b44bcc7b6d13147560aed00c2046f0ba07de198e7882a816168e3f61"},
+    {file = "slimeface-2024.9.27-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:add4c258da8be39d9c9ec97b44c9cb487dca94c0876084cf81d8700641635929"},
+    {file = "slimeface-2024.9.27-cp311-cp311-win_amd64.whl", hash = "sha256:40b85c407966a5cff3d48ca62b6f0584d48ca1ff815b0a532f428d627b70dc2a"},
+    {file = "slimeface-2024.9.27-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:9ee38343b0ef95e2653e3fba6cf3137d60735566e6cd39cd5a6a8ffb87999323"},
+    {file = "slimeface-2024.9.27-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ed8855e14300a0893b14ac6efdc6663b27e4422fdf9a9e8b56725b9ca3a455ed"},
+    {file = "slimeface-2024.9.27-cp312-cp312-win_amd64.whl", hash = "sha256:3f1d09feaa2ac2e0613b5bd559603b61b5d3034c0ba372bd2085a069ee2d3c78"},
+    {file = "slimeface-2024.9.27-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:e0ab7f85c9b036e54a9fe1fe923e23d028a1d152a6f92fc16b7f6e0db58a14a3"},
+    {file = "slimeface-2024.9.27-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:631169294505b08a52406f3b266fe57d45074dbd8d1c5c3a24ebc7cb707c2f42"},
+    {file = "slimeface-2024.9.27-cp313-cp313-win_amd64.whl", hash = "sha256:6b93c0c7c2a48abe777dcf4845130ff82e8730afea28b1d2942d2ef3bdc20e2b"},
+    {file = "slimeface-2024.9.27-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:318d5ef4e44c30f04ceecf37d66d54f825dead035b92e5cb768c822a0843bd5e"},
+    {file = "slimeface-2024.9.27-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f1f006d3eb536667aa9947bd6b95ddfc8fc6e11707106459275d10e3e3a57e41"},
+    {file = "slimeface-2024.9.27-cp36-cp36m-win_amd64.whl", hash = "sha256:54d0f910c67d8bf655fbc1d819ad05ff186a41f882bcc5aa35f4ccbe84add7cd"},
+    {file = "slimeface-2024.9.27-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:b27b9f0daf9bdddc249e87ef03296245c78f862565b5955ee898c5622b974df6"},
+    {file = "slimeface-2024.9.27-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:973126c054d2d3d56848375105c15571b5f15f7d87a391d9f7c0060b1c54941b"},
+    {file = "slimeface-2024.9.27-cp37-cp37m-win_amd64.whl", hash = "sha256:6f6ed8194d954b576849c50bc67ad9bfcacc8dd85bee8aab907e8e33fe6d6a85"},
+    {file = "slimeface-2024.9.27-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:09610b653165b7252c81ab984fe2ad9e1fe61d0b1d58cea41c7c1cdf638e1769"},
+    {file = "slimeface-2024.9.27-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f271b4b676120861ccf68e33423aaa45c02211f9b4921083dbc66003de832c89"},
+    {file = "slimeface-2024.9.27-cp38-cp38-win_amd64.whl", hash = "sha256:6b693a1fe6cb11161ca61ddad585fd45f1b903f92e282807d16df87f98471dd9"},
+    {file = "slimeface-2024.9.27-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3d11d154aabefd1be63953e14152f3da7e4bc125e9ba3b65be0900a737a7df9b"},
+    {file = "slimeface-2024.9.27-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:681d603dfff1a58841194394059e299688202e582ca089599983d5be1703f286"},
+    {file = "slimeface-2024.9.27-cp39-cp39-win_amd64.whl", hash = "sha256:9f8f38391bcaabd24336c1c13107ff078e1a1a1d3ea4421d9320eaaecad13bb9"},
+    {file = "slimeface-2024.9.27.tar.gz", hash = "sha256:e237283e2059f0fbe5cbe5412d4bcb4e986237221758c3259daf097be04b9c70"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+reference = "mirrors"
+
+[[package]]
 name = "time-machine"
 version = "2.15.0"
 description = "Travel through time in your tests."
@@ -1976,21 +2015,6 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "mirrors"
 
 [[package]]
-name = "yuface"
-version = "2023.5.1"
-description = "A face detection library based on libfacedetection"
-optional = false
-python-versions = "*"
-files = []
-develop = false
-
-[package.source]
-type = "git"
-url = "git@github.com:glyh/libfacedetection.pip.git"
-reference = "HEAD"
-resolved_reference = "c1a75d355b31f68ad0a75518c404f0922ceebaf3"
-
-[[package]]
 name = "zipp"
 version = "3.20.2"
 description = "Backport of pathlib-compatible object wrapper for zip files"
@@ -2017,4 +2041,4 @@ reference = "mirrors"
 [metadata]
 lock-version = "2.0"
 python-versions = "<3.13,>=3.10"
-content-hash = "1f71dd8291d090d8e6d92992dbb9667590537fb5d2a66c4e23ab9017ff669b73"
+content-hash = "056b2f7a21b0286a04a5ecadb809f6472c636348fe07976ac42c9c47c620f04c"
