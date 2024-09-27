@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Cx_Freeze on Windows
+name: Cx_Freeze
 
 # Controls when the workflow will run
 on:
@@ -19,10 +19,11 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
-    runs-on: windows-latest
-    env:
-      PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
+    name: Build binaries on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -50,19 +51,16 @@ jobs:
         run: |
           poetry install
 
-      - name: Build with Cx_Freeze for windows
+      - name: Build with Cx_Freeze
         run: poetry run python setup.py build_exe -b dist
 
-      - name: Switch code page
-        run: |
-          chcp 65001
-
       - name: Set VERSION variable for windows
+        shell: bash
         run: |
-          echo "VERSION=$(poetry run python tools/version.py)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "VERSION=`poetry run python tools/version.py`" >> $GITHUB_ENV
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: JavSP-${{ env.VERSION }}-Windows-amd64
+          name: JavSP-${{ env.VERSION }}-${{ matrix.os }}
           path: dist
