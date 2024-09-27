@@ -5,7 +5,7 @@ import logging
 
 from javsp.web.base import *
 from javsp.web.exceptions import *
-from javsp.core.datatype import MovieInfo
+from javsp.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)

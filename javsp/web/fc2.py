@@ -4,9 +4,9 @@ import logging
 
 from javsp.web.base import get_html, request_get, resp2html
 from javsp.web.exceptions import *
-from javsp.core.config import Cfg
-from javsp.core.lib import strftime_to_minutes
-from javsp.core.datatype import MovieInfo
+from javsp.config import Cfg
+from javsp.lib import strftime_to_minutes
+from javsp.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)

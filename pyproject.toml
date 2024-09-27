@@ -15,7 +15,7 @@ format = "v{base}.{distance}"
 python = "<3.13,>=3.10"
 cloudscraper = "1.2.71"
 colorama = "0.4.4"
-pillow = "10.3.0"
+pillow = "10.2.0"
 pretty-errors = "1.2.19"
 requests = "2.31.0"
 tqdm = "4.59.0"
@@ -25,11 +25,10 @@ pywin32-ctypes = {version = "^0.2.2", markers = "sys_platform == 'win32'"}
 cryptography = "^42.0.5"
 pycryptodome = "^3.20.0"
 lxml = {extras = ["html-clean"], version = "^5.2.1"}
-baidu-aip = "^2.2.18.0"
 confz = "^2.0.1"
 pydantic-extra-types = "^2.9.0"
 pendulum = "^3.0.0"
-
+slimeface = "^2024.9.27"
 
 [tool.poetry.scripts]
 javsp = "javsp.__main__:entry"
@@ -46,6 +45,7 @@ pytest = "^8.1.1"
 flake8 = "^7.0.0"
 cx-freeze = "^7.2.2"
 types-lxml = "^2024.4.14"
+types-pillow = "^10.2.0.20240822"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]

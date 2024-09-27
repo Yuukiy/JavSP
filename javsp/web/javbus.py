@@ -4,9 +4,9 @@ import logging
 
 from javsp.web.base import *
 from javsp.web.exceptions import *
-from javsp.core.func import *
-from javsp.core.config import Cfg, CrawlerID
-from javsp.core.datatype import MovieInfo, GenreMap
+from javsp.func import *
+from javsp.config import Cfg, CrawlerID
+from javsp.datatype import MovieInfo, GenreMap
 
 
 logger = logging.getLogger(__name__)

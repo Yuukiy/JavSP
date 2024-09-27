@@ -1,5 +1,4 @@
 """定义数据类型和一些通用性的对数据类型的操作"""
-from enum import Enum
 import os
 import csv
 import json
@@ -7,8 +6,8 @@ import shutil
 import logging
 from functools import cached_property
 
-from javsp.core.config import Cfg
-from javsp.core.lib import resource_path, detect_special_attr
+from javsp.config import Cfg
+from javsp.lib import resource_path, detect_special_attr
 
 
 logger = logging.getLogger(__name__)

@@ -13,10 +13,10 @@ from typing import List
 __all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_illegal_chars', 'get_failed_when_scan', 'find_subtitle_in_dir']
 
 
-from javsp.core.avid import *
-from javsp.core.lib import re_escape
-from javsp.core.config import Cfg
-from javsp.core.datatype import Movie
+from javsp.avid import *
+from javsp.lib import re_escape
+from javsp.config import Cfg
+from javsp.datatype import Movie
 
 logger = logging.getLogger(__name__)
 failed_items = []

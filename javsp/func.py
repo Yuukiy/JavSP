@@ -25,7 +25,7 @@ except ImportError:
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from javsp.web.base import *
-from javsp.core.lib import re_escape, resource_path
+from javsp.lib import re_escape, resource_path
 
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',

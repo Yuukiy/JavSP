@@ -5,9 +5,9 @@ import logging
 import re
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import request_get
-from web.exceptions import *
-from core.datatype import MovieInfo
+from javsp.web.base import request_get
+from javsp.web.exceptions import *
+from javsp.datatype import MovieInfo
 import requests
 from lxml import html
 

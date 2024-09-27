@@ -6,7 +6,7 @@ from shutil import rmtree
 
 file_dir = os.path.dirname(__file__)
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
-from javsp.core.avid import get_id, get_cid
+from javsp.avid import get_id, get_cid
 
 
 @pytest.fixture

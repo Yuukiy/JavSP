@@ -3,7 +3,7 @@ import logging
 
 from javsp.web.base import Request, resp2html
 from javsp.web.exceptions import *
-from javsp.core.datatype import MovieInfo
+from javsp.datatype import MovieInfo
 
 
 request = Request()

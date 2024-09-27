@@ -178,15 +178,9 @@ summarizer:
       # 要使用的图像识别引擎，详细配置见文档 https://github.com/Yuukiy/JavSP/wiki/AI-%7C-%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB
       # NOTE: 此处无法直接对应，请参照注释手动填入
       engine: null #null表示禁用图像剪裁
-      ## 使用百度人体分析应用: {{{{{{
+      ## 使用Slimeface: {{{{{{
       # engine: 
-      #   name: baidu_aip
-      #   # 百度人体分析应用的AppID
-      #   app_id: ''
-      #   # 百度人体分析应用的API Key
-      #   api_key: ''
-      #   # 百度人体分析应用的Secret Key
-      #   secret_key: ''
+      #   name: slimeface
       ## }}}}}}
 
   fanart:

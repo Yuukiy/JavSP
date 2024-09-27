@@ -20,7 +20,7 @@ def resource_path(path: str) -> str:
     if getattr(sys, "frozen", False):
         return path
     else:
-        path_joined = Path(__file__).parent.parent.parent / path
+        path_joined = Path(__file__).parent.parent / path
         return str(path_joined)
 
 

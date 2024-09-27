@@ -14,7 +14,7 @@ from lxml.html.clean import Cleaner
 from requests.models import Response
 
 
-from javsp.core.config import Cfg
+from javsp.config import Cfg
 from javsp.web.exceptions import *
 
 

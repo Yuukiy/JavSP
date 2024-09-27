@@ -4,6 +4,7 @@ import sys
 import json
 import time
 import logging
+from PIL import Image
 from pydantic import ValidationError
 from pydantic_extra_types.pendulum_dt import Duration
 import requests
@@ -21,8 +22,8 @@ from tqdm import tqdm
 pretty_errors.configure(display_link=True)
 
 
-from javsp.core.print import TqdmOut
-from javsp.core.baidu_aip import aip_crop_poster
+from javsp.print import TqdmOut
+from javsp.cropper import Cropper, get_cropper
 
 
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
@@ -34,17 +35,17 @@ for handler in root_logger.handlers:
 logger = logging.getLogger('main')
 
 
-from javsp.core.lib import resource_path
-from javsp.core.nfo import write_nfo
-from javsp.core.file import *
-from javsp.core.func import *
-from javsp.core.image import *
-from javsp.core.datatype import Movie, MovieInfo
+from javsp.lib import resource_path
+from javsp.nfo import write_nfo
+from javsp.file import *
+from javsp.func import *
+from javsp.image import *
+from javsp.datatype import Movie, MovieInfo
 from javsp.web.base import download
 from javsp.web.exceptions import *
 from javsp.web.translate import translate_movie_info
 
-from javsp.core.config import BaiduAipEngine, Cfg, CrawlerID
+from javsp.config import Cfg, CrawlerID
 
 actressAliasMap = {}
 
@@ -376,25 +377,30 @@ def reviewMovieID(all_movies, root):
         print()
 
 
-SUBTITLE_MARK_FILE = os.path.abspath(resource_path('image/sub_mark.png'))
-UNCENSORED_MARK_FILE = os.path.abspath(resource_path('image/unc_mark.png'))
-def crop_poster_wrapper(fanart_file, poster_file, engine: BaiduAipEngine | None, hard_sub=False, uncensored=False):
-    """包装各种海报裁剪方法，提供统一的调用"""
-    if engine is BaiduAipEngine:
-        try:
-            aip_crop_poster(fanart_file, engine.app_id, engine.api_key, poster=poster_file)
-        except Exception as e:
-            logger.debug('人脸识别失败，回退到常规裁剪方法')
-            logger.debug(e, exc_info=True)
-            crop_poster(fanart_file, poster_file)
-    else:
-        crop_poster(fanart_file, poster_file)
-    if Cfg().summarizer.cover.add_label:
-        if hard_sub == True:
-            add_label_to_poster(poster_file, SUBTITLE_MARK_FILE, LabelPostion.BOTTOM_RIGHT)
-        if uncensored == True:
-            add_label_to_poster(poster_file, UNCENSORED_MARK_FILE, LabelPostion.BOTTOM_LEFT)
+SUBTITLE_MARK_FILE = Image.open(os.path.abspath(resource_path('image/sub_mark.png')))
+UNCENSORED_MARK_FILE = Image.open(os.path.abspath(resource_path('image/unc_mark.png')))
 
+def process_poster(movie: Movie):
+    def should_use_ai_crop_match(label):
+        for r in Cfg().summarizer.cover.crop.on_id_pattern:
+            re.match(r, label)
+            return True
+        return False
+    crop_engine = None
+    if (movie.info.uncensored or
+       movie.data_src == 'fc2' or
+       should_use_ai_crop_match(movie.info.label.upper())):
+        crop_engine = Cfg().summarizer.cover.crop.engine
+    cropper = get_cropper(crop_engine)
+    fanart_image = Image.open(movie.fanart_file)
+    fanart_cropped = cropper.crop(fanart_image)
+
+    if Cfg().summarizer.cover.add_label:
+        if movie.hard_sub:
+            fanart_cropped = add_label_to_poster(fanart_cropped, SUBTITLE_MARK_FILE, LabelPostion.BOTTOM_RIGHT)
+        if movie.uncensored:
+            fanart_cropped = add_label_to_poster(fanart_cropped, UNCENSORED_MARK_FILE, LabelPostion.BOTTOM_LEFT)
+    fanart_cropped.save(movie.poster_file)
 
 def RunNormalMode(all_movies):
     """普通整理模式"""
@@ -455,22 +461,8 @@ def RunNormalMode(all_movies):
                 actual_ext = os.path.splitext(pic_path)[1]
                 movie.poster_file = os.path.splitext(movie.poster_file)[0] + actual_ext
 
-            def should_use_ai_crop_match(label):
-                for r in Cfg().summarizer.cover.crop.on_id_pattern:
-                    re.match(r, label)
-                    return True
-                return False
+            process_poster(movie)
 
-            crop_engine = None
-
-            if (movie.info.uncensored or
-               movie.data_src == 'fc2' or
-               should_use_ai_crop_match(movie.info.label.upper())):
-                crop_engine = Cfg().summarizer.cover.crop.engine
-                inner_bar.set_description('使用AI裁剪海报封面')
-            else:
-                inner_bar.set_description('裁剪海报封面')
-            crop_poster_wrapper(movie.fanart_file, movie.poster_file, crop_engine, movie.hard_sub, movie.uncensored)
             check_step(True)
 
             if Cfg().summarizer.extra_fanarts.enabled:

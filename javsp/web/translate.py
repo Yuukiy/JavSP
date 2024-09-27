@@ -13,8 +13,8 @@ from hashlib import md5
 __all__ = ['translate', 'translate_movie_info']
 
 
-from javsp.core.config import BaiduTranslateEngine, BingTranslateEngine, Cfg, ClaudeTranslateEngine, GoogleTranslateEngine, OpenAITranslateEngine, TranslateEngine
-from javsp.core.datatype import MovieInfo
+from javsp.config import BaiduTranslateEngine, BingTranslateEngine, Cfg, ClaudeTranslateEngine, GoogleTranslateEngine, OpenAITranslateEngine, TranslateEngine
+from javsp.datatype import MovieInfo
 from javsp.web.base import read_proxy
 
 
@@ -66,9 +66,7 @@ def translate(texts, engine: Union[
     """
     rtn = {}
     err_msg = ''
-    if engine is None:
-        return {'trans': texts}
-    elif engine is BaiduTranslateEngine:
+    if engine.name == 'baidu':
         result = baidu_translate(texts, engine.app_id, engine.api_key)
         if 'error_code' not in result:
             # 百度翻译的结果中的组表示的是按换行符分隔的不同段落，而不是句子
@@ -76,7 +74,7 @@ def translate(texts, engine: Union[
             rtn = {'trans': '\n'.join(paragraphs)}
         else:
             err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
-    elif engine is BingTranslateEngine:
+    elif engine.name == 'bing':
         # 使用动态词典保护原文中的女优名，防止翻译后认不出来
         for i in actress:
             texts = texts.replace(i, f'<mstrans:dictionary translation="{i}">{i}</mstrans:dictionary>')
@@ -99,7 +97,7 @@ def translate(texts, engine: Union[
             rtn = {'trans': trans, 'orig_break': orig_break, 'trans_break': trans_break}
         else:
             err_msg = "{}: {}: {}".format(engine, result['error']['code'], result['error']['message'])
-    elif engine is ClaudeTranslateEngine:
+    elif engine.name == 'claude':
         try:
             result = claude_translate(texts, engine.api_key)
             if 'error_code' not in result:
@@ -108,7 +106,7 @@ def translate(texts, engine: Union[
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
-    elif engine is OpenAITranslateEngine:
+    elif engine.name == 'openai':
         try:
             result = openai_translate(texts, engine.url, engine.api_key, engine.model)
             if 'error_code' not in result:
@@ -117,7 +115,7 @@ def translate(texts, engine: Union[
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
-    elif engine is GoogleTranslateEngine:
+    elif engine.name == 'google':
         try:
             result = google_trans(texts)
             # 经测试，翻译成功时会带有'sentences'字段；失败时不带，也没有故障码
@@ -131,6 +129,8 @@ def translate(texts, engine: Union[
                 err_msg = "{}: {}: {}".format(engine, result['error_code'], result['error_msg'])
         except Exception as e:
             err_msg = "{}: {}: Exception: {}".format(engine, -2, repr(e))
+    else:
+        return {'trans': texts}
 
 def baidu_translate(texts, app_id, api_key, to='zh'):
     """使用百度翻译文本（默认翻译为简体中文）"""

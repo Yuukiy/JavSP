@@ -6,8 +6,8 @@ from html import unescape
 
 from javsp.web.base import Request
 from javsp.web.exceptions import *
-from javsp.core.config import Cfg
-from javsp.core.datatype import MovieInfo
+from javsp.config import Cfg
+from javsp.datatype import MovieInfo
 
 # 初始化Request实例
 request = Request(use_scraper=True)

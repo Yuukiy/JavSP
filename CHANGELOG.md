@@ -11,6 +11,7 @@
 
   参见[Package javsp](https://github.com/Yuukiy/JavSP/pkgs/container/javsp)。
 - 添加新的爬虫`arzon`, `arzon_iv` [#377](https://github.com/Yuukiy/JavSP/pull/377)
+- Slimeface人脸识别 [#380](https://github.com/Yuukiy/JavSP/pull/380)
 
 ### Changed
 - 使用 Poetry 作为构建系统 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
@@ -33,8 +34,11 @@
   ```
 - 为了引入对类型注释的支持，最低Python版本现在为3.10
 
+- 重构封面剪裁逻辑 [#380](https://github.com/Yuukiy/JavSP/pull/380)
+
 ### Removed
 - Pyinstaller 打包描述文件 [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
 - requirements.txt [134b279](https://github.com/Yuukiy/JavSP/commit/134b279151aead587db0b12d1a30781f2e1be5b1)
 - MovieID.ignore_whole_word 功能和ignore_regex重复 [e096d83](https://github.com/Yuukiy/JavSP/commit/e096d8394a4db29bb4a1123b3d05021de201207d)
 - NamingRule.media_servers：由于不常用删除，之后会出更general的解决方案 [#353](https://github.com/Yuukiy/JavSP/issues/353)
+- Baidu AIP人脸识别，请使用Slimeface替代。

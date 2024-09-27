@@ -2,12 +2,12 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 from enum import Enum
 from typing import Dict, List, Literal, TypeAlias, Union
 from confz import BaseConfig, CLArgSource, EnvSource, FileSource
-from pydantic import ByteSize, Discriminator, Field, NonNegativeInt, PositiveInt, field_validator
+from pydantic import ByteSize, Field, NonNegativeInt, PositiveInt
 from pydantic_extra_types.pendulum_dt import Duration
 from pydantic_core import Url
 from pathlib import Path
 
-from javsp.core.lib import resource_path
+from javsp.lib import resource_path
 
 class Scanner(BaseConfig):
     ignored_id_pattern: List[str]
@@ -143,15 +143,12 @@ class ExtraFanartSummarize(BaseConfig):
     enabled: bool
     scrap_interval: Duration
 
-class BaiduAipEngine(BaseConfig):
-    name: Literal['baidu_aip']
-    app_id: str
-    api_key: str
-    secret_key: str
+class SlimefaceEngine(BaseConfig):
+    name: Literal['slimeface']
 
 class CoverCrop(BaseConfig):
-    engine: BaiduAipEngine | None
-    on_id_pattern: list[str]
+  engine: SlimefaceEngine | None
+  on_id_pattern: list[str]
 
 class CoverSummarize(BaseConfig):
     basename_pattern: str

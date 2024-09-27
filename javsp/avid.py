@@ -7,9 +7,7 @@ from pathlib import Path
 __all__ = ['get_id', 'get_cid', 'guess_av_type']
 
 
-from javsp.core.config import Cfg
-
-Path('1.png').stem
+from javsp.config import Cfg
 
 def get_id(filepath_str: str) -> str:
     """从给定的文件路径中提取番号（DVD ID）"""
