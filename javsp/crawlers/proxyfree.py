@@ -80,7 +80,6 @@ async def get_proxy_free_url(site_name: CrawlerID, prefer_url: str | None = None
     if site_name in proxy_free_fns:
         try:
             urls = await proxy_free_fns[site_name]()
-            print(f"I got {urls}")
             return await choose_one_connectable(urls)
         except:
             return None

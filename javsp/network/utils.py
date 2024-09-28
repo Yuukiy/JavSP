@@ -58,7 +58,6 @@ async def url_download(url: Url, target_path: str, desc: str | None = None) -> D
 async def test_connect(url_str: str, timeout: Duration) -> bool:
     """测试与指定url的连接，不使用映射，但使用代理"""
     try:
-        print(f"Attemping to connect {url_str}")
         client = get_client(Url(url_str))
         response = \
             await client.get(
@@ -71,7 +70,6 @@ async def test_connect(url_str: str, timeout: Duration) -> bool:
         return False
 
 async def choose_one_connectable(urls: list[str]) -> str | None:
-    print(urls)
     co_connectables: list[Coroutine[Any, Any, bool]] = []
     for url in urls:
         co_connectables.append(test_connect(url, Duration(seconds=5)))
@@ -95,10 +93,10 @@ async def resolve_site_fallback(cr_id: CrawlerID, default: str) -> Url:
 
 
 if __name__ == '__main__':
-    # async def aentry():
-    #     print(await choose_one_connectable(['http://iandown.what', 'http://www.baidu.com']))
-
     async def aentry():
-        print(await test_connect("https://www.y78k.com/", timeout=3))
+        print(await choose_one_connectable(['http://iandown.what', 'http://www.baidu.com']))
+
+    # async def aentry():
+    #     print(await test_connect("https://www.y78k.com/", Duration(seconds=3)))
 
     asyncio.run(aentry())
