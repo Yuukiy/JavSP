@@ -5,9 +5,7 @@ import json
 import time
 import asyncio
 import logging
-import uvloop
 from PIL import Image
-from lxml.etree import Comment
 from pydantic import ValidationError
 from pydantic_core import Url
 from pydantic_extra_types.pendulum_dt import Duration
@@ -554,7 +552,7 @@ async def aentry():
     sys.exit(0)
 
 def entry():
-    uvloop.run(aentry(), debug=True)
+    asyncio.run(aentry(), debug=True)
 
 if __name__ == "__main__":
     entry()
