@@ -209,6 +209,7 @@ class Translator(BaseConfig):
     fields: TranslateField
 
 class Other(BaseConfig):
+    interactive: bool
     check_update: bool
     auto_update: bool
 

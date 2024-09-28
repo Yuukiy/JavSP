@@ -237,6 +237,8 @@ translator:
   
 ################################
 other:
+  # 是否在stdin/stdout进行交互
+  interactive: true
   # 是否允许检查更新。如果允许，在有新版本时会显示提示信息和新版功能
   check_update: {yes_to_true(cfg['Other']['check_update'])}
   # 是否允许检查到新版本时自动下载

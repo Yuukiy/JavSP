@@ -26,6 +26,7 @@ except ImportError:
 from javsp.web.base import *
 from javsp.lib import re_escape, resource_path
 
+from javsp.prompt import prompt
 
 __all__ = ['select_folder', 'get_scan_dir', 'remove_trail_actor_in_title',
            'shutdown', 'CLEAR_LINE', 'check_update', 'split_by_punc']
@@ -61,7 +62,7 @@ def get_scan_dir(cfg_scan_dir: Path | None) -> str | None:
             print('请选择要整理的文件夹：', end='')
             root = select_folder()
         else:
-            root = input('请选择要整理的文件夹路径，必须是绝对路径: ')
+            root = prompt('请选择要整理的文件夹路径，必须是绝对路径: ', "要整理的文件夹")
         print(root)
         return root
 

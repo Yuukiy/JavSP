@@ -46,6 +46,7 @@ from javsp.web.exceptions import *
 from javsp.web.translate import translate_movie_info
 
 from javsp.config import Cfg, CrawlerID
+from javsp.prompt import prompt
 
 actressAliasMap = {}
 
@@ -353,7 +354,7 @@ def reviewMovieID(all_movies, root):
         print(f'[{i}/{count}]\t{Fore.LIGHTMAGENTA_EX}{id}{Style.RESET_ALL}, 对应文件:')
         relpaths = [os.path.relpath(i, root) for i in movie.files]
         print('\n'.join(['  '+i for i in relpaths]))
-        s = input("回车确认当前番号，或直接输入更正后的番号（如'ABC-123'或'cid:sqte00300'）")
+        s = prompt("回车确认当前番号，或直接输入更正后的番号（如'ABC-123'或'cid:sqte00300'）", "更正后的番号")
         if not s:
             logger.info(f"已确认影片番号: {','.join(relpaths)}: {id}")
         else:
