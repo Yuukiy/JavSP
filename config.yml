@@ -25,16 +25,24 @@ network:
   # 设置代理服务器地址，支持 http, socks5/socks5h 代理，比如'http://127.0.0.1:1080'
   # null表示禁用代理
   proxy_server: null
-  # 各个站点的免代理地址。地址失效时软件会自动尝试获取新地址，你也可以手动设置
-  proxy_free:
-    avsox: 'https://avsox.click'
-    javbus: 'https://www.seedmm.help'
-    javdb: 'https://javdb368.com'
-    javlib: 'https://www.y78k.com'
   # 网络问题导致抓取数据失败时的重试次数，通常3次就差不多了
-  retry: 3
+  retries: 3
   # https://en.wikipedia.org/wiki/ISO_8601#Durations
   timeout: PT10S
+  # 对列表中的地址不使用梯子（如果启用了的话）
+  unproxied: [
+      'https://www.seedmm.help',
+      'https://javdb368.com',
+      'https://www.y78k.com',
+      'https://www.javbus.one',
+      'https://www.tellme.pw',
+  ]
+  # 各个站点的代替地址。
+  # JavSP会按顺序尝试列表里的每一个服务器，如果都不行会使用默认的主站点地址
+  fallback:
+    javbus: ['https://www.seedmm.help']
+    javdb: ['https://javdb368.com']
+    javlib: ['https://www.y78k.com']
 
 ################################
 crawler:
@@ -52,8 +60,6 @@ crawler:
   hardworking: true
   # 使用网页番号作为最终番号（启用时会对番号大小写等进行更正）
   respect_site_avid: true
-  # fc2fan已关站。如果你有镜像，请设置本地镜像文件夹的路径，此文件夹内要有类似'FC2-12345.html'的网页文件
-  fc2fan_local_path: null
   # 刮削一部电影后的等待时间（设置为0禁用此功能）
   # https://en.wikipedia.org/wiki/ISO_8601#Durations
   sleep_after_scraping: PT1S

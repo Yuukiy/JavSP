@@ -6,7 +6,7 @@ import uuid
 import random
 import logging
 from pydantic_core import Url
-import requests
+import httpx
 from hashlib import md5
 
 
@@ -15,7 +15,7 @@ __all__ = ['translate', 'translate_movie_info']
 
 from javsp.config import BaiduTranslateEngine, BingTranslateEngine, Cfg, ClaudeTranslateEngine, GoogleTranslateEngine, OpenAITranslateEngine, TranslateEngine
 from javsp.datatype import MovieInfo
-from javsp.web.base import read_proxy
+from javsp.network.client import get_proxy
 
 
 logger = logging.getLogger(__name__)
@@ -49,13 +49,7 @@ def translate_movie_info(info: MovieInfo):
             return False
     return True
 
-def translate(texts, engine: Union[
-        BaiduTranslateEngine,
-        BingTranslateEngine,
-        ClaudeTranslateEngine,
-        OpenAITranslateEngine,
-        None
-    ], actress=[]):
+def translate(texts, engine: TranslateEngine, actress=[]):
     """
     翻译入口：对错误进行处理并且统一返回格式
 
@@ -146,7 +140,7 @@ def baidu_translate(texts, app_id, api_key, to='zh'):
     wait = 1.0 - (now - last_access)
     if wait > 0:
         time.sleep(wait)
-    r = requests.post(api_url, params=payload, headers=headers)
+    r = httpx.post(api_url, params=payload, headers=headers)
     result = r.json()
     baidu_translate._last_access = time.perf_counter()
     return result
@@ -163,7 +157,7 @@ def bing_translate(texts, api_key, to='zh-Hans'):
         'X-ClientTraceId': str(uuid.uuid4())
     }
     body = [{'text': texts}]
-    r = requests.post(api_url, params=params, headers=headers, json=body)
+    r = httpx.post(api_url, params=params, headers=headers, json=body)
     result = r.json()
     return result
 
@@ -175,12 +169,12 @@ def google_trans(texts, to='zh_CN'):
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
     url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
-    proxies = read_proxy()
-    r = requests.get(url, proxies=proxies)
+    proxies = get_proxy(False)
+    r = httpx.get(url, proxies=proxies)
     while r.status_code == 429:
         logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
         time.sleep(_google_trans_wait)
-        r = requests.get(url, proxies=proxies)
+        r = httpx.get(url, proxies=proxies)
         if r.status_code == 429:
             _google_trans_wait += random.randint(60, 90)
     if r.status_code == 200:
@@ -204,7 +198,7 @@ def claude_translate(texts, api_key, to="zh_CN"):
         "max_tokens": 1024,
         "messages": [{"role": "user", "content": texts}],
     }
-    r = requests.post(api_url, headers=headers, json=data)
+    r = httpx.post(api_url, headers=headers, json=data)
     if r.status_code == 200:
         result = r.json().get("content", [{}])[0].get("text", "").strip()
     else:
@@ -236,7 +230,7 @@ def openai_translate(texts, url: Url, api_key: str, model: str, to="zh_CN"):
          "temperature": 0,
          "max_tokens": 1024,
     }
-    r = requests.post(api_url, headers=headers, json=data)
+    r = httpx.post(api_url, headers=headers, json=data)
     if r.status_code == 200:
         if 'error' in r.json():
             result = {

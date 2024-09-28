@@ -39,9 +39,10 @@ class CrawlerID(str, Enum):
 
 class Network(BaseConfig):
     proxy_server: Url | None
-    retry: NonNegativeInt = 3
+    retries: NonNegativeInt = 3
     timeout: Duration
-    proxy_free: Dict[CrawlerID, Url]
+    unproxied: List[Url]
+    fallback: Dict[CrawlerID, List[str]]
 
 class CrawlerSelect(BaseConfig):
     def items(self) -> List[tuple[str, list[CrawlerID]]]:
@@ -109,7 +110,6 @@ class Crawler(BaseConfig):
     required_keys: list[MovieInfoField]
     hardworking: bool
     respect_site_avid: bool
-    fc2fan_local_path: Path | None
     sleep_after_scraping: Duration
     use_javdb_cover: UseJavDBCover
     normalize_actress_name: bool

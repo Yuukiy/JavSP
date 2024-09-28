@@ -16,6 +16,8 @@ from colorama import Style
 from pathlib import Path
 import importlib.metadata as meta
 
+from pydantic_core import Url
+
 # 判断系统是否可以使用tk
 USE_GUI = True
 try:
@@ -23,7 +25,7 @@ try:
 except ImportError:
     USE_GUI = False
 
-from javsp.web.base import *
+from javsp.network.utils import get_client, url_download
 from javsp.lib import re_escape, resource_path
 
 
@@ -150,7 +152,7 @@ def split_by_punc(s):
     return ls
 
 
-def check_update(allow_check=True, auto_update=True):
+async def check_update(allow_check=True, auto_update=True):
     """检查版本更新"""
 
     def print_header(title, info=[]):
@@ -181,7 +183,9 @@ def check_update(allow_check=True, auto_update=True):
         release_url = 'https://github.com/Yuukiy/JavSP/releases/latest'
         print('正在检查更新...', end='')
         try:
-            data = request_get(api_url, timeout=3).json()
+            client = get_client(Url(api_url))
+            resp = await client.get(api_url)
+            data = resp.json()
             latest_version = data['tag_name']
             release_time = utc2local(data['published_at'])
             release_date = release_time.isoformat().split('T')[0]
@@ -233,7 +237,7 @@ def check_update(allow_check=True, auto_update=True):
         if auto_update:
             try:
                 logger.info('尝试自动更新到新版本: ' + latest_version + " （按'Ctrl+C'取消）")
-                download_update(data)
+                await download_update(data)
             except KeyboardInterrupt:
                 logger.info('用户取消更新')
             except Exception as e:
@@ -243,7 +247,7 @@ def check_update(allow_check=True, auto_update=True):
                 print()     # 输出空行，作为新旧程序的分隔
 
 
-def download_update(rel_info):
+async def download_update(rel_info):
     """下载版本更新
 
     Args:
@@ -253,7 +257,8 @@ def download_update(rel_info):
         down_url = rel_info['assets'][0]['browser_download_url']
         asset_name = rel_info['assets'][0]['name']
         desc = '下载更新' if shutil.get_terminal_size().columns < 120 else '下载更新: '+asset_name
-        download(down_url, asset_name, desc=desc)
+        await url_download(Url(down_url), asset_name, desc=desc)
+        # download(down_url, asset_name, desc=desc)
         if os.path.exists(asset_name):
             # 备份原有的程序
             basepath, ext = os.path.splitext(sys.executable)
@@ -270,8 +275,3 @@ def download_update(rel_info):
             p.wait()
             p.terminate()
             sys.exit(0)
-
-
-if __name__ == "__main__":
-    setattr(sys, 'javsp_version', 'v0')
-    check_update()

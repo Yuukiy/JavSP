@@ -2,14 +2,18 @@ import os
 import re
 import sys
 import json
+import asyncio
 import time
 import logging
 from PIL import Image
+from lxml.etree import Comment
 from pydantic import ValidationError
+from pydantic_core import Url
 from pydantic_extra_types.pendulum_dt import Duration
-import requests
 import threading
-from typing import Dict, List
+from typing import Any, Coroutine, Dict, List
+from javsp.crawlers.interface import Crawler
+from javsp.crawlers.all import crawlers
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -23,7 +27,7 @@ pretty_errors.configure(display_link=True)
 
 
 from javsp.print import TqdmOut
-from javsp.cropper import Cropper, get_cropper
+from javsp.cropper import get_cropper
 
 
 # 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
@@ -41,11 +45,11 @@ from javsp.file import *
 from javsp.func import *
 from javsp.image import *
 from javsp.datatype import Movie, MovieInfo
-from javsp.web.base import download
-from javsp.web.exceptions import *
-from javsp.web.translate import translate_movie_info
+from javsp.network.utils import url_download
+from javsp.crawlers.exceptions import *
+from javsp.translate import translate_movie_info
 
-from javsp.config import Cfg, CrawlerID
+from javsp.config import Cfg, CrawlerID, UseJavDBCover
 
 actressAliasMap = {}
 
@@ -57,86 +61,49 @@ def resolve_alias(name):
     return name  # 如果找不到别名对应的固定名字，则返回原名
 
 
-def import_crawlers():
-    """按配置文件的抓取器顺序将该字段转换为抓取器的函数列表"""
-    unknown_mods = []
-    for _, mods in Cfg().crawler.selection.items():
-        valid_mods = []
-        for name in mods:
-            try:
-                # 导入fc2fan抓取器的前提: 配置了fc2fan的本地路径
-                # if name == 'fc2fan' and (not os.path.isdir(Cfg().Crawler.fc2fan_local_path)):
-                #     logger.debug('由于未配置有效的fc2fan路径，已跳过该抓取器')
-                #     continue
-                import_name = 'javsp.web.' + name
-                __import__(import_name)
-                valid_mods.append(import_name)  # 抓取器有效: 使用完整模块路径，便于程序实际使用
-            except ModuleNotFoundError:
-                unknown_mods.append(name)       # 抓取器无效: 仅使用模块名，便于显示
-    if unknown_mods:
-        logger.warning('配置的抓取器无效: ' + ', '.join(unknown_mods))
-
-
 # 爬虫是IO密集型任务，可以通过多线程提升效率
-def parallel_crawler(movie: Movie, tqdm_bar=None):
+async def parallel_crawler(movie: Movie, tqdm_bar=None) -> dict[CrawlerID, MovieInfo]:
     """使用多线程抓取不同网站的数据"""
-    def wrapper(parser, info: MovieInfo, retry):
+
+    async def wrapper(id: CrawlerID, movie: MovieInfo) -> None:
         """对抓取器函数进行包装，便于更新提示信息和自动重试"""
-        crawler_name = threading.current_thread().name
-        task_info = f'Crawler: {crawler_name}: {info.dvdid}'
-        for cnt in range(retry):
-            try:
-                parser(info)
-                movie_id = info.dvdid or info.cid
-                logger.debug(f"{crawler_name}: 抓取成功: '{movie_id}': '{info.url}'")
-                setattr(info, 'success', True)
-                if isinstance(tqdm_bar, tqdm):
-                    tqdm_bar.set_description(f'{crawler_name}: 抓取完成')
-                break
-            except MovieNotFoundError as e:
-                logger.debug(e)
-                break
-            except MovieDuplicateError as e:
-                logger.exception(e)
-                break
-            except (SiteBlocked, SitePermissionError, CredentialError) as e:
-                logger.error(e)
-                break
-            except requests.exceptions.RequestException as e:
-                logger.debug(f'{crawler_name}: 网络错误，正在重试 ({cnt+1}/{retry}): \n{repr(e)}')
-                if isinstance(tqdm_bar, tqdm):
-                    tqdm_bar.set_description(f'{crawler_name}: 网络错误，正在重试')
-            except Exception as e:
-                logger.exception(e)
+        try:
+            crawler = await crawlers[id].create()
+            await crawler.crawl_and_fill(movie)
+            movie_id = info.dvdid or info.cid
+            logger.debug(f"{crawler.id.value}: 抓取成功: '{movie_id}': '{info.url}'")
+            setattr(info, 'success', True)
+            if isinstance(tqdm_bar, tqdm):
+                tqdm_bar.set_description(f'{crawler.id.value}: 抓取完成')
+        except MovieNotFoundError as e:
+            logger.debug(e)
+        except MovieDuplicateError as e:
+            logger.exception(e)
+        except (SiteBlocked, SitePermissionError, CredentialError) as e:
+            logger.error(e)
+        except Exception as e:
+            logger.exception(e)
 
     # 根据影片的数据源获取对应的抓取器
-    crawler_mods: List[CrawlerID] = Cfg().crawler.selection[movie.data_src]
+    crawler_to_use: List[CrawlerID] = Cfg().crawler.selection[movie.data_src]
 
-    all_info = {i.value: MovieInfo(movie) for i in crawler_mods}
+    all_info: Dict[CrawlerID, MovieInfo] = {i: MovieInfo(movie) for i in crawler_to_use}
+
     # 番号为cid但同时也有有效的dvdid时，也尝试使用普通模式进行抓取
     if movie.data_src == 'cid' and movie.dvdid:
-        crawler_mods = crawler_mods + Cfg().crawler.selection.normal
+        crawler_to_use += Cfg().crawler.selection.normal
         for i in all_info.values():
             i.dvdid = None
         for i in Cfg().crawler.selection.normal:
             all_info[i] = MovieInfo(movie.dvdid)
-    thread_pool = []
-    for mod_partial, info in all_info.items():
-        mod = f"javsp.web.{mod_partial}"
-        parser = getattr(sys.modules[mod], 'parse_data')
-        # 将all_info中的info实例传递给parser，parser抓取完成后，info实例的值已经完成更新
-        # TODO: 抓取器如果带有parse_data_raw，说明它已经自行进行了重试处理，此时将重试次数设置为1
-        if hasattr(sys.modules[mod], 'parse_data_raw'):
-            th = threading.Thread(target=wrapper, name=mod, args=(parser, info, 1))
-        else:
-            th = threading.Thread(target=wrapper, name=mod, args=(parser, info, Cfg().network.retry))
-        th.start()
-        thread_pool.append(th)
-    # 等待所有线程结束
-    timeout = Cfg().network.retry * Cfg().network.timeout.total_seconds()
-    for th in thread_pool:
-        th: threading.Thread
-        th.join(timeout=timeout)
+
+    co_pool: list[Coroutine[Any, Any, None]] = []
+    for crawler_id, info in all_info.items():
+        co_pool.append(wrapper(crawler_id, info))
+
+    # 等待所有协程结束
+    asyncio.gather(*co_pool)
+
     # 根据抓取结果更新影片类型判定
     if movie.data_src == 'cid' and movie.dvdid:
         titles = [all_info[i].title for i in Cfg().crawler.selection[movie.data_src]]
@@ -148,22 +115,22 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
             movie.data_src = 'normal'
             movie.cid = None
             all_info = {k: v for k, v in all_info.items() if k not in Cfg().crawler.selection['cid']}
+
     # 删除抓取失败的站点对应的数据
     all_info = {k:v for k,v in all_info.items() if hasattr(v, 'success')}
     for info in all_info.values():
         del info.success
-    # 删除all_info中键名中的'web.'
-    all_info = {k[4:]:v for k,v in all_info.items()}
+
     return all_info
 
 
-def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
+def info_summary(movie: Movie, all_info: Dict[CrawlerID, MovieInfo]):
     """汇总多个来源的在线数据生成最终数据"""
     final_info = MovieInfo(movie)
     ########## 部分字段配置了专门的选取逻辑，先处理这些字段 ##########
     # genre
-    if 'javdb' in all_info and all_info['javdb'].genre:
-        final_info.genre = all_info['javdb'].genre
+    if 'javdb' in all_info and all_info[CrawlerID.javdb].genre:
+        final_info.genre = all_info[CrawlerID.javdb].genre
 
     ########## 移除所有抓取器数据中，标题尾部的女优名 ##########
     if Cfg().summarizer.title.remove_trailing_actor_name:
@@ -197,7 +164,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                     setattr(final_info, attr, incoming)
                     absorbed.append(attr)
         if absorbed:
-            logger.debug(f"从'{name}'中获取了字段: " + ' '.join(absorbed))
+            logger.debug(f"从'{name.value}'中获取了字段: " + ' '.join(absorbed))
     # 使用网站的番号作为番号
     if Cfg().crawler.respect_site_avid:
         id_weight = {}
@@ -216,7 +183,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
             else:
                 final_info.cid = final_id
     # javdb封面有水印，优先采用其他站点的封面
-    javdb_cover = getattr(all_info.get('javdb'), 'cover', None)
+    javdb_cover = getattr(all_info.get(CrawlerID.javdb), 'cover', None)
     if javdb_cover is not None:
         match Cfg().crawler.use_javdb_cover:
             case UseJavDBCover.fallback:
@@ -402,7 +369,7 @@ def process_poster(movie: Movie):
             fanart_cropped = add_label_to_poster(fanart_cropped, UNCENSORED_MARK_FILE, LabelPostion.BOTTOM_LEFT)
     fanart_cropped.save(movie.poster_file)
 
-def RunNormalMode(all_movies):
+async def RunNormalMode(all_movies):
     """普通整理模式"""
     def check_step(result, msg='步骤错误'):
         """检查一个整理步骤的结果，并负责更新tqdm的进度"""
@@ -427,7 +394,7 @@ def RunNormalMode(all_movies):
             inner_bar = tqdm(total=total_step, desc='步骤', ascii=True, leave=False)
             # 依次执行各个步骤
             inner_bar.set_description(f'启动并发任务')
-            all_info = parallel_crawler(movie, inner_bar)
+            all_info = await parallel_crawler(movie, inner_bar)
             msg = f'为其配置的{len(Cfg().crawler.selection[movie.data_src])}个抓取器均未获取到影片信息'
             check_step(all_info, msg)
 
@@ -447,9 +414,9 @@ def RunNormalMode(all_movies):
 
             inner_bar.set_description('下载封面图片')
             if Cfg().summarizer.cover.highres:
-                cover_dl = download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
+                cover_dl = await download_cover(movie.info.covers, movie.fanart_file, movie.info.big_covers)
             else:
-                cover_dl = download_cover(movie.info.covers, movie.fanart_file)
+                cover_dl = await download_cover(movie.info.covers, movie.fanart_file)
             check_step(cover_dl, '下载封面图片失败')
             cover, pic_path = cover_dl
             # 确保实际下载的封面的url与即将写入到movie.info中的一致
@@ -476,12 +443,12 @@ def RunNormalMode(all_movies):
                                                                                                                                 
                         fanart_destination = f"{extrafanartdir}/{id}.png"
                         try:
-                            info = download(pic_url, fanart_destination)
+                            info = await url_download(Url(pic_url), fanart_destination)
                             if valid_pic(fanart_destination):
                                 filesize = get_fmt_size(pic_path)
                                 width, height = get_pic_size(pic_path)
-                                elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
-                                speed = get_fmt_size(info['rate']) + '/s'
+                                elapsed = str(info.elapsed)
+                                speed =  f"{info.get_rate()}Mbps"
                                 logger.info(f"已下载剧照{pic_url} {id}.png: {width}x{height}, {filesize} [{elapsed}, {speed}]")
                             else:
                                 check_step(False, f"下载剧照{id}: {pic_url}失败")
@@ -512,38 +479,29 @@ def RunNormalMode(all_movies):
     return return_movies
 
 
-def download_cover(covers, fanart_path, big_covers=[]):
+async def download_cover(covers, fanart_path, big_covers=[]):
     """下载封面图片"""
     # 优先下载高清封面
     for url in big_covers:
         pic_path = get_pic_path(fanart_path, url)
-        for _ in range(Cfg().network.retry):
-            try:
-                info = download(url, pic_path)
-                if valid_pic(pic_path):
-                    filesize = get_fmt_size(pic_path)
-                    width, height = get_pic_size(pic_path)
-                    elapsed = time.strftime("%M:%S", time.gmtime(info['elapsed']))
-                    speed = get_fmt_size(info['rate']) + '/s'
-                    logger.info(f"已下载高清封面: {width}x{height}, {filesize} [{elapsed}, {speed}]")
-                    return (url, pic_path)
-            except requests.exceptions.HTTPError:
-                # HTTPError通常说明猜测的高清封面地址实际不可用，因此不再重试
-                break
+        info = await url_download(Url(url), pic_path)
+        if valid_pic(pic_path):
+            filesize = get_fmt_size(pic_path)
+            width, height = get_pic_size(pic_path)
+            elapsed = str(info.elapsed)
+            speed = f"{info.get_rate()}Mbps"
+            logger.info(f"已下载高清封面: {width}x{height}, {filesize} [{elapsed}, {speed}]")
+            return (url, pic_path)
     # 如果没有高清封面或高清封面下载失败
     for url in covers:
         pic_path = get_pic_path(fanart_path, url)
-        for _ in range(Cfg().network.retry):
-            try:
-                download(url, pic_path)
-                if valid_pic(pic_path):
-                    logger.debug(f"已下载封面: '{url}'")
-                    return (url, pic_path)
-                else:
-                    logger.debug(f"图片无效或已损坏: '{url}'，尝试更换下载地址")
-                    break
-            except Exception as e:
-                logger.debug(e, exc_info=True)
+        await url_download(Url(url), pic_path)
+        if valid_pic(pic_path):
+            logger.debug(f"已下载封面: '{url}'")
+            return (url, pic_path)
+        else:
+            logger.debug(f"图片无效或已损坏: '{url}'，尝试更换下载地址")
+            break
     logger.error(f"下载封面图片失败")
     logger.debug('big_covers:'+str(big_covers) + ', covers'+str(covers))
     return None
@@ -558,14 +516,7 @@ def get_pic_path(fanart_path, url):
     pic_path = fanart_base + "." + pic_extend
     return pic_path
 
-def error_exit(success, err_info):
-    """检查业务逻辑是否成功完成，如果失败则报错退出程序"""
-    if not success:
-        logger.error(err_info)
-        sys.exit(1)
-
-
-def entry():
+async def aentry():
     try:
         Cfg()
     except ValidationError as e:
@@ -583,22 +534,28 @@ def entry():
     # 检查更新
     version_info = 'JavSP ' + getattr(sys, 'javsp_version', '未知版本/从代码运行')
     logger.debug(version_info.center(60, '='))
-    check_update(Cfg().other.check_update, Cfg().other.auto_update)
+    await check_update(Cfg().other.check_update, Cfg().other.auto_update)
     root = get_scan_dir(Cfg().scanner.input_directory)
-    error_exit(root, '未选择要扫描的文件夹')
+    if root is None:
+        logger.error('未选择要扫描的文件夹')
+        sys.exit(1)
     # 导入抓取器，必须在chdir之前
-    import_crawlers()
     os.chdir(root)
 
     print(f'扫描影片文件...')
     recognized = scan_movies(root)
     movie_count = len(recognized)
     recognize_fail = []
-    error_exit(movie_count, '未找到影片文件')
+    if movie_count == 0:
+        logger.error('未找到影片文件')
+        sys.exit(1)
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
-    RunNormalMode(recognized + recognize_fail)
+    await RunNormalMode(recognized + recognize_fail)
 
     sys.exit(0)
+
+def entry():
+    asyncio.run(aentry(), debug=True)
 
 if __name__ == "__main__":
     entry()

@@ -76,13 +76,16 @@ network:
   # 设置代理服务器地址，支持 http, socks5/socks5h 代理，比如'http://127.0.0.1:1080'
   # null表示禁用代理
   proxy_server: {'null' if proxy_disabled else f"'{cfg['Network']['proxy']}'"}
-  # 各个站点的免代理地址。地址失效时软件会自动尝试获取新地址，你也可以手动设置
-  proxy_free:
-{'\n'.join([f"    {id}: '{url}'" for id, url in dict(cfg['ProxyFree']).items()])}
   # 网络问题导致抓取数据失败时的重试次数，通常3次就差不多了
-  retry: {cfg['Network']['retry']}
+  retries: {cfg['Network']['retry']}
   # https://en.wikipedia.org/wiki/ISO_8601#Durations
   timeout: PT{cfg['Network']['timeout']}S
+  # 各个站点的免代理地址。地址失效时软件会自动尝试获取新地址，你也可以手动设置
+  unproxied: [{
+  ', '.join(dict(cfg['ProxyFree']).values())
+}]
+  fallback:
+{'\n'.join([f"    {id}: ['{url}']" for id, url in dict(cfg['ProxyFree']).items()])}
 
 ################################
 crawler:
@@ -100,8 +103,6 @@ crawler:
   hardworking: {yes_to_true(cfg['Crawler']['hardworking_mode'])}
   # 使用网页番号作为最终番号（启用时会对番号大小写等进行更正）
   respect_site_avid: {yes_to_true(cfg['Crawler']['respect_site_avid'])}
-  # fc2fan已关站。如果你有镜像，请设置本地镜像文件夹的路径，此文件夹内要有类似'FC2-12345.html'的网页文件
-  fc2fan_local_path: '{cfg['Crawler']['fc2fan_local_path']}'
   # 刮削一部电影后的等待时间（设置为0禁用此功能）
   # https://en.wikipedia.org/wiki/ISO_8601#Durations
   sleep_after_scraping: PT{cfg['Crawler']['sleep_after_scraping']}S
