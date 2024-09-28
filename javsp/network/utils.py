@@ -1,4 +1,5 @@
 from datetime import timedelta
+import logging
 import time
 from tqdm.asyncio import tqdm
 from typing import Any, Coroutine, NamedTuple
@@ -13,6 +14,8 @@ from javsp.config import Cfg, CrawlerID
 from javsp.network.client import get_client
 
 import asyncio
+
+logger = logging.getLogger(__name__)
 
 class DownloadInfo(NamedTuple):
     size: ByteSize
@@ -63,16 +66,16 @@ async def test_connect(url_str: str, timeout: Duration) -> bool:
             await client.get(
                 url_str,
                 timeout=timeout.total_seconds(),
-                follow_redirects=True,
             )
         return response.status_code == 200
-    except:
+    except Exception as e:
+        logger.debug(f"Not connectable: {url_str}\n" + repr(e))
         return False
 
 async def choose_one_connectable(urls: list[str]) -> str | None:
     co_connectables: list[Coroutine[Any, Any, bool]] = []
     for url in urls:
-        co_connectables.append(test_connect(url, Duration(seconds=5)))
+        co_connectables.append(test_connect(url, Duration(seconds=3)))
 
     connectables = await asyncio.gather(*co_connectables)
     for i, connectable in enumerate(connectables):
