@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [Unreleased](https://github.com/Yuukiy/Javsp/compare/v1.8...HEAD)
 
 ### Added
 - 添加无码和字幕的水印 [#73](https://github.com/Yuukiy/JavSP/commit/eaedc84049597eaab1ba064229f9b5bcf38aa504)
@@ -43,3 +43,23 @@
 - MovieID.ignore_whole_word 功能和ignore_regex重复 [e096d83](https://github.com/Yuukiy/JavSP/commit/e096d8394a4db29bb4a1123b3d05021de201207d)
 - NamingRule.media_servers：由于不常用删除，之后会出更general的解决方案 [#353](https://github.com/Yuukiy/JavSP/issues/353)
 - Baidu AIP人脸识别，请使用Slimeface替代。
+
+## v1.8 - 2024-09-28
+
+### Added
+- 新增站点njav, fc2ppvdb
+- 添加选项控制封面选择逻辑，优先使用非javdb的封面以避免水印
+- 支持自定义要写入到nfo的genre和tag中的字段
+- 支持添加uncensored标签到poster图片
+- 支持调用Claude(haiku)和Groq(llama3.1-70b)翻译接口
+
+### Changed
+- 适配网页和接口的变化: avsox, fc2, fanza, mgstage, prestige, javmenu
+- 修复写入nfo时的拼写问题
+- 修复Windows下无法读取Cookies的问题
+- 修复封面图片url存在?参数时下载图片失败的问题
+- 解决图片下载请求被javbus拦截的问题
+- 优化google翻译参数和速率，减少被QoS
+- 为Cloudflare拦截导致的失败请求给出提示
+- 改进T38-000系列影片的番号识别
+- msin: 站点关闭，移除相应代码及测试用例
