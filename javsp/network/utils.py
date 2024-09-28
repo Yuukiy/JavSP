@@ -12,6 +12,8 @@ from pydantic_extra_types.pendulum_dt import Duration
 from javsp.config import Cfg, CrawlerID
 from javsp.network.client import get_client
 
+import asyncio
+
 class DownloadInfo(NamedTuple):
     size: ByteSize
     elapsed: timedelta
@@ -53,18 +55,10 @@ async def url_download(url: Url, target_path: str, desc: str | None = None) -> D
             
             return DownloadInfo(ByteSize(response.num_bytes_downloaded), response.elapsed)
 
-# def resp2html(resp: Response) -> lxml.html.HtmlElement:
-#
-#     """将request返回的response转换为经lxml解析后的document"""
-#
-#     html = lxml.html.fromstring(resp.text)
-#     html.make_links_absolute(str(resp.url), resolve_base_href=True)
-#     return html
-#
 async def test_connect(url_str: str, timeout: Duration) -> bool:
     """测试与指定url的连接，不使用映射，但使用代理"""
     try:
-
+        print(f"Attemping to connect {url_str}")
         client = get_client(Url(url_str))
         response = \
             await client.get(
@@ -76,16 +70,35 @@ async def test_connect(url_str: str, timeout: Duration) -> bool:
     except:
         return False
 
+async def choose_one_connectable(urls: list[str]) -> str | None:
+    print(urls)
+    co_connectables: list[Coroutine[Any, Any, bool]] = []
+    for url in urls:
+        co_connectables.append(test_connect(url, Duration(seconds=5)))
+
+    connectables = await asyncio.gather(*co_connectables)
+    for i, connectable in enumerate(connectables):
+        if connectable:
+            return urls[i]
+    return None
+
 async def resolve_site_fallback(cr_id: CrawlerID, default: str) -> Url:
     if cr_id not in Cfg().network.fallback:
         return Url(default)
-    
-    tasks: list[tuple[str, Coroutine[Any, Any, bool]]] = []
-    for fallback in Cfg().network.fallback[cr_id]:
-        tasks.append((fallback, test_connect(fallback, Duration(seconds=3))))
 
-    for (fallback, task) in tasks:
-        if await task:
-            return Url(fallback)
+    fallbacks = Cfg().network.fallback[cr_id]
+    chosen = await choose_one_connectable(fallbacks)
+    if chosen is None:
+        return Url(default)
+    else:
+        return Url(chosen)
 
-    return Url(default)
+
+if __name__ == '__main__':
+    # async def aentry():
+    #     print(await choose_one_connectable(['http://iandown.what', 'http://www.baidu.com']))
+
+    async def aentry():
+        print(await test_connect("https://www.y78k.com/", timeout=3))
+
+    asyncio.run(aentry())

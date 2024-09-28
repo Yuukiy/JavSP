@@ -2,17 +2,16 @@ import os
 import re
 import sys
 import json
-import asyncio
 import time
+import asyncio
 import logging
+import uvloop
 from PIL import Image
 from lxml.etree import Comment
 from pydantic import ValidationError
 from pydantic_core import Url
 from pydantic_extra_types.pendulum_dt import Duration
-import threading
 from typing import Any, Coroutine, Dict, List
-from javsp.crawlers.interface import Crawler
 from javsp.crawlers.all import crawlers
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -102,7 +101,7 @@ async def parallel_crawler(movie: Movie, tqdm_bar=None) -> dict[CrawlerID, Movie
         co_pool.append(wrapper(crawler_id, info))
 
     # 等待所有协程结束
-    asyncio.gather(*co_pool)
+    await asyncio.gather(*co_pool)
 
     # 根据抓取结果更新影片类型判定
     if movie.data_src == 'cid' and movie.dvdid:
@@ -555,7 +554,7 @@ async def aentry():
     sys.exit(0)
 
 def entry():
-    asyncio.run(aentry(), debug=True)
+    uvloop.run(aentry(), debug=True)
 
 if __name__ == "__main__":
     entry()

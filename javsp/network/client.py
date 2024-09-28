@@ -7,7 +7,9 @@ from httpx import AsyncClient, AsyncHTTPTransport
 
 from javsp.config import Cfg
 
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'}
+default_headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+}
 
 def get_proxy(unproxied: bool):
     if Cfg().network.proxy_server is None or unproxied:
@@ -33,7 +35,7 @@ def get_client(url: Url) -> AsyncClient:
             client = AsyncClient(
                 transport=transport,
                 # 必须使用copy()，否则各个模块对headers的修改都将会指向本模块中定义的headers变量，导致只有最后一个对headers的修改生效
-                headers=headers.copy(),
+                headers=default_headers.copy(),
                 timeout=Cfg().network.timeout.total_seconds(),
                 follow_redirects=True,
             )

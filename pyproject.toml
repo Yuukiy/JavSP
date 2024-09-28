@@ -29,6 +29,7 @@ pendulum = "^3.0.0"
 slimeface = "^2024.9.27"
 httpx = {extras = ["socks"], version = "^0.27.2"}
 aiofiles = "^24.1.0"
+uvloop = "^0.20.0"
 
 [tool.poetry.scripts]
 javsp = "javsp.__main__:entry"
