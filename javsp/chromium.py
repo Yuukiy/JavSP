@@ -32,6 +32,8 @@ class Decrypter():
 
 def get_browsers_cookies():
     """获取系统上的所有Chromium系浏览器的JavDB的Cookies"""
+    if not sys.platform.startswith('win32'): # 不支持windows以外的系统
+        return []
     # 不予支持: Opera, 360安全&极速, 搜狗使用非标的用户目录或数据格式; QQ浏览器屏蔽站点
     user_data_dirs = {
         'Chrome':        '/Google/Chrome/User Data',

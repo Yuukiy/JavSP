@@ -6,7 +6,7 @@ from typing import List
 from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from javsp.lib import strftime_to_minutes
@@ -26,7 +26,7 @@ class NjavCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.njav.tv/')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def search_video(self, movie: MovieInfo) -> str:
@@ -34,7 +34,7 @@ class NjavCrawler(Crawler):
         # 抓取网页
         url = f'{self.base_url}ja/search?keyword={id_uc}'
         resp = await self.client.get(url)
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         list = tree.xpath("//div[@class='box-item']/div[@class='detail']/a")
         video_url = None
         for item in list:
@@ -57,7 +57,7 @@ class NjavCrawler(Crawler):
         if not url:
             raise MovieNotFoundError(__name__, movie.dvdid)
         resp = await self.client.get(url)
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         container = tree.xpath("//div[@class='container']/div/div[@class='col']")
         if len(container) > 0:
             container = container[0]

@@ -11,6 +11,7 @@ from pydantic_core import Url
 from pydantic_extra_types.pendulum_dt import Duration
 from typing import Any, Coroutine, Dict, List
 from javsp.crawlers.all import crawlers
+from javsp.network.client import clear_clients
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -548,6 +549,8 @@ async def aentry():
         sys.exit(1)
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
     await RunNormalMode(recognized + recognize_fail)
+
+    await clear_clients()
 
     sys.exit(0)
 

@@ -5,19 +5,18 @@ import json
 import logging
 from typing import Dict, List, Tuple
 
-from httpx import Response
-
 
 from javsp.crawlers.exceptions import MovieNotFoundError, SiteBlocked
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.config import Cfg
 from javsp.datatype import MovieInfo
 
 from lxml import html
 from lxml.html import HtmlElement
+from aiohttp import ClientResponse
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +30,8 @@ def sort_search_result(result: List[Dict]):
     return sorted_result
 
 
-def resp2html_wrapper(resp: Response) -> HtmlElement:
-    tree = html.fromstring(resp.text)
+async def resp2html_wrapper(resp: ClientResponse) -> HtmlElement:
+    tree = html.fromstring(await resp.text())
     if 'not available in your region' in tree.text_content():
         raise SiteBlocked('FANZA不允许从当前IP所在地区访问，请检查你的网络和代理服务器设置')
     elif '/login/' in str(resp.url):
@@ -88,14 +87,29 @@ def parse_anime_page(movie: MovieInfo, tree: HtmlElement):
 
 class FanzaCrawler(Crawler):
     id = CrawlerID.fanza
+    headers: Dict[str, str]
+
+
+    @classmethod
+    async def create(cls): 
+        self = cls()
+        url = await resolve_site_fallback(self.id, 'https://www.dmm.co.jp')
+        self.base_url = str(url)
+        self.client = get_session(url)
+
+        # 初始化Request实例（要求携带已通过R18认证的cookies，否则会被重定向到认证页面）
+        self.client.cookie_jar.update_cookies({'age_check_done': '1'})
+        self.headers = {'Accept-Language': 'ja,en-US;q=0.9'}
+        return self
 
     async def get_urls_of_cid(self, cid: str) -> Tuple[str, str]:
         """搜索cid可能的影片URL"""
-        r = await self.client.get(f"{self.base_url}search/?redirect=1&enc=UTF-8&category=&searchstr={cid}&commit.x=0&commit.y=0")
-        if r.status_code == 404:
+        r = await self.client.get(f"{self.base_url}search/?redirect=1&enc=UTF-8&category=&searchstr={cid}&commit.x=0&commit.y=0", headers=self.headers)
+        if r.status == 404:
             raise MovieNotFoundError(__name__, cid)
         r.raise_for_status()
-        tree = resp2html_wrapper(r)
+
+        tree = await resp2html_wrapper(r)
         result = tree.xpath("//ul[@id='list']/li/div/p/a/@href")
         parsed_result = {}
         for url in result:
@@ -116,36 +130,25 @@ class FanzaCrawler(Crawler):
         sorted_result = sort_search_result(parsed_result[cid])
         return sorted_result
 
-    @classmethod
-    async def create(cls): 
-        self = cls()
-        url = await resolve_site_fallback(self.id, 'https://www.dmm.co.jp')
-        self.base_url = str(url)
-        self.client = get_client(url)
-
-        # 初始化Request实例（要求携带已通过R18认证的cookies，否则会被重定向到认证页面）
-        self.client.cookies = {'age_check_done': '1'}
-        self.client.headers['Accept-Language'] = 'ja,en-US;q=0.9'
-        return self
+    async def dispatch(self, type: str, movie: MovieInfo, tree: HtmlElement):
+        match type:
+            case 'videoa' | 'dvd' | 'ppr' | 'nikkatsu':
+                await self.parse_videoa_page(movie, tree)
+            case 'anime' | 'doujin':
+                parse_anime_page(movie, tree)
 
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
         """解析指定番号的影片数据"""
         default_url = f'{self.base_url}digital/videoa/-/detail/=/cid={movie.cid}/'
-        r0 = await self.client.get(default_url)
-        if r0.status_code == 404:
+        r0 = await self.client.get(default_url, headers=self.headers)
+        if r0.status == 404:
             urls = await self.get_urls_of_cid(movie.cid)
             for d in urls:
-                func_name = f"parse_{d['type']}_page"
-                if func_name in globals():
-                    parse_func = globals()[func_name]
-                else:
-                    logger.debug(f"不知道怎么解析 fanza {d['type']} 的页面: {d['url']}")
-                    continue
-                r = await self.client.get(d['url'])
-                tree = resp2html_wrapper(r)
                 try:
-                    parse_func(movie, tree)
+                    r = await self.client.get(d['url'], headers=self.headers)
+                    tree = await resp2html_wrapper(r)
+                    await self.dispatch(d['type'], movie, tree)
                     movie.url = d['url']
                     break
                 except:
@@ -209,8 +212,8 @@ class FanzaCrawler(Crawler):
         if Cfg().crawler.hardworking:
             # 预览视频是动态加载的，不在静态网页中
             video_url = f'{self.base_url}service/digitalapi/-/html5_player/=/cid={movie.cid}'
-            resp = await self.client.get(video_url)
-            tree2 = html.fromstring(resp.text)
+            resp = await self.client.get(video_url, headers=self.headers)
+            tree2 = html.fromstring(await resp.text())
             # 目前用到js脚本的地方不多，所以不使用专门的js求值模块，先用正则提取文本然后用json解析数据
             script = tree2.xpath("//script[contains(text(),'getElementById(\"dmmplayer\")')]/text()")[0].strip()
             match = re.search(r'\{.*\}', script)
@@ -244,3 +247,4 @@ if __name__ == "__main__":
 
     import asyncio
     asyncio.run(test_main())
+

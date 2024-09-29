@@ -6,7 +6,7 @@ import logging
 from javsp.crawlers.exceptions import MovieNotFoundError, SiteBlocked
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import Cfg, CrawlerID
 from lxml import html
@@ -22,22 +22,22 @@ class MgstageCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.mgstage.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         # 初始化Request实例（要求携带已通过R18认证的cookies，否则会被重定向到认证页面）
-        self.client.cookies = {'adc': '1'}
+        self.client.cookie_jar.update_cookies({'adc': '1'})
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
         """解析指定番号的影片数据"""
         url = f'{self.base_url}/product/product_detail/{movie.dvdid}/'
         resp = await self.client.get(url)
-        if resp.status_code == 403:
+        if resp.status == 403:
             raise SiteBlocked('mgstage不允许从当前IP所在地区访问，请尝试更换为日本地区代理')
         # url不存在时会被重定向至主页。history非空时说明发生了重定向
         elif resp.history:
             raise MovieNotFoundError(__name__, movie.dvdid)
 
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         # mgstage的文本中含有大量的空白字符（'\n \t'），需要使用strip去除
         title = tree.xpath("//div[@class='common_detail_cover']/h1/text()")[0].strip()
         container = tree.xpath("//div[@class='detail_left']")[0]
@@ -93,7 +93,7 @@ class MgstageCrawler(Crawler):
             video_pid = btn_url.split('/')[-1]
             req_url = f'{self.base_url}/sampleplayer/sampleRespons.php?pid={video_pid}'
             resp = await self.client.get(req_url)
-            j = resp.json()
+            j = await resp.json()
             video_url = j.get('url')
             if video_url:
                 # /sample/shirouto/siro/3093/SIRO-3093_sample.ism/request?uid=XXX&amp;pid=XXX

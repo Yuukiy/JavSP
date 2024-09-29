@@ -1,21 +1,19 @@
 """网页翻译接口"""
 # 由于翻译服务不走代理，而且需要自己的错误处理机制，因此不通过base.py来管理网络请求
 import time
-from typing import Union
 import uuid
 import random
 import logging
 from pydantic_core import Url
-import httpx
 from hashlib import md5
 
 
 __all__ = ['translate', 'translate_movie_info']
 
 
-from javsp.config import BaiduTranslateEngine, BingTranslateEngine, Cfg, ClaudeTranslateEngine, GoogleTranslateEngine, OpenAITranslateEngine, TranslateEngine
+from javsp.config import Cfg, TranslateEngine
 from javsp.datatype import MovieInfo
-from javsp.network.client import get_proxy
+from javsp.network.client import get_session
 
 
 logger = logging.getLogger(__name__)
@@ -126,7 +124,7 @@ def translate(texts, engine: TranslateEngine, actress=[]):
     else:
         return {'trans': texts}
 
-def baidu_translate(texts, app_id, api_key, to='zh'):
+async def baidu_translate(texts, app_id, api_key, to='zh'):
     """使用百度翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.fanyi.baidu.com/api/trans/vip/translate"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -140,13 +138,14 @@ def baidu_translate(texts, app_id, api_key, to='zh'):
     wait = 1.0 - (now - last_access)
     if wait > 0:
         time.sleep(wait)
-    r = httpx.post(api_url, params=payload, headers=headers)
-    result = r.json()
+    s = get_session(Url(api_url))
+    r = await s.post(api_url, params=payload, headers=headers)
+    result = await r.json()
     baidu_translate._last_access = time.perf_counter()
     return result
 
 
-def bing_translate(texts, api_key, to='zh-Hans'):
+async def bing_translate(texts, api_key, to='zh-Hans'):
     """使用Bing翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.cognitive.microsofttranslator.com/translate"
     params = {'api-version': '3.0', 'to': to, 'includeSentenceLength': True}
@@ -157,34 +156,36 @@ def bing_translate(texts, api_key, to='zh-Hans'):
         'X-ClientTraceId': str(uuid.uuid4())
     }
     body = [{'text': texts}]
-    r = httpx.post(api_url, params=params, headers=headers, json=body)
-    result = r.json()
+    s = get_session(Url(api_url))
+    r = await s.post(api_url, params=params, headers=headers, json=body)
+    result = await r.json()
     return result
 
 
 _google_trans_wait = 60
-def google_trans(texts, to='zh_CN'):
+async def google_trans(texts, to='zh_CN'):
     """使用Google翻译文本（默认翻译为简体中文）"""
     # API: https://www.jianshu.com/p/ce35d89c25c3
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
     url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
-    proxies = get_proxy(False)
-    r = httpx.get(url, proxies=proxies)
-    while r.status_code == 429:
-        logger.warning(f"HTTP {r.status_code}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
+    s = get_session(Url(url))
+    r = await s.get(url)
+    # TODO: retry已经集成到client里了，这里考虑删除
+    while r.status == 429:
+        logger.warning(f"HTTP {r.status}: {r.reason}: Google翻译请求超限，将等待{_google_trans_wait}秒后重试")
         time.sleep(_google_trans_wait)
-        r = httpx.get(url, proxies=proxies)
-        if r.status_code == 429:
+        r = await client.get(url)
+        if r.status == 429:
             _google_trans_wait += random.randint(60, 90)
-    if r.status_code == 200:
-        result = r.json()
+    if r.status == 200:
+        result = await r.json()
     else:
-        result = {'error_code': r.status_code, 'error_msg': r.reason}
+        result = {'error_code': r.status, 'error_msg': r.reason}
     time.sleep(4) # Google翻译的API有QPS限制，因此需要等待一段时间
     return result
 
-def claude_translate(texts, api_key, to="zh_CN"):
+async def claude_translate(texts, api_key, to="zh_CN"):
     """使用Claude翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.anthropic.com/v1/messages"
     headers = {
@@ -198,17 +199,20 @@ def claude_translate(texts, api_key, to="zh_CN"):
         "max_tokens": 1024,
         "messages": [{"role": "user", "content": texts}],
     }
-    r = httpx.post(api_url, headers=headers, json=data)
-    if r.status_code == 200:
-        result = r.json().get("content", [{}])[0].get("text", "").strip()
+
+    s = get_session(Url(api_url))
+    r = await s.post(api_url, headers=headers, json=data)
+    j = await r.json()
+    if r.status == 200:
+        result = j.get("content", [{}])[0].get("text", "").strip()
     else:
         result = {
-            "error_code": r.status_code,
-            "error_msg": r.json().get("error", {}).get("message", r.reason),
+            "error_code": r.status,
+            "error_msg": j.get("error", {}).get("message", r.reason),
         }
     return result
 
-def openai_translate(texts, url: Url, api_key: str, model: str, to="zh_CN"):
+async def openai_translate(texts, url: Url, api_key: str, model: str, to="zh_CN"):
     """使用 OpenAI 翻译文本（默认翻译为简体中文）"""
     api_url = str(url)
     headers = {
@@ -230,18 +234,20 @@ def openai_translate(texts, url: Url, api_key: str, model: str, to="zh_CN"):
          "temperature": 0,
          "max_tokens": 1024,
     }
-    r = httpx.post(api_url, headers=headers, json=data)
-    if r.status_code == 200:
-        if 'error' in r.json():
+    s = get_session(Url(api_url))
+    r = await s.post(api_url, headers=headers, json=data)
+    if r.status == 200:
+        j = await r.json()
+        if 'error' in j:
             result = {
-                "error_code": r.status_code,
-                "error_msg": r.json().get("error", {}).get("message", ""),
+                "error_code": r.status,
+                "error_msg": j.get("error", {}).get("message", ""),
             }
         else:
-            result = r.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+            result = j.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
     else:
         result = {
-            "error_code": r.status_code,
+            "error_code": r.status,
             "error_msg": r.reason,
         }
     return result

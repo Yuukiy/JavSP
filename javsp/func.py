@@ -25,7 +25,7 @@ try:
 except ImportError:
     USE_GUI = False
 
-from javsp.network.utils import get_client, url_download
+from javsp.network.utils import get_session, url_download
 from javsp.lib import re_escape, resource_path
 
 
@@ -183,9 +183,9 @@ async def check_update(allow_check=True, auto_update=True):
         release_url = 'https://github.com/Yuukiy/JavSP/releases/latest'
         print('正在检查更新...', end='')
         try:
-            client = get_client(Url(api_url))
+            client = get_session(Url(api_url))
             resp = await client.get(api_url)
-            data = resp.json()
+            data = await resp.json()
             latest_version = data['tag_name']
             release_time = utc2local(data['published_at'])
             release_date = release_time.isoformat().split('T')[0]

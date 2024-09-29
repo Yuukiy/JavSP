@@ -6,7 +6,7 @@ import logging
 from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -22,14 +22,14 @@ class Jav321Crawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.jav321.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
 
         """解析指定番号的影片数据"""
         resp = await self.client.post(f'{self.base_url}/search', data={'sn': movie.dvdid})
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         page_url = tree.xpath("//ul[@class='dropdown-menu']/li/a/@href")[0]
         #TODO: 注意cid是dmm的概念。如果影片来自MGSTAGE，这里的cid很可能是jav321自己添加的，例如 345SIMM-542
         cid = page_url.split('/')[-1]   # /video/ipx00177

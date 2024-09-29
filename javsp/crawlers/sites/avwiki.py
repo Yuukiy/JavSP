@@ -4,7 +4,7 @@ from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.crawlers.interface import Crawler
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.config import CrawlerID
 from lxml import html
 
@@ -16,7 +16,7 @@ class AvWikiCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://av-wiki.net')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
@@ -27,9 +27,9 @@ class AvWikiCrawler(Crawler):
         movie.url = url = f'{self.base_url}/{movie.dvdid}'
         
         resp = await self.client.get(url) 
-        if resp.status_code == 404:
+        if resp.status == 404:
             raise MovieNotFoundError(__name__, movie.dvdid)
-        tree = html.fromstring(resp.content)
+        tree = html.fromstring(await resp.text())
 
         cover_tag = tree.xpath("//header/div/a[@class='image-link-border']/img")
         if cover_tag:

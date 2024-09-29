@@ -3,7 +3,7 @@
 from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -16,7 +16,7 @@ class AvsoxCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, "https://avsox.click/")
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
@@ -24,7 +24,7 @@ class AvsoxCrawler(Crawler):
         if full_id.startswith('FC2-'):
             full_id = full_id.replace('FC2-', 'FC2-PPV-')
         resp = await self.client.get(f'{self.base_url}tw/search/{full_id}')
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         tree.make_links_absolute(str(resp.url), resolve_base_href=True)
         ids = tree.xpath("//div[@class='photo-info']/span/date[1]/text()")
         urls = tree.xpath("//a[contains(@class, 'movie-box')]/@href")
@@ -37,9 +37,7 @@ class AvsoxCrawler(Crawler):
 
         # 提取影片信息
         resp = await self.client.get(url)
-        # with open('file.html', 'wb') as f:
-        #     f.write(resp.content)
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         container = tree.xpath("/html/body/div[@class='container']")[0]
         title = container.xpath("h3/text()")[0]
         cover = container.xpath("//a[@class='bigImage']/@href")[0]

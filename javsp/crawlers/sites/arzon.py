@@ -2,7 +2,7 @@
 import re
 
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from javsp.crawlers.exceptions import *
@@ -17,7 +17,7 @@ class ArzonCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, "https://www.arzon.jp")
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         # https://www.arzon.jp/index.php?action=adult_customer_agecheck&agecheck=1&redirect=https%3A%2F%2Fwww.arzon.jp%2F
         skip_verify_url = f"{self.base_url}/index.php?action=adult_customer_agecheck&agecheck=1"
         await self.client.get(skip_verify_url)
@@ -30,10 +30,10 @@ class ArzonCrawler(Crawler):
         # url = f'{base_url}/imagelist.html?q={full_id}'
         
         r = await self.client.get(url)
-        if r.status_code == 404:
+        if r.status == 404:
           raise MovieNotFoundError(__name__, movie.dvdid)
         # https://stackoverflow.com/questions/15830421/xml-unicode-strings-with-encoding-declaration-are-not-supported
-        data = html.fromstring(r.content)
+        data = html.fromstring(await r.read())
     
         urls = data.xpath("//h2/a/@href")
         if len(urls) == 0:
@@ -41,7 +41,7 @@ class ArzonCrawler(Crawler):
     
         item_url = self.base_url + urls[0]
         e = await self.client.get(item_url)
-        item = html.fromstring(e.content)
+        item = html.fromstring(await e.read())
     
         title = item.xpath("//div[@class='detail_title_new2']//h1/text()")[0]
         cover = item.xpath("//td[@align='center']//a/img/@src")[0]
@@ -91,6 +91,7 @@ class ArzonCrawler(Crawler):
         movie.preview_pics = preview_pics
     
 if __name__ == "__main__":
+    from javsp.network.client import clear_clients
 
     async def test_main():
         crawler = await ArzonCrawler.create()
@@ -98,6 +99,7 @@ if __name__ == "__main__":
         try:
           await crawler.crawl_and_fill(movie)
           print(movie)
+          await clear_clients()
         except Exception as e:
           print(repr(e))
 

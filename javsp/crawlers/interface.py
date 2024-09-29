@@ -1,13 +1,13 @@
-from httpx import AsyncClient
 from javsp.config import CrawlerID
 from javsp.datatype import MovieInfo
 from abc import ABC, abstractmethod
 from typing import Self
+from aiohttp import ClientSession
 
 
 class Crawler(ABC):
     base_url: str
-    client: AsyncClient
+    client: ClientSession
     id: CrawlerID
 
 

@@ -10,7 +10,7 @@ from javsp.lib import strftime_to_minutes
 from javsp.datatype import MovieInfo
 from javsp.crawlers.interface import Crawler
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.config import CrawlerID
 
 
@@ -24,13 +24,13 @@ class Fc2Crawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://adult.contents.fc2.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def get_movie_score(self, fc2_id: str) -> float | None:
         """通过评论数据来计算FC2的影片评分（10分制），无法获得评分时返回None"""
         resp = await self.client.get(f'{self.base_url}/article/{fc2_id}/review')
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         review_tags = tree.xpath("//ul[@class='items_comment_headerReviewInArea']/li")
         reviews = {}
         for tag in review_tags:
@@ -56,7 +56,7 @@ class Fc2Crawler(Crawler):
         resp = await self.client.get(url)
         if '/id.fc2.com/' in str(resp.url):
             raise SiteBlocked('FC2要求当前IP登录账号才可访问，请尝试更换为日本IP')
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         container = tree.xpath("//div[@class='items_article_left']")
         if len(container) > 0:
             container = container[0]
@@ -85,7 +85,7 @@ class Fc2Crawler(Crawler):
             key = desc_frame_url.split('=')[-1]     # /widget/article/718323/description?ac=60fc08fa...
             api_url = f'{self.base_url}/api/v2/videos/{fc2_id}/sample?key={key}'
             resp = await self.client.get(api_url)
-            j = resp.json()
+            j = await resp.json()
             movie.preview_video = j['path']
         else:
             # 获取影片评分。影片页面的评分只能粗略到星级，且没有分数，要通过类名来判断，如'items_article_Star5'表示5星

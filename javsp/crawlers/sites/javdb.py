@@ -2,8 +2,7 @@
 import os
 import re
 import logging
-
-from httpx import Cookies
+from typing import Dict
 
 from javsp.func import *
 from javsp.avid import guess_av_type
@@ -13,7 +12,7 @@ from javsp.chromium import get_browsers_cookies
 
 from javsp.crawlers.exceptions import CredentialError, MovieDuplicateError, MovieNotFoundError, SiteBlocked, SitePermissionError, WebsiteError
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 
 from javsp.crawlers.interface import Crawler
 from lxml import html
@@ -23,23 +22,25 @@ logger = logging.getLogger(__name__)
 class JavDbCrawler(Crawler):
     id = CrawlerID.javdb
     genre_map: GenreMap
-    cookies_pool: list[Cookies]
+    cookies_pool: list
+    headers: Dict[str, str]
 
     @classmethod
     async def create(cls): 
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.javdb.com')
         self.base_url = str(url)
-        self.client = get_client(url)
-        self.client.headers['Accept-Language'] = 'zh-CN,zh;q=0.9,zh-TW;q=0.8,en-US;q=0.7,en;q=0.6,ja;q=0.5'
+        self.client = get_session(url)
+        self.headers = {'Accept-Language': 'zh-CN,zh;q=0.9,zh-TW;q=0.8,en-US;q=0.7,en;q=0.6,ja;q=0.5'}
         self.genre_map = GenreMap('data/genre_javdb.csv')
         self.cookies_pool = []
         return self
 
     async def get_html_wrapper(self, url: str):
         """包装外发的request请求并负责转换为可xpath的html，同时处理Cookies无效等问题"""
+
         r = await self.client.get(url)
-        if r.status_code == 200:
+        if r.status == 200:
             # 发生重定向可能仅仅是域名重定向，因此还要检查url以判断是否被跳转到了登录页
             if r.history and '/login' in str(r.url):
                 # 仅在需要时去读取Cookies
@@ -48,14 +49,14 @@ class JavDbCrawler(Crawler):
                         self.cookies_pool = get_browsers_cookies()
                     except (PermissionError, OSError) as e:
                         logger.warning(f"无法从浏览器Cookies文件获取JavDB的登录凭据({e})，可能是安全软件在保护浏览器Cookies文件", exc_info=True)
-                        cookies_pool = []
+                        self.cookies_pool = []
                     except Exception as e:
                         logger.warning(f"获取JavDB的登录凭据时出错({e})，你可能使用的是国内定制版等非官方Chrome系浏览器", exc_info=True)
-                        cookies_pool = []
+                        self.cookies_pool = []
                 if len(self.cookies_pool) > 0:
                     item = self.cookies_pool.pop()
                     # 更换Cookies时需要创建新的request实例，否则cloudscraper会保留它内部第一次发起网络访问时获得的Cookies
-                    self.client.cookies = item['cookies']
+                    self.client.cookie_jar.update_cookies = item['cookies']
                     cookies_source = (item['profile'], item['site'])
                     logger.debug(f'未携带有效Cookies而发生重定向，尝试更换Cookies为: {cookies_source}')
                     return self.get_html_wrapper(url)
@@ -65,30 +66,30 @@ class JavDbCrawler(Crawler):
                 raise SitePermissionError(f"JavDB: 此资源被限制为仅VIP可见: '{r.history[0].url}'")
             else:
                 
-                return html.fromstring(r.text)
-        elif r.status_code in (403, 503):
-            tree = html.fromstring(r.text)
+                return html.fromstring(await r.text())
+        elif r.status in (403, 503):
+            tree = html.fromstring(await r.text())
             code_tag = tree.xpath("//span[@class='code-label']/span")
             error_code = code_tag[0].text if code_tag else None
             if error_code:
                 if error_code == '1020':
-                    block_msg = f'JavDB: {r.status_code} 禁止访问: 站点屏蔽了来自日本地区的IP地址，请使用其他地区的代理服务器'
+                    block_msg = f'JavDB: {r.status} 禁止访问: 站点屏蔽了来自日本地区的IP地址，请使用其他地区的代理服务器'
                 else:
-                    block_msg = f'JavDB: {r.status_code} 禁止访问: {url} (Error code: {error_code})'
+                    block_msg = f'JavDB: {r.status} 禁止访问: {url} (Error code: {error_code})'
             else:
-                block_msg = f'JavDB: {r.status_code} 禁止访问: {url}'
+                block_msg = f'JavDB: {r.status} 禁止访问: {url}'
             raise SiteBlocked(block_msg)
         else:
-            raise WebsiteError(f'JavDB: {r.status_code} 非预期状态码: {url}')
+            raise WebsiteError(f'JavDB: {r.status} 非预期状态码: {url}')
 
 
-    async def get_user_info(self, site: str, cookies: Cookies):
+    async def get_user_info(self, site: str, cookies):
         """获取cookies对应的JavDB用户信息"""
         try:
             self.client.cookies = cookies
             resp = await self.client.get(f'https://{site}/users/profile')
             
-            html_str = resp.text
+            html_str = await resp.text()
             tree = html.fromstring(html_str)
         except Exception as e:
             logger.info('JavDB: 获取用户信息时出错')
@@ -130,7 +131,7 @@ class JavDbCrawler(Crawler):
             index = ids.index(movie.dvdid.lower())
             new_url = movie_urls[index]
             try:
-                html2 = await self.get_html_wrapper(new_url)
+                html2 = await self.get_html_wrapper(self.base_url + new_url)
             except (SitePermissionError, CredentialError):
                 # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
                 box = tree.xpath("//a[@class='box']")[index]
@@ -219,7 +220,7 @@ class JavDbCrawler(Crawler):
             # 检查封面URL是否真的存在对应图片
             if movie.cover is not None:
                 r = await self.client.head(movie.cover)
-                if r.status_code != 200:
+                if r.status != 200:
                     movie.cover = None
         except SiteBlocked:
             raise
@@ -260,7 +261,7 @@ class JavDbCrawler(Crawler):
                     count += 1
                     actor_name = actor.xpath("strong/text()")[0].strip()
                     actor_url = actor.xpath("@href")[0]
-                    # actor_url = f"https://javdb.com{actor_url}"  # 构造演员主页的完整URL
+                    actor_url = self.base_url + actor_url  # 构造演员主页的完整URL
 
                     # 进入演员主页，获取更多信息
                     actor_html = await self.get_html_wrapper(actor_url)
@@ -338,6 +339,7 @@ class JavDbCrawler(Crawler):
 if __name__ == "__main__":
 
     async def test_main():
+        # breakpoint()
         crawler = await JavDbCrawler.create()
         movie = MovieInfo('FC2-2735981')
         try:

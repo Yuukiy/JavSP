@@ -1,17 +1,17 @@
 from datetime import timedelta
 import logging
 import time
+from aiohttp import ClientTimeout
 from tqdm.asyncio import tqdm
 from typing import Any, Coroutine, NamedTuple
 import aiofiles
-from pretty_errors import os
 from pydantic.types import ByteSize
 from pydantic_core import Url
 
 from pydantic_extra_types.pendulum_dt import Duration
 
 from javsp.config import Cfg, CrawlerID
-from javsp.network.client import get_client
+from javsp.network.client import get_session, clear_clients
 
 import asyncio
 
@@ -28,46 +28,37 @@ class DownloadInfo(NamedTuple):
 async def url_download(url: Url, target_path: str, desc: str | None = None) -> DownloadInfo:
     url_str = str(url)
 
-    if url.scheme == 'file':
-        path: str = url.path
-        start_time: float = time.time()
-        async with aiofiles.open(path, "rb") as src:
-           async with aiofiles.open(target_path, "wb") as dest:
-               await dest.write(await src.read())
-        filesize = os.path.getsize(path)
-        elapsed = time.time() - start_time
-        return DownloadInfo(ByteSize(filesize), Duration(seconds=elapsed))
-
     if not desc:
         desc = url_str.split('/')[-1]
 
-    client = get_client(url)
+    s = get_session(url)
 
     # REF: https://www.python-httpx.org/advanced/clients/#monitoring-download-progress
     async with aiofiles.open(target_path, 'wb') as download_file:
         # NOTE: Create a client for each request for now, need further refactor
-        async with client.stream("GET", url_str) as response:
-            total = int(response.headers["Content-Length"])
+
+        start = time.monotonic()
+        async with s.get(url_str) as response:
+            total = response.content_length
 
             with tqdm(total=total, unit_scale=True, unit_divisor=1024, unit="B") as progress:
-                num_bytes_downloaded = response.num_bytes_downloaded
-                for chunk in response.iter_bytes():
+                async for chunk in response.content.iter_any():
                     await download_file.write(chunk)
-                    progress.update(response.num_bytes_downloaded - num_bytes_downloaded)
-                    num_bytes_downloaded = response.num_bytes_downloaded
+                    progress.update(len(chunk))
             
-            return DownloadInfo(ByteSize(response.num_bytes_downloaded), response.elapsed)
+            response_time = time.monotonic() - start
+            return DownloadInfo(ByteSize(total), timedelta(seconds=response_time))
 
 async def test_connect(url_str: str, timeout: Duration) -> bool:
     """测试与指定url的连接，不使用映射，但使用代理"""
     try:
-        client = get_client(Url(url_str))
+        s = get_session(Url(url_str))
         response = \
-            await client.get(
+            await s.get(
                 url_str,
-                timeout=timeout.total_seconds(),
+                timeout=ClientTimeout(total=timeout.total_seconds()),
             )
-        return response.status_code == 200
+        return response.status == 200
     except Exception as e:
         logger.debug(f"Not connectable: {url_str}\n" + repr(e))
         return False
@@ -98,8 +89,17 @@ async def resolve_site_fallback(cr_id: CrawlerID, default: str) -> Url:
 if __name__ == '__main__':
     async def aentry():
         print(await choose_one_connectable(['http://iandown.what', 'http://www.baidu.com']))
+        from javsp.network.client import clear_clients
+        await clear_clients()
 
     # async def aentry():
     #     print(await test_connect("https://www.y78k.com/", Duration(seconds=3)))
+
+    # async def aentry():
+    #     await asyncio.gather(
+    #         url_download(Url('https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png'), 'gogle_logo.png'),
+    #     url_download(Url('https://ei.phncdn.com/www-static/images/pornhub_logo_straight.svg?cache=2024092501'), 'pornhub_logo.svg'),
+    #     )
+    #     await clear_clients()
 
     asyncio.run(aentry())

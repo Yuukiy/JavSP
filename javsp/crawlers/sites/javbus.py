@@ -9,7 +9,7 @@ from javsp.datatype import MovieInfo, GenreMap
 
 from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 
 from javsp.crawlers.interface import Crawler
 from lxml import html
@@ -26,8 +26,8 @@ class JavbusCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.javbus.com')
         self.base_url = str(url)
-        self.client = get_client(url)
-        self.client.cookies = {'age': 'verified', 'dv': '1'}
+        self.client = get_session(url)
+        self.client.cookie_jar.update_cookies({'age': 'verified', 'dv': '1'})
         self.genre_map = GenreMap('data/genre_javbus.csv')
         return self
 
@@ -40,7 +40,7 @@ class JavbusCrawler(Crawler):
         url = f'{self.base_url}/{movie.dvdid}'
         resp = await self.client.get(url)
 
-        tree = html.fromstring(resp.content)
+        tree = html.fromstring(await resp.text())
         # 疑似JavBus检测到类似爬虫的行为时会要求登录，不过发现目前不需要登录也可以从重定向前的网页中提取信息
         # 引入登录验证后状态码不再准确，因此还要额外通过检测标题来确认是否发生了404
         page_title = tree.xpath('/html/head/title/text()')

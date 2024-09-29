@@ -27,8 +27,9 @@ confz = "^2.0.1"
 pydantic-extra-types = "^2.9.0"
 pendulum = "^3.0.0"
 slimeface = "^2024.9.27"
-httpx = {extras = ["socks"], version = "^0.27.2"}
 aiofiles = "^24.1.0"
+aiohttp = "^3.10.8"
+aiohttp-socks = "^0.9.0"
 
 [tool.poetry.scripts]
 javsp = "javsp.__main__:entry"

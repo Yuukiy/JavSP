@@ -9,32 +9,32 @@ from lxml import html
 
 from javsp.config import CrawlerID
 from javsp.network.utils import test_connect, choose_one_connectable
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 
 
 async def _get_avsox_urls() -> list[str]:
     link = 'https://tellme.pw/avsox'
-    client = get_client(Url(link))
-    resp = await client.get(link)
-    tree = html.fromstring(resp.text)
+    s = get_session(Url(link))
+    resp = await s.get(link)
+    tree = html.fromstring(await resp.text())
     urls = tree.xpath('//h4/strong/a/@href')
     return urls
 
 
 async def _get_javbus_urls() -> list[str]:
     link = 'https://www.javbus.one/'
-    client = get_client(Url(link))
-    resp = await client.get(link)
-    text = resp.text
+    s = get_session(Url(link))
+    resp = await s.get(link)
+    text = await resp.text()
     urls = re.findall(r'防屏蔽地址：(https://(?:[\d\w][-\d\w]{1,61}[\d\w]\.){1,2}[a-z]{2,})', text, re.I | re.A)
     return urls
 
 
 async def _get_javlib_urls() -> list[str]:
     link = 'https://github.com/javlibcom'
-    client = get_client(Url(link))
-    resp = await client.get(link)
-    tree = html.fromstring(resp.text)
+    s = get_session(Url(link))
+    resp = await s.get(link)
+    tree = html.fromstring(await resp.text())
     text = tree.xpath("//div[@class='p-note user-profile-bio mb-3 js-user-profile-bio f4']")[0].text_content()
     match = re.search(r'[\w\.]+', text, re.A)
     if match:
@@ -45,15 +45,15 @@ async def _get_javlib_urls() -> list[str]:
 
 async def _get_javdb_urls() -> list[str]:
     root_link = 'https://jav524.app'
-    client = get_client(Url(root_link))
-    resp = await client.get(root_link)
-    tree = html.fromstring(resp.text)
+    s = get_session(Url(root_link))
+    resp = await s.get(root_link)
+    tree = html.fromstring(await resp.text())
     js_links = tree.xpath("//script[@src]/@src")
     for link in js_links:
         if '/js/index' in link:
             link = root_link + link
-            resp = await client.get(link)
-            text = resp.text
+            resp = await s.get(link)
+            text = await resp.text()
             match = re.search(r'\$officialUrl\s*=\s*"(https://(?:[\d\w][-\d\w]{1,61}[\d\w]\.){1,2}[a-z]{2,})"', text, flags=re.I | re.A)
             if match:
                 return [match.group(1)]

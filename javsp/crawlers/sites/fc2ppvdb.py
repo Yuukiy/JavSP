@@ -2,6 +2,7 @@
 
 # BUG: This crawler doesn't work, seemed due to cloudflare
 
+from ssl import ALERT_DESCRIPTION_HANDSHAKE_FAILURE
 from typing import List
 
 
@@ -9,7 +10,7 @@ from javsp.crawlers.exceptions import *
 from javsp.lib import strftime_to_minutes
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -23,7 +24,7 @@ class Fc2PpvDbCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://fc2ppvdb.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
@@ -40,7 +41,7 @@ class Fc2PpvDbCrawler(Crawler):
         # 抓取网页
         url = f'{self.base_url}/articles/{fc2_id}'
         resp = await self.client.get(url)
-        tree = html.fromstring(resp.content)
+        tree = html.fromstring(await resp.text())
         # html = get_html(url)
         container = tree.xpath("//div[@class='container lg:px-5 px-2 py-12 mx-auto']/div[1]")
         if len(container) > 0:

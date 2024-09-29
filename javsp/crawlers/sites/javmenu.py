@@ -4,7 +4,7 @@ import logging
 from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -19,7 +19,7 @@ class JavMenuCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.javmenu.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
@@ -34,7 +34,7 @@ class JavMenuCrawler(Crawler):
             # 被重定向到主页说明找不到影片资源
             raise MovieNotFoundError(__name__, movie.dvdid)
 
-        tree = html.fromstring(r.text)
+        tree = html.fromstring(await r.text())
         container = tree.xpath("//div[@class='col-md-9 px-0']")[0]
         title = container.xpath("div[@class='col-12 mb-3']/h1/strong/text()")[0]
         # 竟然还在标题里插广告，真的疯了。要不是我已经写了抓取器，才懒得维护这个破站

@@ -1,4 +1,7 @@
 """从JavLibrary抓取数据"""
+
+# BUG: This crawler doesn't work, seemed due to cloudflare
+
 import logging
 from urllib.parse import urlsplit
 
@@ -7,7 +10,7 @@ from httpx._transports import base
 from javsp.crawlers.exceptions import MovieDuplicateError, MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -15,14 +18,14 @@ from lxml import html
 logger = logging.getLogger(__name__)
 
 class JavLibCrawler(Crawler):
-    id = CrawlerID.jav321
+    id = CrawlerID.javlib
 
     @classmethod
     async def create(cls): 
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.javlibrary.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     # TODO: 发现JavLibrary支持使用cid搜索，会直接跳转到对应的影片页面，也许可以利用这个功能来做cid到dvdid的转换
@@ -30,7 +33,7 @@ class JavLibCrawler(Crawler):
         """解析指定番号的影片数据"""
         url = new_url = f'{self.base_url}/cn/vl_searchbyid.php?keyword={movie.dvdid}'
         resp = await self.client.get(url)
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         if resp.history and urlsplit(str(resp.url)).netloc == urlsplit(self.base_url).netloc:
             # 出现301重定向通常且新老地址netloc相同时，说明搜索到了影片且只有一个结果
             new_url = resp.url
@@ -65,7 +68,7 @@ class JavLibCrawler(Crawler):
                 raise MovieDuplicateError(__name__, movie.dvdid, match_count, pre_choose_urls)
             # 重新抓取网页
             resp = await self.client.get(new_url)
-            tree = html.fromstring(resp.text)
+            tree = html.fromstring(await resp.text())
         container = tree.xpath("/html/body/div/div[@id='rightcolumn']")[0]
         title_tag = container.xpath("div/h3/a/text()")
         title = title_tag[0]

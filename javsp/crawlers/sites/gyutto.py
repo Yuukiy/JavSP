@@ -5,7 +5,7 @@ import time
 from javsp.crawlers.exceptions import MovieNotFoundError
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -41,7 +41,7 @@ class GyuttoCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'http://gyutto.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
@@ -54,9 +54,9 @@ class GyuttoCrawler(Crawler):
         # 抓取网页
         url = f'{self.base_url}/i/item{gyutto_id}?select_uaflag=1'
         r = await self.client.get(url)
-        if r.status_code == 404:
+        if r.status == 404:
             raise MovieNotFoundError(__name__, movie.dvdid)
-        tree = html.fromstring(r.text)
+        tree = html.fromstring(await r.text())
         container = tree.xpath("//dl[@class='BasicInfo clearfix']")
 
         producer = None

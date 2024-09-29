@@ -7,7 +7,7 @@ import logging
 from javsp.crawlers.exceptions import MovieNotFoundError, SiteBlocked
 from javsp.datatype import MovieInfo
 from javsp.network.utils import resolve_site_fallback
-from javsp.network.client import get_client
+from javsp.network.client import get_session
 from javsp.crawlers.interface import Crawler
 from javsp.config import CrawlerID
 from lxml import html
@@ -24,10 +24,10 @@ class PrestigeCrawler(Crawler):
         self = cls()
         url = await resolve_site_fallback(self.id, 'https://www.prestige-av.com')
         self.base_url = str(url)
-        self.client = get_client(url)
+        self.client = get_session(url)
         # prestige要求访问者携带已通过R18认证的cookies才能够获得完整数据，否则会被重定向到认证页面
         # （其他多数网站的R18认证只是在网页上遮了一层，完整数据已经传回，不影响爬虫爬取）
-        self.client.cookies = {'__age_auth__': 'true'}
+        self.client.cookie_jar.update_cookies({'__age_auth__': 'true'})
         return self
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
@@ -37,13 +37,13 @@ class PrestigeCrawler(Crawler):
         """
         url = f'{self.base_url}/goods/goods_detail.php?sku={movie.dvdid}'
         resp = await self.client.get(url)
-        if resp.status_code == 500:
+        if resp.status == 500:
             # 500错误表明prestige没有这部影片的数据，不是网络问题，因此不再重试
             raise MovieNotFoundError(__name__, movie.dvdid)
-        elif resp.status_code == 403:
+        elif resp.status == 403:
             raise SiteBlocked('prestige不允许从当前IP所在地区访问，请尝试更换为日本地区代理')
         resp.raise_for_status()
-        tree = html.fromstring(resp.text)
+        tree = html.fromstring(await resp.text())
         container_tags = tree.xpath("//section[@class='px-4 mb-4 md:px-8 md:mb-16']")
         if not container_tags:
             raise MovieNotFoundError(__name__, movie.dvdid)
