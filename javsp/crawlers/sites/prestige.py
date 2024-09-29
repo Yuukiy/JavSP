@@ -35,7 +35,7 @@ class PrestigeCrawler(Crawler):
         Args:
             movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
         """
-        url = f'{self.base_url}/goods/goods_detail.php?sku={movie.dvdid}'
+        url = f'{self.base_url}goods/goods_detail.php?sku={movie.dvdid}'
         resp = await self.client.get(url)
         if resp.status == 500:
             # 500错误表明prestige没有这部影片的数据，不是网络问题，因此不再重试

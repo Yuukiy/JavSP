@@ -18,6 +18,7 @@ from javsp.crawlers.interface import Crawler
 from lxml import html
 
 logger = logging.getLogger(__name__)
+perma_url = 'https://www.javdb.com'
 
 class JavDbCrawler(Crawler):
     id = CrawlerID.javdb
@@ -28,7 +29,7 @@ class JavDbCrawler(Crawler):
     @classmethod
     async def create(cls): 
         self = cls()
-        url = await resolve_site_fallback(self.id, 'https://www.javdb.com')
+        url = await resolve_site_fallback(self.id, perma_url)
         self.base_url = str(url)
         self.client = get_session(url)
         self.headers = {'Accept-Language': 'zh-CN,zh;q=0.9,zh-TW;q=0.8,en-US;q=0.7,en;q=0.6,ja;q=0.5'}
@@ -66,7 +67,9 @@ class JavDbCrawler(Crawler):
                 raise SitePermissionError(f"JavDB: 此资源被限制为仅VIP可见: '{r.history[0].url}'")
             else:
                 
-                return html.fromstring(await r.text())
+                tree = html.fromstring(await r.text())
+                tree.make_links_absolute(base_url=perma_url)
+                return tree
         elif r.status in (403, 503):
             tree = html.fromstring(await r.text())
             code_tag = tree.xpath("//span[@class='code-label']/span")
@@ -131,7 +134,7 @@ class JavDbCrawler(Crawler):
             index = ids.index(movie.dvdid.lower())
             new_url = movie_urls[index]
             try:
-                html2 = await self.get_html_wrapper(self.base_url + new_url)
+                html2 = await self.get_html_wrapper(new_url)
             except (SitePermissionError, CredentialError):
                 # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
                 box = tree.xpath("//a[@class='box']")[index]

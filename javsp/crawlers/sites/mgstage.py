@@ -29,7 +29,7 @@ class MgstageCrawler(Crawler):
 
     async def crawl_and_fill(self, movie: MovieInfo) -> None:
         """解析指定番号的影片数据"""
-        url = f'{self.base_url}/product/product_detail/{movie.dvdid}/'
+        url = f'{self.base_url}product/product_detail/{movie.dvdid}/'
         resp = await self.client.get(url)
         if resp.status == 403:
             raise SiteBlocked('mgstage不允许从当前IP所在地区访问，请尝试更换为日本地区代理')

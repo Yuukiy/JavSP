@@ -20,11 +20,13 @@ logger = logging.getLogger(__name__)
 class JavbusCrawler(Crawler):
     id = CrawlerID.javbus
     genre_map: GenreMap
+    perma_url: str
 
     @classmethod
     async def create(cls): 
         self = cls()
-        url = await resolve_site_fallback(self.id, 'https://www.javbus.com')
+        self.perma_url = 'https://www.javbus.com'
+        url = await resolve_site_fallback(self.id, self.perma_url)
         self.base_url = str(url)
         self.client = get_session(url)
         self.client.cookie_jar.update_cookies({'age': 'verified', 'dv': '1'})
@@ -41,6 +43,7 @@ class JavbusCrawler(Crawler):
         resp = await self.client.get(url)
 
         tree = html.fromstring(await resp.text())
+        tree.make_links_absolute(base_url=self.perma_url)
         # 疑似JavBus检测到类似爬虫的行为时会要求登录，不过发现目前不需要登录也可以从重定向前的网页中提取信息
         # 引入登录验证后状态码不再准确，因此还要额外通过检测标题来确认是否发生了404
         page_title = tree.xpath('/html/head/title/text()')
@@ -93,7 +96,7 @@ class JavbusCrawler(Crawler):
             if not pic_url.endswith('nowprinting.gif'):     # 略过默认的头像
                 actress_pics[name] = pic_url
         # 整理数据并更新movie的相应属性
-        movie.url = f'{self.base_url}/{movie.dvdid}'
+        movie.url = f'{self.perma_url}/{movie.dvdid}'
         movie.dvdid = dvdid
         movie.title = title.replace(dvdid, '').strip()
         movie.cover = cover

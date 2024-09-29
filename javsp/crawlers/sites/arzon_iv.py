@@ -40,7 +40,7 @@ class ArzonIvCrawler(Crawler):
         if len(urls) == 0:
             raise MovieNotFoundError(__name__, movie.dvdid)
     
-        item_url = self.base_url + urls[0]
+        item_url = self.base_url[:-1] + urls[0]
         e = await self.client.get(item_url)
         item = html.fromstring(await e.read())
     

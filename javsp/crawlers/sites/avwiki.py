@@ -24,7 +24,7 @@ class AvWikiCrawler(Crawler):
         Args:
             movie (MovieInfo): 要解析的影片信息，解析后的信息直接更新到此变量内
         """
-        movie.url = url = f'{self.base_url}/{movie.dvdid}'
+        movie.url = url = f'{self.base_url}{movie.dvdid}'
         
         resp = await self.client.get(url) 
         if resp.status == 404:

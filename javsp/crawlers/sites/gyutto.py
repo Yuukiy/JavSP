@@ -57,6 +57,7 @@ class GyuttoCrawler(Crawler):
         if r.status == 404:
             raise MovieNotFoundError(__name__, movie.dvdid)
         tree = html.fromstring(await r.text())
+        tree.make_links_absolute(self.base_url)
         container = tree.xpath("//dl[@class='BasicInfo clearfix']")
 
         producer = None

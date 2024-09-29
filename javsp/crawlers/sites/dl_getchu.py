@@ -66,11 +66,12 @@ class DlGetchuCrawler(Crawler):
             raise ValueError('Invalid GETCHU number: ' + movie.dvdid)
         getchu_id = id_uc.replace('GETCHU-', '')
         # 抓取网页
-        url = f'{self.base_url}/i/item{getchu_id}'
+        url = f'{self.base_url}i/item{getchu_id}'
         r = await self.client.get(url)
         if r.status == 404:
             raise MovieNotFoundError(__name__, movie.dvdid)
         tree = html.fromstring((await r.read()).decode(encoding='euc_jp', errors='ignore'))
+        tree.make_links_absolute(base_url=str(self.base_url))
         container = tree.xpath("//form[@action='https://dl.getchu.com/cart/']/div/table[3]")
         if len(container) > 0:
             container = container[0]

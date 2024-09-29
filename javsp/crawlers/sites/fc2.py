@@ -57,6 +57,7 @@ class Fc2Crawler(Crawler):
         if '/id.fc2.com/' in str(resp.url):
             raise SiteBlocked('FC2要求当前IP登录账号才可访问，请尝试更换为日本IP')
         tree = html.fromstring(await resp.text())
+        tree.make_links_absolute(base_url=self.base_url)
         container = tree.xpath("//div[@class='items_article_left']")
         if len(container) > 0:
             container = container[0]

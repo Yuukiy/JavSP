@@ -30,6 +30,7 @@ class Jav321Crawler(Crawler):
         """解析指定番号的影片数据"""
         resp = await self.client.post(f'{self.base_url}/search', data={'sn': movie.dvdid})
         tree = html.fromstring(await resp.text())
+        tree.make_links_absolute(self.base_url)
         page_url = tree.xpath("//ul[@class='dropdown-menu']/li/a/@href")[0]
         #TODO: 注意cid是dmm的概念。如果影片来自MGSTAGE，这里的cid很可能是jav321自己添加的，例如 345SIMM-542
         cid = page_url.split('/')[-1]   # /video/ipx00177

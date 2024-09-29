@@ -80,7 +80,7 @@ class AiravCrawler(Crawler):
         data = resp_json['result']
         dvdid = data['barcode']
         movie.dvdid = dvdid
-        movie.url = self.base_url + '/video/' + dvdid
+        movie.url = self.base_url + 'video/' + dvdid
         # plot和title中可能含有HTML的转义字符，需要进行解转义处理
         movie.plot = unescape(data['description']) or None
         movie.cover = data['img_url']
