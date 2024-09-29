@@ -48,12 +48,12 @@ jobs:
     - name: Public IP
       id: ip
       uses: haythem/public-ip@v1.3
-    - name: Test proxyfree.py
-      run: |
-        poetry run pytest unittest/test_proxyfree.py
     - name: Test web crawlers
       run: |
         poetry run pytest unittest/test_crawlers.py
+    - name: Test proxyfree.py
+      run: |
+        poetry run pytest unittest/test_proxyfree.py
     - name: Upload log as artifact
       uses: actions/upload-artifact@v4
       if: ${{ always() }}
