@@ -132,6 +132,8 @@ def translate(texts, engine: Union[
     else:
         return {'trans': texts}
 
+    return rtn
+
 def baidu_translate(texts, app_id, api_key, to='zh'):
     """使用百度翻译文本（默认翻译为简体中文）"""
     api_url = "https://api.fanyi.baidu.com/api/trans/vip/translate"
