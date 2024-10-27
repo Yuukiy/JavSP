@@ -132,6 +132,9 @@ def translate(texts, engine: Union[
     else:
         return {'trans': texts}
 
+    if rtn == {}:
+        rtn['error'] = err_msg
+
     return rtn
 
 def baidu_translate(texts, app_id, api_key, to='zh'):
