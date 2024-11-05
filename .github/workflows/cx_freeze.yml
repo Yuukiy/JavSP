@@ -1,0 +1,66 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Cx_Freeze
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    name: Build binaries on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+
+      - name: Setup dynamic versioning
+        run: poetry self add poetry-dynamic-versioning
+
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      - name: Build with Cx_Freeze
+        run: poetry run python setup.py build_exe -b dist
+
+      - name: Set VERSION variable for windows
+        shell: bash
+        run: |
+          echo "VERSION=`poetry run python tools/version.py`" >> $GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JavSP-${{ env.VERSION }}-${{ matrix.os }}
+          path: dist

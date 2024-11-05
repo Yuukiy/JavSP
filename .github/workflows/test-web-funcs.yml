@@ -7,11 +7,9 @@ on:
   push:
     branches:
     - master
-    - premerge
   pull_request:
     branches:
     - master
-    - premerge
   schedule:
   # Web crawlers might be outdated because of website updating, so run periodically to follow the changes
   - cron: '9 9 * * 3,6,0'
@@ -27,28 +25,38 @@ jobs:
       PYTEST_ADDOPTS: "-rA --color=yes --tb=long --showlocals"
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
       with:
-        python-version: 3.8
+        submodules: 'true'
+
+    - name: Install poetry
+      run: pipx install poetry
+
+    - name: Setup Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'poetry'
+    - name: Setup dynamic versioning
+      run: poetry self add poetry-dynamic-versioning
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install pytest
-        python -m pip install -r requirements.txt
+        poetry install
     - name: Switch code page
       run: |
         chcp 65001
+    - name: Public IP
+      id: ip
+      uses: haythem/public-ip@v1.3
     - name: Test proxyfree.py
       run: |
-        pytest unittest/test_proxyfree.py
+        poetry run pytest unittest/test_proxyfree.py
     - name: Test web crawlers
       run: |
-        pytest unittest/test_crawlers.py
+        poetry run pytest unittest/test_crawlers.py
     - name: Upload log as artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: JavSP-web-funcs.log
-        path: JavSP.log
+        path: javspn/JavSP.log

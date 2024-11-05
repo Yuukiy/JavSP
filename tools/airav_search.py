@@ -5,7 +5,7 @@ import json
 
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from web.base import Request
+from javsp.web.base import Request
 
 request = Request()
 request.headers['Accept-Language'] = 'zh-TW,zh;q=0.9'

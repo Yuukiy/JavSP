@@ -9,8 +9,8 @@ file_dir = os.path.dirname(__file__)
 data_dir = os.path.join(file_dir, 'data')
 sys.path.insert(0, os.path.abspath(os.path.join(file_dir, '..')))
 
-from core.datatype import MovieInfo
-from web.exceptions import CrawlerError, SiteBlocked
+from javsp.datatype import MovieInfo
+from javsp.web.exceptions import CrawlerError, SiteBlocked
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def compare(avid, scraper, file):
     else:
         online = MovieInfo(cid=avid)
     # 导入抓取器模块
-    scraper_mod = 'web.' + scraper
+    scraper_mod = 'javsp.web.' + scraper
     __import__(scraper_mod)
     mod = sys.modules[scraper_mod]
     if hasattr(mod, 'parse_clean_data'):
