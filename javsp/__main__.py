@@ -170,6 +170,7 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
     if Cfg().summarizer.title.remove_trailing_actor_name:
         for name, data in all_info.items():
             data.title = remove_trail_actor_in_title(data.title, data.actress)
+            data.ori_title = remove_trail_actor_in_title(data.ori_title, data.actress)
     ########## 然后检查所有字段，如果某个字段还是默认值，则按照优先级选取数据 ##########
     # parser直接更新了all_info中的项目，而初始all_info是按照优先级生成的，已经符合配置的优先级顺序了
     # 按照优先级取出各个爬虫获取到的信息
