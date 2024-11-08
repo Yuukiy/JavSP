@@ -105,7 +105,13 @@ class MovieInfo:
         d['rawtitle'] = info.ori_title or d['title']
         d['actress'] = ','.join(info.actress) if info.actress else Cfg().summarizer.default.actress
         d['score'] = info.score or '0'
-        d['censor'] = Cfg().summarizer.censor_options_representation[1 if info.uncensored else 0]
+        # uncensored字段为True表示无码，False表示有码，None表示未知
+        # 对应 0:无码 1:有码 2:未知
+        d['censor'] = {
+            True: Cfg().summarizer.censor_options_representation[0],
+            False: Cfg().summarizer.censor_options_representation[1],
+            None: Cfg().summarizer.censor_options_representation[2]
+        }[info.uncensored]
         d['serial'] = info.serial or Cfg().summarizer.default.series
         d['director'] = info.director or Cfg().summarizer.default.director
         d['producer'] = info.producer or Cfg().summarizer.default.producer
