@@ -153,8 +153,6 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
     all_info = {k:v for k,v in all_info.items() if hasattr(v, 'success')}
     for info in all_info.values():
         del info.success
-    # 删除all_info中键名中的'web.'
-    all_info = {k[4:]:v for k,v in all_info.items()}
     return all_info
 
 
