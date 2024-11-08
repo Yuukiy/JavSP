@@ -194,6 +194,14 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
                 if (current is None) and (incoming is not None):
                     setattr(final_info, attr, incoming)
                     absorbed.append(attr)
+            elif attr == 'ori_title':
+                # 如果要使用抓取的数据中的ori_title，则也要同时使用title
+                if (not current) and (incoming):
+                    setattr(final_info, attr, incoming)
+                    incoming_title = getattr(data, 'title')
+                    if incoming_title:
+                        setattr(final_info, 'title', incoming_title)
+                    absorbed.append(attr)
             else:
                 if (not current) and (incoming):
                     setattr(final_info, attr, incoming)
