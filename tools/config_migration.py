@@ -29,7 +29,7 @@ input_directory = 'null' if len(input_directory) == 0 else f"'{input_directory}'
 filename_extensions = cfg['File']['media_ext'].split(';')
 
 ignored_folders = cfg['File']['ignore_folder'].split(';')
-
+skip_nfo_file = cfg['File']['skip_nfo_dir']
 proxy_disabled = cfg['Network']['use_proxy'] == 'no' or cfg['Network']['proxy'] == ''
 
 def yes_to_true(s):
