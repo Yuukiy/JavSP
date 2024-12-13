@@ -82,6 +82,10 @@ def get_id(filepath_str: str) -> str:
     match = re.search(r'(N\d{4}|K\d{4})', norm, re.I)
     if match:
         return match.group(1)
+    # 尝试匹配R18-XXX的番号
+    match = re.search(r'R18-?\d{3}', norm, re.I)
+    if match:
+        return match.group(1)
     # 尝试匹配纯数字番号（无码影片）
     match = re.search(r'(\d{6}[-_]\d{2,3})', norm)
     if match:
