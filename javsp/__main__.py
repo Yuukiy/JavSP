@@ -261,9 +261,18 @@ def info_summary(movie: Movie, all_info: Dict[str, MovieInfo]):
 
 def generate_names(movie: Movie):
     """按照模板生成相关文件的文件名"""
+
+    def legalize_path(path: str):
+        """
+            Windows下文件名中不能包含换行 #467
+            所以这里对文件路径进行合法化
+        """
+        return ''.join(c for c in path if c not in {'\n'})
+
     info = movie.info
     # 准备用来填充命名模板的字典
     d = info.get_info_dic()
+
     if info.actress and len(info.actress) > Cfg().summarizer.path.max_actress_count:
         logging.debug('女优人数过多，按配置保留了其中的前n个: ' + ','.join(info.actress))
         actress = info.actress[:Cfg().summarizer.path.max_actress_count] + ['…']
@@ -292,6 +301,22 @@ def generate_names(movie: Movie):
     else:
         ori_title_break = split_by_punc(d['rawtitle'])
     copyd = d.copy()
+
+    def legalize_info():
+        if movie.save_dir != None:
+            movie.save_dir = legalize_path(movie.save_dir)
+        if movie.nfo_file != None:
+            movie.nfo_file = legalize_path(movie.nfo_file)
+        if movie.fanart_file != None:
+            movie.fanart_file = legalize_path(movie.fanart_file)
+        if movie.poster_file != None:
+            movie.poster_file = legalize_path(movie.poster_file)
+        if d['title'] != copyd['title']:
+            logger.info(f"自动截短标题为:\n{copyd['title']}")
+        if d['rawtitle'] != copyd['rawtitle']:
+            logger.info(f"自动截短原始标题为:\n{copyd['rawtitle']}")
+        return
+
     copyd['num'] = copyd['num'] + movie.attr_str
     longest_ext = max((os.path.splitext(i)[1] for i in movie.files), key=len)
     for end in range(len(ori_title_break), 0, -1):
@@ -315,11 +340,7 @@ def generate_names(movie: Movie):
                 movie.nfo_file = os.path.join(save_dir, Cfg().summarizer.nfo.basename_pattern.format(**copyd) + '.nfo')
                 movie.fanart_file = os.path.join(save_dir, Cfg().summarizer.fanart.basename_pattern.format(**copyd) + '.jpg')
                 movie.poster_file = os.path.join(save_dir, Cfg().summarizer.cover.basename_pattern.format(**copyd) + '.jpg')
-                if d['title'] != copyd['title']:
-                    logger.info(f"自动截短标题为:\n{copyd['title']}")
-                if d['rawtitle'] != copyd['rawtitle']:
-                    logger.info(f"自动截短原始标题为:\n{copyd['rawtitle']}")
-                return
+                return legalize_info()
     else:
         # 以防万一，当整理路径非常深或者标题起始很长一段没有标点符号时，硬性截短生成的名称
         copyd['title'] = copyd['title'][:remaining]
@@ -340,10 +361,7 @@ def generate_names(movie: Movie):
         movie.fanart_file = os.path.join(save_dir, Cfg().summarizer.fanart.basename_pattern.format(**copyd) + '.jpg')
         movie.poster_file = os.path.join(save_dir, Cfg().summarizer.cover.basename_pattern.format(**copyd) + '.jpg')
 
-        if d['title'] != copyd['title']:
-            logger.info(f"自动截短标题为:\n{copyd['title']}")
-        if d['rawtitle'] != copyd['rawtitle']:
-            logger.info(f"自动截短原始标题为:\n{copyd['rawtitle']}")
+        return legalize_info()
 
 def reviewMovieID(all_movies, root):
     """人工检查每一部影片的番号"""
