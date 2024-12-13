@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """调用抓取器抓取数据"""
 import os
 import sys
