@@ -16,7 +16,15 @@ if(args.input is None):
     exit(1)
 
 cfg = ConfigParser()
-cfg.read(args.input)
+try:
+    with open(args.input, 'r', encoding='utf-8') as f:
+        cfg.read_file(f);
+except UnicodeDecodeError:
+    with open(args.input, 'r', encoding='gbk') as f:
+        cfg.read_file(f);
+except FileNotFoundError:
+    print(f"Error: The file '{args.input}' was not found.")
+    sys.exit(1)
 
 ignore_regexes: list[str] = cfg['MovieID']['ignore_regex'].split(';')
 ignore_regexes += cfg['MovieID']['ignore_whole_word'].split(';')
@@ -29,8 +37,9 @@ input_directory = 'null' if len(input_directory) == 0 else f"'{input_directory}'
 filename_extensions = cfg['File']['media_ext'].split(';')
 
 ignored_folders = cfg['File']['ignore_folder'].split(';')
-
 proxy_disabled = cfg['Network']['use_proxy'] == 'no' or cfg['Network']['proxy'] == ''
+skip_nfo_dir = cfg['File'].get('skip_nfo_dir', 'no')
+
 
 def yes_to_true(s):
     return 'true' if s == 'yes' else 'false'
@@ -70,6 +79,7 @@ scanner:
   # 匹配番号时忽略小于指定大小的文件
   # 格式要求：https://docs.pydantic.dev/2.0/usage/types/bytesize/
   minimum_size: {cfg['File']['ignore_video_file_less_than']}MiB
+  skip_nfo_dir: {skip_nfo_dir}
 
 ################################
 network:
@@ -189,9 +199,9 @@ summarizer:
 
   extra_fanarts:
     # 是否下载剧照？
-    enabled: {yes_to_true(cfg['Picture']['use_extra_fanarts'])}
+    enabled: {yes_to_true(cfg['Picture'].get('use_extra_fanarts','no'))}
     # 间隔的两次封面爬取请求之间应该间隔多久
-    scrap_interval: PT{cfg['Picture']['extra_fanarts_scrap_interval']}S
+    scrap_interval: PT{cfg['Picture'].get('extra_fanarts_scrap_interval','no')}S
 
 ################################
 translator:
@@ -246,4 +256,3 @@ other:
 
 with open(args.output, mode ="w") as file:
     file.write(config_str)
-

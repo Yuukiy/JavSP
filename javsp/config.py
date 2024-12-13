@@ -15,6 +15,7 @@ class Scanner(BaseConfig):
     filename_extensions: List[str]
     ignored_folder_name_pattern: List[str]
     minimum_size: ByteSize
+    skip_nfo_dir: bool
 
 class CrawlerID(str, Enum):
     airav = 'airav'
