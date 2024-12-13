@@ -24,10 +24,13 @@ logger = logging.getLogger(__name__)
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
     # 翻译标题
-    if info.title and Cfg().translator.fields.title and info.ori_title is None:
+    # 只要开启了翻译，就翻译标题，可以将繁体标题翻译为简体或者使用AI时对标题进行润色。
+    if info.title and Cfg().translator.fields.title:
         result = translate(info.title, Cfg().translator.engine, info.actress)
         if 'trans' in result:
-            info.ori_title = info.title
+            # 由于翻译标题有可能是把已经翻译过的标题进行润色，因此只有原始标题为空时才更新原始标题
+            if info.ori_title is None:
+                info.ori_title = info.title
             info.title = result['trans']
             # 如果有的话，附加断句信息
             if 'orig_break' in result:
