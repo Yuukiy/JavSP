@@ -19,10 +19,10 @@ from javsp.datatype import MovieInfo
 # 搜索抓取器并导入它们
 all_crawler = {}
 exclude_files = ['fc2fan']
-for file in os.listdir('web'):
+for file in os.listdir('../javsp/web'):
     name, ext = os.path.splitext(file)
     if ext == '.py' and name not in exclude_files:
-        modu = 'web.' + name
+        modu = 'javsp.web.' + name
         __import__(modu)
         if hasattr(sys.modules[modu], 'parse_data'):
             parser = getattr(sys.modules[modu], 'parse_data')
