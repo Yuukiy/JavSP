@@ -21,5 +21,4 @@ class DefaultCropper(Cropper):
 
         dh = int((fanart_h - poster_h) / 2)
         box = (fanart_w - poster_w, dh, fanart_w, poster_h + dh)
-        fanart.crop(box)
-        return fanart
+        return fanart.crop(box)
