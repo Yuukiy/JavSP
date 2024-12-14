@@ -120,7 +120,7 @@ def parallel_crawler(movie: Movie, tqdm_bar=None):
         for i in all_info.values():
             i.dvdid = None
         for i in Cfg().crawler.selection.normal:
-            all_info[i] = MovieInfo(movie.dvdid)
+            all_info[i.value] = MovieInfo(movie.dvdid)
     thread_pool = []
     for mod_partial, info in all_info.items():
         mod = f"javsp.web.{mod_partial}"
