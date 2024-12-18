@@ -51,7 +51,7 @@ def parse_data(movie: MovieInfo):
     genre_tags = container.xpath("//p[text()='ジャンル：']/following-sibling::div/a")
     genre = [tag.text.strip() for tag in genre_tags]
     serial = container.xpath("//p[text()='レーベル：']/following-sibling::div/a/text()")[0].strip()
-    plot = container.xpath("//h2[text()='商品紹介']/following-sibling::p")[0].text.strip()
+    plot = container.xpath("//h2[text()='商品紹介']/following-sibling::div/p")[0].text.strip()
     preview_pics = container.xpath("//h2[text()='サンプル画像']/following-sibling::div/div/picture/source/img/@src")
     preview_pics = [i.split('?')[0] for i in preview_pics]
 
