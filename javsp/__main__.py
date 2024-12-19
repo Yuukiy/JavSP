@@ -402,8 +402,8 @@ UNCENSORED_MARK_FILE = Image.open(os.path.abspath(resource_path('image/unc_mark.
 def process_poster(movie: Movie):
     def should_use_ai_crop_match(label):
         for r in Cfg().summarizer.cover.crop.on_id_pattern:
-            re.match(r, label)
-            return True
+            if re.match(r, label):
+                return True
         return False
     crop_engine = None
     if (movie.info.uncensored or
@@ -615,6 +615,8 @@ def entry():
     recognize_fail = []
     error_exit(movie_count, '未找到影片文件')
     logger.info(f'扫描影片文件：共找到 {movie_count} 部影片')
+    if Cfg().scanner.manual:
+        reviewMovieID(recognized, root)
     RunNormalMode(recognized + recognize_fail)
 
     sys.exit(0)
