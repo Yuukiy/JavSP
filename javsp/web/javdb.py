@@ -175,9 +175,12 @@ def parse_data(movie: MovieInfo):
     genre, genre_id = [], []
     for tag in genre_tags:
         pre_id = tag.get('href').split('/')[-1]
-        genre.append(tag.text)
-        genre_id.append(pre_id)
-        # 判定影片有码/无码
+        # pre_id的id如果是tags?c7=348(無碼破解)、tags?c7=345(無碼流出)
+        # 则不把此tag添加到genre中，因为是否破解是根据文件名判断的
+        if pre_id not in ('tags?c7=348', 'tags?c7=345'):
+            genre.append(tag.text)
+            genre_id.append(pre_id)
+        # 判定影片是否无码
         subsite = pre_id.split('?')[0]
         movie.uncensored = {'uncensored': True, 'tags':False}.get(subsite)
     # JavDB目前同时提供男女优信息，根据用来标识性别的符号筛选出女优
