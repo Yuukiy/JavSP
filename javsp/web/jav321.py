@@ -46,10 +46,11 @@ def parse_data(movie: MovieInfo):
         genre_id.append(tag.get('href').split('/')[-2]) # genre/4025/1
     dvdid = info.xpath("b[text()='品番']")[0].tail.replace(': ', '').upper()
     publish_date = info.xpath("b[text()='配信開始日']")[0].tail.replace(': ', '')
-    duration_str = info.xpath("b[text()='収録時間']")[0].tail
-    match = re.search(r'\d+', duration_str)
-    if match:
-        movie.duration = match.group(0)
+    duration_div = info.xpath("b[text()='収録時間']")
+    if duration_div:
+        match = re.search(r'\d+', duration_div[0].tail)
+        if match:
+            movie.duration = match.group(0)
     # 仅部分影片有评分且评分只能粗略到星级而没有分数，要通过星级的图片来判断，如'/img/35.gif'表示3.5星
     score_tag = info.xpath("//b[text()='平均評価']/following-sibling::img/@data-original")
     if score_tag:
