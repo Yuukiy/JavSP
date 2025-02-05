@@ -107,9 +107,9 @@ summarizer:
     # nfo文件中的影片标题（即媒体管理工具中显示的标题）
     title_pattern: '{num} {title}'
     # 要添加到自定义分类的字段，空列表表示不添加
-    custom_genres_fields: ['{genre}', '{censor}']
+    custom_genres_fields: ['{censor}']
     # 要添加到自定义标签的字段，空列表表示不添加
-    custom_tags_fields: ['{genre}', '{censor}']
+    custom_tags_fields: ['{censor}']
   # 依次设置 已知无码/已知有码/不确定 这三种情况下 {censor} 对应的文本(可以利用此变量将有码/无码影片整理到不同文件夹)
   censor_options_representation: ['无码', '有码', '打码情况未知']
 
