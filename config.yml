@@ -47,6 +47,7 @@ crawler:
     cid: [fanza]
     getchu: [dl_getchu]
     gyutto: [gyutto]
+    fantia_product: [fantia_product]
   # 爬虫至少要获取到哪些字段才可以视为抓取成功？
   required_keys: [cover, title]
   # 努力爬取更准确更丰富的信息（会略微增加部分站点的爬取耗时）
@@ -129,6 +130,7 @@ summarizer:
         - '^GANA'
         - '^MIUM'
         - '^HHL'
+        - '^FANTIA'
       # 要使用的图像识别引擎，详细配置见文档 https://github.com/Yuukiy/JavSP/wiki/AI-%7C-%E4%BA%BA%E8%84%B8%E8%AF%86%E5%88%AB
       # NOTE: 此处无法直接对应，请参照注释手动填入
       engine: null # null表示禁用图像剪裁
@@ -187,7 +189,12 @@ translator:
     title: true
     # 是否翻译剧情简介
     plot: true
-  
+
+# 记录每个网址的cookie,win11系统 get_browsers_cookies() 方法仍然不可用: Could not decode to UTF-8 column 'encrypted_value' with text
+cookie:
+  # fantia.jp
+  fantia: ''
+
 ################################
 other:
   # 是否在stdin/stdout进行交互

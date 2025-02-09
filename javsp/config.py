@@ -38,6 +38,7 @@ class CrawlerID(str, Enum):
     prestige = 'prestige'
     arzon = 'arzon'
     arzon_iv = 'arzon_iv'
+    fantia_product = 'fantia_product'
 
 class Network(BaseConfig):
     proxy_server: Url | None
@@ -53,6 +54,7 @@ class CrawlerSelect(BaseConfig):
             ('cid', self.cid),
             ('getchu', self.getchu),
             ('gyutto', self.gyutto),
+            ('fantia_product',self.fantia_product)
         ]
 
     def __getitem__(self, index) -> list[CrawlerID]:
@@ -67,6 +69,8 @@ class CrawlerSelect(BaseConfig):
                 return self.getchu
             case 'gyutto':
                 return self.gyutto
+            case 'fantia_product':
+                return self.fantia_product
         raise Exception("Unknown crawler type")
 
     normal: list[CrawlerID]
@@ -74,6 +78,7 @@ class CrawlerSelect(BaseConfig):
     cid: list[CrawlerID]
     getchu: list[CrawlerID]
     gyutto: list[CrawlerID]
+    fantia_product: list[CrawlerID]
 
 class MovieInfoField(str, Enum):
     dvdid = 'dvdid'
@@ -210,6 +215,9 @@ class Translator(BaseConfig):
     engine: TranslateEngine = Field(..., discriminator='name')
     fields: TranslateField
 
+class Cookie(BaseConfig):
+    fantia: str
+
 class Other(BaseConfig):
     interactive: bool
     check_update: bool
@@ -233,5 +241,6 @@ class Cfg(BaseConfig):
     crawler: Crawler
     summarizer: Summarizer
     translator: Translator
+    cookie: Cookie
     other: Other
     CONFIG_SOURCES=get_config_source()
