@@ -39,6 +39,7 @@ class CrawlerID(str, Enum):
     arzon = 'arzon'
     arzon_iv = 'arzon_iv'
     fantia_product = 'fantia_product'
+    fantia_post = 'fantia_post'
 
 class Network(BaseConfig):
     proxy_server: Url | None
@@ -54,7 +55,8 @@ class CrawlerSelect(BaseConfig):
             ('cid', self.cid),
             ('getchu', self.getchu),
             ('gyutto', self.gyutto),
-            ('fantia_product',self.fantia_product)
+            ('fantia_product',self.fantia_product),
+            ('fantia_post', self.fantia_post)
         ]
 
     def __getitem__(self, index) -> list[CrawlerID]:
@@ -71,6 +73,9 @@ class CrawlerSelect(BaseConfig):
                 return self.gyutto
             case 'fantia_product':
                 return self.fantia_product
+            case 'fantia_post':
+                return self.fantia_post
+
         raise Exception("Unknown crawler type")
 
     normal: list[CrawlerID]
@@ -79,6 +84,7 @@ class CrawlerSelect(BaseConfig):
     getchu: list[CrawlerID]
     gyutto: list[CrawlerID]
     fantia_product: list[CrawlerID]
+    fantia_post: list[CrawlerID]
 
 class MovieInfoField(str, Enum):
     dvdid = 'dvdid'
