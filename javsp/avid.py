@@ -32,6 +32,14 @@ def get_id(filepath_str: str) -> str:
         match = re.search(r'GYUTTO-(\d+)', norm, re.I)
         if match:
             return 'GYUTTO-' + match.group(1)
+    elif 'FANTIA-PRODUCT' in norm:
+        match = re.search(r'FANTIA-PRODUCT[-_]*(\d+)', norm, re.I)
+        if match:
+            return 'FANTIA-PRODUCT-' + match.group(1)
+    elif 'FANTIA-POST' in norm:
+        match = re.search(r'FANTIA-POST[-_]*(\d+)', norm, re.I)
+        if match:
+            return 'FANTIA-POST-' + match.group(1)
     elif '259LUXU' in norm: # special case having form of '259luxu'
         match = re.search(r'259LUXU-(\d+)', norm, re.I)
         if match:
@@ -141,6 +149,12 @@ def guess_av_type(avid: str) -> str:
     match = re.match(r'^GYUTTO-(\d+)',avid,re.I)
     if match:
         return 'gyutto'
+    match = re.match(r'^fantia-product-(\d+)',avid,re.I)
+    if match:
+        return 'fantia_product'
+    match = re.match(r'^fantia-post-(\d+)',avid,re.I)
+    if match:
+        return 'fantia_post'
     # 如果传入的avid完全匹配cid的模式，则将影片归类为cid
     cid = get_cid(avid)
     if cid == avid:
