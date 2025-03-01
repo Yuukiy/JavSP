@@ -10,7 +10,7 @@ from sys import platform
 from typing import List
 
 
-__all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_illegal_chars', 'get_failed_when_scan', 'find_subtitle_in_dir']
+__all__ = ['scan_movies', 'get_fmt_size', 'get_remaining_path_len', 'replace_illegal_chars', 'get_failed_when_scan', 'find_subtitle_in_dir', 'write_summarizer_index_file']
 
 
 from javsp.avid import *
@@ -22,6 +22,22 @@ logger = logging.getLogger(__name__)
 failed_items = []
 
 
+def load_summarizer_index_file(root: str):
+    """加载索引文件"""
+    index_file = os.path.join(root, Cfg().summarizer.path.summarizer_index_file)
+    try:
+        with open(index_file, 'r', encoding='utf-8') as f:
+            return [line.rstrip('\n') for line in f.readlines()]
+    except FileNotFoundError:
+        return []
+
+def write_summarizer_index_file(root: str, movies: List[Movie]):
+    """写入索引文件"""
+    index_file = os.path.join(root, Cfg().summarizer.path.summarizer_index_file)
+    with open(index_file, 'a+', encoding='utf-8') as f:
+        for movie in movies:
+            f.write(movie.files[0] + '\n')
+
 def scan_movies(root: str) -> List[Movie]:
     """获取文件夹内的所有影片的列表（自动探测同一文件夹内的分片）"""
     # 由于实现的限制: 
@@ -31,6 +47,7 @@ def scan_movies(root: str) -> List[Movie]:
     # 扫描所有影片文件并获取它们的番号
     dic = {}    # avid: [abspath1, abspath2...]
     small_videos = {}
+    files_in_index = [] if not Cfg().scanner.ignore_file_in_index else load_summarizer_index_file(root)
     ignore_folder_name_pattern = re.compile('|'.join(Cfg().scanner.ignored_folder_name_pattern))
     for dirpath, dirnames, filenames in os.walk(root):
         for name in dirnames.copy():
@@ -51,6 +68,10 @@ def scan_movies(root: str) -> List[Movie]:
                 if filesize < Cfg().scanner.minimum_size:
                     small_videos.setdefault(file, []).append(fullpath)
                     continue
+                # 如果文件名在索引文件中，则跳过
+                if Cfg().scanner.ignore_file_in_index:
+                    if fullpath in files_in_index:
+                        continue
                 dvdid = get_id(fullpath)
                 cid = get_cid(fullpath)
                 # 如果文件名能匹配到cid，那么将cid视为有效id，因为此时dvdid多半是错的

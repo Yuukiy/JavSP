@@ -17,7 +17,7 @@ class Scanner(BaseConfig):
     minimum_size: ByteSize
     skip_nfo_dir: bool
     manual: bool
-
+    ignore_file_in_index: bool 
 class CrawlerID(str, Enum):
     airav = 'airav'
     avsox = 'avsox'
@@ -125,6 +125,7 @@ class MovieDefault(BaseConfig):
     publisher: str
 
 class PathSummarize(BaseConfig):
+    summarizer_index_file: str
     output_folder_pattern: str
     basename_pattern: str
     length_maximum: PositiveInt

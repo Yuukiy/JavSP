@@ -21,6 +21,8 @@ scanner:
   minimum_size: 232MiB
   skip_nfo_dir: yes
   manual: yes
+  # 扫描影片文件时，使用索引文件跳过已整理的影片 （避免重复整理）
+  ignore_file_in_index: true
 ################################
 network:
   # 设置代理服务器地址，支持 http, socks5/socks5h 代理，比如'http://127.0.0.1:1080'
@@ -72,7 +74,9 @@ summarizer:
   move_files: true
 
   # 路径相关的选项
-  path: 
+  path:
+    # 以整理文件的索引文件，存放在input_directory中
+    summarizer_index_file: 'summarizer_index.txt'
     # 存放影片、封面等文件的文件夹路径
     output_folder_pattern: '#整理完成/{actress}/[{num}] {title}'
     # 影片、封面、nfo信息文件等的文件名将基于下面的规则来创建
