@@ -9,7 +9,7 @@ from javsp.func import *
 from javsp.avid import guess_av_type
 from javsp.config import Cfg, CrawlerID
 from javsp.datatype import MovieInfo, GenreMap
-from javsp.chromium import get_browsers_cookies
+from javsp.chromium import get_browsers_cookies, get_cookiecloud_cookies
 
 
 # 初始化Request实例。使用scraper绕过CloudFlare后，需要指定网页语言，否则可能会返回其他语言网页，影响解析
@@ -35,7 +35,10 @@ def get_html_wrapper(url):
             # 仅在需要时去读取Cookies
             if 'cookies_pool' not in globals():
                 try:
-                    cookies_pool = get_browsers_cookies()
+                    if Cfg().other.cookiecloud.enabled:
+                        cookies_pool = get_cookiecloud_cookies()
+                    else:
+                        cookies_pool = get_browsers_cookies()
                 except (PermissionError, OSError) as e:
                     logger.warning(f"无法从浏览器Cookies文件获取JavDB的登录凭据({e})，可能是安全软件在保护浏览器Cookies文件", exc_info=True)
                     cookies_pool = []
@@ -71,7 +74,6 @@ def get_html_wrapper(url):
         raise SiteBlocked(block_msg)
     else:
         raise WebsiteError(f'JavDB: {r.status_code} 非预期状态码: {url}')
-
 
 def get_user_info(site, cookies):
     """获取cookies对应的JavDB用户信息"""
@@ -134,6 +136,7 @@ def parse_data(movie: MovieInfo):
         raise MovieDuplicateError(__name__, movie.dvdid, match_count)
 
     container = html2.xpath("/html/body/section/div/div[@class='video-detail']")[0]
+
     info = container.xpath("//nav[@class='panel movie-panel-info']")[0]
     title = container.xpath("h2/strong[@class='current-title']/text()")[0]
     show_orig_title = container.xpath("//a[contains(@class, 'meta-link') and not(contains(@style, 'display: none'))]")

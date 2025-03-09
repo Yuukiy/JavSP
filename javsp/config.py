@@ -210,10 +210,16 @@ class Translator(BaseConfig):
     engine: TranslateEngine = Field(..., discriminator='name')
     fields: TranslateField
 
+class CookieCloud(BaseConfig):
+    enabled: bool = False
+    url: str | None = None
+    uuid: str | None = None
+    passwd: str | None = None
 class Other(BaseConfig):
     interactive: bool
     check_update: bool
     auto_update: bool
+    cookiecloud: CookieCloud
 
 def get_config_source():
     parser = ArgumentParser(prog='JavSP', description='汇总多站点数据的AV元数据刮削器', formatter_class=RawTextHelpFormatter)

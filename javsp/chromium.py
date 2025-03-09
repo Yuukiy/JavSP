@@ -1,5 +1,6 @@
 """解析Chromium系浏览器Cookies的相关函数"""
 import os
+import re
 import sys
 import json
 import base64
@@ -8,8 +9,11 @@ import logging
 from glob import glob
 from shutil import copyfile
 from datetime import datetime
+from PyCookieCloud import PyCookieCloud
 
-__all__ = ['get_browsers_cookies']
+from javsp.config import Cfg
+
+__all__ = ['get_browsers_cookies', 'get_cookiecloud_cookies']
 
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -29,6 +33,40 @@ class Decrypter():
         plaintext = cipher.decrypt_and_verify(ciphertext, tag).decode('utf-8')
         return plaintext
 
+def filter_records(all_records, decrypter=None, time_convert=True):
+    now = datetime.now()
+    records = {}
+    for host_key, name, encrypted_value, expires_utc in all_records:
+        d = records.setdefault(host_key, {})
+        # 只提取尚在有效期内的Cookies
+        expires = convert_chrome_utc(expires_utc) if time_convert else datetime.fromtimestamp(int(expires_utc))
+        if expires > now:
+            if decrypter:
+                d[name] = decrypter.decrypt(encrypted_value)
+            else:
+                d[name] = encrypted_value
+    return records
+
+def get_cookiecloud_cookies(host_pattern='javdb%.com'):
+    cookiecloud = PyCookieCloud(
+        Cfg().other.cookiecloud.url, 
+        Cfg().other.cookiecloud.uuid,
+        Cfg().other.cookiecloud.passwd
+    )
+    cookiecloud.get_the_key()
+    decrypted_data = cookiecloud.get_decrypted_data()
+    regex_host_pattern = host_pattern.replace('.', r'\.').replace('%', '.*')
+    records = []
+    for domain, cookies in decrypted_data.items():
+        if re.match(regex_host_pattern, domain):
+            for cookie in cookies:
+                records.append((cookie['domain'], cookie['name'], cookie['value'], cookie['expirationDate']))
+    records = filter_records(records, time_convert=False)
+    cookiecloud_cookies = []
+    for site, cookies in records.items():
+        entry = {'profile': 'CookieCloud', 'site': site, 'cookies': cookies}
+        cookiecloud_cookies.append(entry)
+    return cookiecloud_cookies
 
 def get_browsers_cookies():
     """获取系统上的所有Chromium系浏览器的JavDB的Cookies"""
@@ -134,7 +172,7 @@ def get_cookies(cookies_file, decrypter, host_pattern='javdb%.com'):
 
 
 if __name__ == "__main__":
-    all_cookies = get_browsers_cookies()
+    all_cookies = get_cookiecloud_cookies()
     for d in all_cookies:
         print('{:<20}{}'.format(d['profile'], d['site']))
 
