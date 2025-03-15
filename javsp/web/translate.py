@@ -24,11 +24,12 @@ logger = logging.getLogger(__name__)
 def translate_movie_info(info: MovieInfo):
     """根据配置翻译影片信息"""
     # 翻译标题
-    if info.title and Cfg().translator.fields.title and info.ori_title is None:
+    if info.title and Cfg().translator.fields.title:
         result = translate(info.title, Cfg().translator.engine, info.actress)
         if 'trans' in result:
             info.ori_title = info.title
             info.title = result['trans']
+            print("翻译标题",info.ori_title,info.title)
             # 如果有的话，附加断句信息
             if 'orig_break' in result:
                 setattr(info, 'ori_title_break', result['orig_break'])
@@ -44,9 +45,12 @@ def translate_movie_info(info: MovieInfo):
             # 只有翻译过plot的影片才可能需要ori_plot属性，因此在运行时动态添加，而不添加到类型定义里
             setattr(info, 'ori_plot', info.plot)
             info.plot = result['trans']
+            print("翻译简介", info.plot)
         else:
             logger.error('翻译简介时出错: ' + result['error'])
             return False
+
+
     return True
 
 def translate(texts, engine: Union[
@@ -179,7 +183,7 @@ def google_trans(texts, to='zh_CN'):
     # API: https://www.jianshu.com/p/ce35d89c25c3
     # client参数的选择: https://github.com/lmk123/crx-selection-translate/issues/223#issue-184432017
     global _google_trans_wait
-    url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=auto&tl={to}&q={texts}"
+    url = f"https://translate.google.com.hk/translate_a/single?client=gtx&dt=t&dj=1&ie=UTF-8&sl=ja&tl=zh_CN&q={texts}"
     proxies = read_proxy()
     r = requests.get(url, proxies=proxies)
     while r.status_code == 429:
@@ -191,6 +195,7 @@ def google_trans(texts, to='zh_CN'):
     if r.status_code == 200:
         result = r.json()
     else:
+        print(r.reason)
         result = {'error_code': r.status_code, 'error_msg': r.reason}
     time.sleep(4) # Google翻译的API有QPS限制，因此需要等待一段时间
     return result

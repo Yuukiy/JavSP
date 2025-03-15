@@ -142,12 +142,12 @@ class Movie:
     @cached_property
     def hard_sub(self) -> bool:
         """影片文件带有内嵌字幕"""
-        return 'C' in self.attr_str
+        return 'C' in self.attr_str.upper()
 
     @cached_property
     def uncensored(self) -> bool:
         """影片文件是无码流出/无码破解版本（很多种子并不严格区分这两种，故这里也不进一步细分）"""
-        return 'U' in self.attr_str
+        return 'U' in self.attr_str.upper()
 
     @cached_property
     def attr_str(self) -> str:

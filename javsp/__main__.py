@@ -427,8 +427,7 @@ def RunNormalMode(all_movies):
         """检查一个整理步骤的结果，并负责更新tqdm的进度"""
         if result:
             inner_bar.update()
-        else:
-            raise Exception(msg + '\n')
+
 
     outer_bar = tqdm(all_movies, desc='整理影片', ascii=True, leave=False)
     total_step = 6
@@ -489,7 +488,9 @@ def RunNormalMode(all_movies):
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'
-                    os.mkdir(extrafanartdir)
+                    # [修复bug] 不存在才创建
+                    if not os.path.exists(extrafanartdir):
+                        os.mkdir(extrafanartdir)
                     for (id, pic_url) in enumerate(movie.info.preview_pics):
                         inner_bar.set_description(f"Downloading extrafanart {id} from url: {pic_url}")
                                                                                                                                 
