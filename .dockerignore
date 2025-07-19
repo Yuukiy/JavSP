@@ -4,3 +4,5 @@
 .vscode/
 .devcontainer/
 **/*.log
+.venv/
+__pypackages__/

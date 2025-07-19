@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JavSP Logs</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        document.addEventListener('DOMContentLoaded', (event) => {
+            var socket = io();
+            socket.on('log', function(msg) {
+                var log_div = document.getElementById('log');
+                log_div.innerHTML += msg.data + '<br>';
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>JavSP Logs</h1>
+    <div id="log"></div>
+</body>
+</html>

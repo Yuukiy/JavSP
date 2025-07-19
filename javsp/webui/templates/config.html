@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JavSP Config</title>
+</head>
+<body>
+    <h1>JavSP Config</h1>
+    <form method="post">
+        <label for="input_directory">Input Directory:</label><br>
+        <input type="text" id="input_directory" name="scanner.input_directory" value="{{ config['scanner']['input_directory'] }}"><br>
+        <label for="output_folder_pattern">Output Folder Pattern:</label><br>
+        <input type="text" id="output_folder_pattern" name="summarizer.path.output_folder_pattern" value="{{ config['summarizer']['path']['output_folder_pattern'] }}"><br><br>
+        <input type="submit" value="Save">
+    </form>
+    <form action="/scrape" method="post">
+        <input type="submit" value="Scrape">
+    </form>
+</body>
+</html>
