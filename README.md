@@ -91,3 +91,30 @@
 ---
 
 ![Star History Chart](https://api.star-history.com/svg?repos=Yuukiy/JavSP&type=Date)
+
+## Docker 部署
+
+以下示例展示了如何使用 Docker 运行 JavSP。如果你对容器不熟悉，也可以使用随项目附带的 `docker-compose.yml` 一键启动。
+
+### 1. 构建镜像
+
+```bash
+docker build -t javsp:latest .
+```
+
+### 2. 运行容器（最简示例）
+
+```bash
+docker run --rm \
+  -v $(pwd)/video:/video:ro \
+  -v $(pwd)/output:/output \
+  javsp:latest
+```
+
+### 3. 使用 docker-compose（推荐）
+
+```bash
+docker compose up -d
+```
+
+运行结束后，处理后的影片以及生成的元数据会出现在 `output` 目录下。你可以通过修改 `config.yml` 或传递命令行参数来进一步控制 JavSP 的行为。

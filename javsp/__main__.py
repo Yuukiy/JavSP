@@ -10,6 +10,7 @@ from pydantic_extra_types.pendulum_dt import Duration
 import requests
 import threading
 from typing import Dict, List
+from pathlib import Path  # 添加用于环境变量目录解析的Path
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -590,6 +591,24 @@ def entry():
     except ValidationError as e:
         print(e.errors())
         exit(1)
+
+    # 读取环境变量以方便在 Docker 中配置输入输出目录
+    input_dir_env = os.getenv('INPUT_DIR')
+    if input_dir_env:
+        # 更新配置中的扫描目录
+        try:
+            Cfg().scanner.input_directory = Path(input_dir_env)
+            logger.debug(f"已从环境变量 INPUT_DIR 设置扫描目录: {input_dir_env}")
+        except Exception as e:
+            logger.error(f"环境变量 INPUT_DIR 无效: {input_dir_env}: {e}")
+
+    output_dir_env = os.getenv('OUTPUT_DIR')
+    if output_dir_env:
+        # 按演员中文名分类存储
+        # 仅保留演员一级文件夹，文件名保持原有命名规则（由basename_pattern控制）
+        pattern = os.path.join(output_dir_env.rstrip('/'), '{actress}')
+        Cfg().summarizer.path.output_folder_pattern = pattern
+        logger.debug(f"已从环境变量 OUTPUT_DIR 设置输出目录模板: {pattern}")
 
     global actressAliasMap
     if Cfg().crawler.normalize_actress_name:
