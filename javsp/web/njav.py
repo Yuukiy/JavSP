@@ -11,7 +11,7 @@ from javsp.datatype import MovieInfo
 
 
 logger = logging.getLogger(__name__)
-base_url = 'https://njav.tv/ja'
+base_url = 'https://123av.com/ja'
 
 def search_video(movie: MovieInfo):
     id_uc = movie.dvdid

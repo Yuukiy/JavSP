@@ -214,6 +214,7 @@ class Other(BaseConfig):
     interactive: bool
     check_update: bool
     auto_update: bool
+    auto_exit: bool
 
 def get_config_source():
     parser = ArgumentParser(prog='JavSP', description='汇总多站点数据的AV元数据刮削器', formatter_class=RawTextHelpFormatter)

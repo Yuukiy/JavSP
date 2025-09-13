@@ -56,7 +56,7 @@ def parse_data(movie: MovieInfo):
     # FC2没有制作商和发行商的区分，作为个人市场，影片页面的'by'更接近于制作商
     producer = container.xpath("//li[text()='by ']/a/text()")[0]
     genre = container.xpath("//a[@class='tag tagTag']/text()")
-    date_str = container.xpath("//div[@class='items_article_Releasedate']/p/text()")[0]
+    date_str = container.xpath("//div[@class='items_article_softDevice']/p/text()")[0]
     publish_date = date_str[-10:].replace('/', '-')  # '販売日 : 2017/11/30'
     preview_pics = container.xpath("//ul[@data-feed='sample-images']/li/a/@href")
 
@@ -95,7 +95,7 @@ def parse_data(movie: MovieInfo):
 if __name__ == "__main__":
     import pretty_errors
     pretty_errors.configure(display_link=True)
-    logger.root.handlers[1].level = logging.DEBUG
+    #logger.root.handlers[1].level = logging.DEBUG
 
     movie = MovieInfo('FC2-718323')
     try:
