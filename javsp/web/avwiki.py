@@ -37,8 +37,9 @@ def parse_data(movie: MovieInfo):
     body = html.xpath("//section[@class='article-body']")[0]
     title = body.xpath("div/p/text()")[0]
     title = title.replace(f"【{movie.dvdid}】", '')
-    cite_url = body.xpath("div/cite/a/@href")[0]
-    cite_url = cite_url.split('?aff=')[0]
+    #cite_url = body.xpath("div/cite/a/@href")[0]
+    #cite_url = cite_url.split('?aff=')[0]
+    #頁面已經沒有cite類，上兩行會引發錯誤，其他地方也沒cite_url變數
     info = body.xpath("dl[@class='dltable']")[0]
     dt_txt_ls, dd_tags = info.xpath("dt/text()"), info.xpath("dd")
     data = {}
