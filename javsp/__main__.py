@@ -4,6 +4,7 @@ import sys
 import json
 import time
 import logging
+from sys import platform
 from PIL import Image
 from pydantic import ValidationError
 from pydantic_extra_types.pendulum_dt import Duration
@@ -419,7 +420,115 @@ def process_poster(movie: Movie):
             fanart_cropped = add_label_to_poster(fanart_cropped, SUBTITLE_MARK_FILE, LabelPostion.BOTTOM_RIGHT)
         if movie.uncensored:
             fanart_cropped = add_label_to_poster(fanart_cropped, UNCENSORED_MARK_FILE, LabelPostion.BOTTOM_LEFT)
+
+    # 在保存前检查目标路径是否为目录，如果是则删除
+    import shutil
+    if os.path.exists(movie.poster_file) and os.path.isdir(movie.poster_file):
+        shutil.rmtree(movie.poster_file)  # 删除整个目录树
+
     fanart_cropped.save(movie.poster_file)
+
+    # 生成文件夹缩略图 (folder.jpg) - 根据配置决定是否生成
+    if Cfg().summarizer.cover.create_folder_thumbnail:
+        # 这个缩略图会被 Windows/macOS 等系统用作文件夹图标
+        folder_dir = os.path.dirname(movie.poster_file)
+        # 清理路径，去除末尾可能的错误字符
+        folder_dir = folder_dir.rstrip('（').rstrip()
+        folder_thumb_path = os.path.join(folder_dir, 'folder.jpg')
+
+        # 调试信息
+        logger.debug(f'文件夹路径: {folder_dir}')
+        logger.debug(f'缩略图路径: {folder_thumb_path}')
+
+        # 从配置读取缩略图大小
+        thumb_width, thumb_height = Cfg().summarizer.cover.folder_thumbnail_size
+        thumb_size = (thumb_width, thumb_height)
+
+        # 创建缩略图 - 使用 resize 而不是 thumbnail 以确保正确的图片生成
+        folder_thumb = fanart_cropped.copy()
+        # 计算缩略图尺寸，保持宽高比
+        original_width, original_height = folder_thumb.size
+        aspect_ratio = original_width / original_height
+
+        # 根据目标尺寸和原始宽高比计算实际尺寸
+        if aspect_ratio > thumb_width / thumb_height:
+            # 原图更宽，以宽度为准
+            new_width = thumb_width
+            new_height = int(thumb_width / aspect_ratio)
+        else:
+            # 原图更高，以高度为准
+            new_height = thumb_height
+            new_width = int(thumb_height * aspect_ratio)
+
+        # 使用 resize 创建缩略图
+        folder_thumb = folder_thumb.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        # 调试信息
+        logger.debug(f'原始尺寸: {original_width}x{original_height}')
+        logger.debug(f'缩略图尺寸: {new_width}x{new_height}')
+
+        # 检查并删除已存在的文件夹封面（无论是目录还是文件）
+        if os.path.exists(folder_thumb_path):
+            if os.path.isdir(folder_thumb_path):
+                logger.debug(f'删除已存在的目录: {folder_thumb_path}')
+                shutil.rmtree(folder_thumb_path)
+            else:
+                logger.debug(f'删除已存在的文件: {folder_thumb_path}')
+                os.remove(folder_thumb_path)
+
+        # 确保父目录存在
+        if not os.path.exists(folder_dir):
+            logger.error(f'文件夹不存在: {folder_dir}')
+            return
+
+        # 保存文件夹缩略图 - 确保图片有内容再保存
+        if folder_thumb and folder_thumb.size[0] > 0 and folder_thumb.size[1] > 0:
+            try:
+                # 如果是 RGBA 模式，转换为 RGB 以便保存为 JPEG
+                if folder_thumb.mode == 'RGBA':
+                    # 创建白色背景
+                    background = Image.new('RGB', folder_thumb.size, (255, 255, 255))
+                    background.paste(folder_thumb, mask=folder_thumb.split()[3])
+                    folder_thumb = background
+                elif folder_thumb.mode != 'RGB':
+                    folder_thumb = folder_thumb.convert('RGB')
+
+                folder_thumb.save(folder_thumb_path, 'JPEG', quality=85, optimize=True)
+
+                # 验证文件是否成功保存
+                if os.path.exists(folder_thumb_path):
+                    file_size = os.path.getsize(folder_thumb_path)
+                    logger.debug(f'已生成文件夹封面: {folder_thumb_path} (大小: {file_size} bytes)')
+                    if file_size == 0:
+                        logger.error(f'文件夹封面保存失败，文件大小为0: {folder_thumb_path}')
+            except Exception as e:
+                logger.error(f'保存文件夹封面时出错: {e}')
+        else:
+            logger.error(f'缩略图生成失败或尺寸无效')
+
+        # 为 Windows 生成 desktop.ini 文件，使文件夹显示自定义图标
+        if platform == 'win32':
+            desktop_ini_path = os.path.join(folder_dir, 'desktop.ini')
+            desktop_ini_content = """[.ShellClassInfo]
+IconResource=folder.jpg,0
+[ViewState]
+Mode=
+Vid=
+FolderType=Pictures
+"""
+            # 写入 desktop.ini 文件
+            with open(desktop_ini_path, 'w', encoding='utf-8') as f:
+                f.write(desktop_ini_content)
+
+            # 设置文件和文件夹属性（隐藏 desktop.ini，设置文件夹为系统文件夹）
+            import ctypes
+            FILE_ATTRIBUTE_HIDDEN = 0x02
+            FILE_ATTRIBUTE_SYSTEM = 0x04
+            # 隐藏 desktop.ini
+            ctypes.windll.kernel32.SetFileAttributesW(desktop_ini_path, FILE_ATTRIBUTE_HIDDEN)
+            # 设置文件夹为系统文件夹（这样 Windows 会读取 desktop.ini）
+            folder_attrs = ctypes.windll.kernel32.GetFileAttributesW(folder_dir)
+            ctypes.windll.kernel32.SetFileAttributesW(folder_dir, folder_attrs | FILE_ATTRIBUTE_SYSTEM)
 
 def RunNormalMode(all_movies):
     """普通整理模式"""

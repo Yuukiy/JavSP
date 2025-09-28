@@ -156,6 +156,8 @@ class CoverSummarize(BaseConfig):
     basename_pattern: str
     highres: bool
     add_label: bool
+    create_folder_thumbnail: bool = True
+    folder_thumbnail_size: list[int] = [300, 450]
     crop: CoverCrop
 
 class FanartSummarize(BaseConfig):

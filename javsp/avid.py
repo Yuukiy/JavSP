@@ -4,10 +4,27 @@ import re
 from pathlib import Path
 
 
-__all__ = ['get_id', 'get_cid', 'guess_av_type']
+__all__ = ['get_id', 'get_cid', 'guess_av_type', 'get_special_suffix']
 
 
 from javsp.config import Cfg
+
+def get_special_suffix(filepath_str: str) -> tuple:
+    """从文件名中提取特殊后缀（UC/U/C）并返回属性标识
+
+    Returns:
+        tuple: (is_uncensored, has_chinese_subtitle)
+    """
+    filepath = Path(filepath_str)
+    filename = filepath.stem.upper()
+
+    # 检查无码标识 (UC 或 U)
+    is_uncensored = bool(re.search(r'[-_](UC|U)$', filename, re.I))
+
+    # 检查中文字幕标识 (C 或 UC 包含 C)
+    has_chinese_subtitle = bool(re.search(r'[-_](UC|C)$', filename, re.I))
+
+    return is_uncensored, has_chinese_subtitle
 
 def get_id(filepath_str: str) -> str:
     """从给定的文件路径中提取番号（DVD ID）"""
@@ -15,6 +32,26 @@ def get_id(filepath_str: str) -> str:
     # 通常是接收文件的路径，当然如果是普通字符串也可以
     ignore_pattern = re.compile('|'.join(Cfg().scanner.ignored_id_pattern))
     norm = ignore_pattern.sub('', filepath.stem).upper()
+
+    # 处理特殊格式: 网站@番号_分集_分辨率.扩展名 (如 4k2.com@sivr00441_1_8k.mp4)
+    # 移除网站前缀和@符号
+    if '@' in norm:
+        norm = norm.split('@', 1)[1]
+
+    # 处理特殊后缀标识 (如 MIDA-234-UC, MIDA-234-U, MIDA-234-C)
+    # 这些后缀通常表示: UC=无码, U=无码, C=中文字幕
+    # 先移除这些后缀以便正确识别番号，但保留信息供后续使用
+    suffix_pattern = r'[-_](UC|U|C)$'
+    suffix_match = re.search(suffix_pattern, norm, re.I)
+    if suffix_match:
+        # 移除后缀，但只是为了番号识别
+        norm = re.sub(suffix_pattern, '', norm, flags=re.I)
+
+    # 将番号中的00替换为-（如 sivr00441 -> sivr-441）
+    # 但要保留分集和分辨率信息在后面处理
+    match = re.match(r'^([A-Z]+)00(\d+)(?:_.*)?$', norm, re.I)
+    if match:
+        norm = match.group(1) + '-' + match.group(2)
     if 'FC2' in norm:
         # 根据FC2 Club的影片数据，FC2编号为5-7个数字
         match = re.search(r'FC2[^A-Z\d]{0,5}(PPV[^A-Z\d]{0,5})?(\d{5,7})', norm, re.I)

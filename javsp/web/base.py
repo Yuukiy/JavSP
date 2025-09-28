@@ -235,7 +235,12 @@ def urlretrieve(url, filename=None, reporthook=None, headers=None):
 
 def download(url, output_path, desc=None):
     """下载指定url的资源"""
-    # 支持“下载”本地资源，以供fc2fan的本地镜像所使用
+    # 在下载前检查目标路径是否为目录，如果是则删除
+    import os
+    if os.path.exists(output_path) and os.path.isdir(output_path):
+        shutil.rmtree(output_path)  # 删除整个目录树
+
+    # 支持"下载"本地资源，以供fc2fan的本地镜像所使用
     if not url.startswith('http'):
         start_time = time.time()
         shutil.copyfile(url, output_path)

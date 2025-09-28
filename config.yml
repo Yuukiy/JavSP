@@ -20,7 +20,7 @@ scanner:
   # 格式要求：https://docs.pydantic.dev/2.0/usage/types/bytesize/
   minimum_size: 232MiB
   skip_nfo_dir: yes
-  manual: yes
+  manual: no
 ################################
 network:
   # 设置代理服务器地址，支持 http, socks5/socks5h 代理，比如'http://127.0.0.1:1080'
@@ -30,7 +30,7 @@ network:
   proxy_free:
     avsox: 'https://avsox.click'
     javbus: 'https://www.seedmm.help'
-    javdb: 'https://javdb368.com'
+    javdb: 'https://javdb.com'
     javlib: 'https://www.y78k.com'
   # 网络问题导致抓取数据失败时的重试次数，通常3次就差不多了
   retry: 3
@@ -42,7 +42,8 @@ crawler:
   # 要使用的爬虫列表（汇总数据时从前到后进行）
   # airav avsox avwiki fanza fc2 fc2fan javbus javdb javlib javmenu jav321 mgstage prestige arzon arzon_iv
   selection:
-    normal: [airav, avsox, javbus, javdb, javlib, jav321, mgstage, prestige]
+    #normal: [airav, avsox, javbus, javdb, javlib, jav321, mgstage, prestige]
+    normal: [javdb]
     fc2: [fc2, avsox, javdb, javmenu, fc2ppvdb]
     cid: [fanza]
     getchu: [dl_getchu]
@@ -118,8 +119,12 @@ summarizer:
     basename_pattern: "poster"
     # 尽可能下载高清封面？（高清封面大小约 8-10 MiB，远大于普通封面，如果你的网络条件不佳，会降低整理速度）
     highres: true
-    # 在封面图上添加水印（标签），例如“字幕”
+    # 在封面图上添加水印（标签），例如"字幕"
     add_label: false
+    # 生成文件夹缩略图 (folder.jpg)，用作文件夹封面图标
+    create_folder_thumbnail: true
+    # 文件夹缩略图的大小 (宽x高)
+    folder_thumbnail_size: [300, 450]
     crop:
       # 要使用图像识别来裁剪的番号系列需要匹配的正则表达式
       on_id_pattern:
@@ -143,7 +148,7 @@ summarizer:
 
   extra_fanarts:
     # 是否下载剧照？
-    enabled: true
+    enabled: false
     # 间隔的两次封面爬取请求之间应该间隔多久
     scrap_interval: PT1.5S
 

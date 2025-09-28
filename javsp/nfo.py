@@ -109,6 +109,15 @@ def write_nfo(info: MovieInfo, nfo_file):
             else:
                 nfo.append(E.actor(E.name(i)))
 
+    # 在保存前检查目标路径是否为目录或文件，如果存在则删除
+    import os
+    import shutil
+    if os.path.exists(nfo_file):
+        if os.path.isdir(nfo_file):
+            shutil.rmtree(nfo_file)  # 删除整个目录树
+        else:
+            os.remove(nfo_file)  # 删除文件
+
     with open(nfo_file, 'wt', encoding='utf-8') as f:
         f.write(tostring(nfo, encoding='unicode', pretty_print=True,
                          doctype='<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>'))

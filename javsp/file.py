@@ -99,6 +99,53 @@ def scan_movies(root: str) -> List[Movie]:
             continue
         # 提取分片信息（如果正则替换成功，只会剩下单个小写字符）。相关变量都要使用同样的列表生成顺序
         basenames = [os.path.basename(i) for i in files]
+
+        # 尝试智能分片识别
+        file_info = []
+        for filepath in files:
+            basename = os.path.basename(filepath).lower()
+            # 移除网站前缀 (如 4k2.com@)
+            if '@' in basename:
+                basename = basename.split('@', 1)[1]
+            # 尝试多种模式匹配分片编号
+            slice_num = None
+
+            # 模式: 支持多种分片格式
+            patterns = [
+                r'[-_](\d+)[-_]\d+k\.', # 匹配 sivr00441_1_8k.mp4 格式 (先匹配更精确的)
+                r'[-_\s]+(?:cd)?(\d+)[-_\s]*(?:_\d+k)?\.', # 匹配 -1, _1, -CD1, _1_8k 等
+                r'[-_](\d+)\.mp4$', # 匹配简单的 -2.mp4 格式
+                r'[-_\s]+([a-z])[-_\s]*\.', # 匹配 -a, _a 等
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, basename)
+                if match:
+                    slice_id = match.group(1)
+                    # 如果是数字，直接使用；如果是字母，转换为对应的数字
+                    if slice_id.isdigit():
+                        slice_num = int(slice_id)
+                    else:
+                        slice_num = ord(slice_id) - ord('a') + 1
+                    break
+
+            if slice_num is not None:
+                file_info.append((filepath, slice_num))
+                logger.debug(f"识别到分片: {basename} -> 编号 {slice_num}")
+
+        # 如果智能识别成功，使用新的逻辑
+        if len(file_info) == len(files):
+            file_info.sort(key=lambda x: x[1])
+            numbers = [info[1] for info in file_info]
+
+            # 检查编号是否连续（允许从0或1开始）
+            min_num = min(numbers)
+            if min_num in (0, 1) and numbers == list(range(min_num, min_num + len(numbers))):
+                logger.debug(f"智能分片识别成功: {avid} -> {numbers}")
+                dic[avid] = [info[0] for info in file_info]
+                continue
+
+        # 如果智能识别失败，回退到原始逻辑
         prefix = os.path.commonprefix(basenames)
         try:
             pattern_expr = re_escape(prefix) + r'\s*([a-z\d])\s*'
