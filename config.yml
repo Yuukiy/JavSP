@@ -15,7 +15,7 @@ scanner:
   # 哪些后缀的文件应当视为影片？
   filename_extensions: [.3gp, .avi, .f4v, .flv, .iso, .m2ts, .m4v, .mkv, .mov, .mp4, .mpeg, .rm, .rmvb, .ts, .vob, .webm, .wmv, .strm, .mpg]
   # 扫描影片文件时忽略指定的文件夹
-  ignored_folder_name_pattern: ['^\.', '^#recycle$', '^#整理完成$', '^#不要扫描$']
+  ignored_folder_name_pattern: ['^\.', '^#recycle$', '^#整理完成$','^#未整理$', '^#不要扫描$', 'System Volume Information','\$RECYCLE.BIN']
   # 匹配番号时忽略小于指定大小的文件
   # 格式要求：https://docs.pydantic.dev/2.0/usage/types/bytesize/
   minimum_size: 232MiB
@@ -29,7 +29,7 @@ network:
   # 各个站点的免代理地址。地址失效时软件会自动尝试获取新地址，你也可以手动设置
   proxy_free:
     avsox: 'https://avsox.click'
-    javbus: 'https://www.seedmm.help'
+    javbus: 'https://www.seedmm.help' #已失效，自己开个代理吧
     javdb: 'https://javdb368.com'
     javlib: 'https://www.y78k.com'
   # 网络问题导致抓取数据失败时的重试次数，通常3次就差不多了

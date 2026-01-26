@@ -26,12 +26,56 @@ from javsp.print import TqdmOut
 from javsp.cropper import Cropper, get_cropper
 
 
-# 将StreamHandler的stream修改为TqdmOut，以与Tqdm协同工作
-root_logger = logging.getLogger()
-for handler in root_logger.handlers:
-    if type(handler) == logging.StreamHandler:
-        handler.stream = TqdmOut
+def setup_logging():
+    """配置日志系统，同时输出到控制台和文件"""
+    from javsp.lib import resource_path
+    
+    # 清除现有的handlers，避免重复
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()
+    
+    # 设置日志级别
+    root_logger.setLevel(logging.INFO)
+    
+    # 创建日志格式
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # 配置控制台输出（重定向到TqdmOut）
+    console_handler = logging.StreamHandler(TqdmOut)
+    console_handler.setLevel(logging.INFO)  # 控制台只显示INFO及以上级别
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+    
+    # 配置文件输出到JavSP.log
+    log_file = os.path.join(resource_path('.'), 'JavSP.log')
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)  # 文件记录DEBUG及以上所有级别
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+    
+    # 为filemove logger配置独立的文件处理器
+    filemove_handler = logging.FileHandler(
+        os.path.join(resource_path('.'), 'FileMove.log'),
+        encoding='utf-8'
+    )
+    filemove_handler.setLevel(logging.DEBUG)
+    filemove_handler.setFormatter(formatter)
+    
+    filemove_logger = logging.getLogger('filemove')
+    filemove_logger.addHandler(filemove_handler)
+    filemove_logger.setLevel(logging.DEBUG)
+    # 防止日志向上传播到root logger造成重复
+    filemove_logger.propagate = False
+    
+    print(f"日志配置完成: 控制台输出 + 文件输出到 {log_file}")
 
+# 设置日志系统
+setup_logging()
+
+# 获取主logger
 logger = logging.getLogger('main')
 
 
@@ -45,7 +89,7 @@ from javsp.web.base import download
 from javsp.web.exceptions import *
 from javsp.web.translate import translate_movie_info
 
-from javsp.config import Cfg, CrawlerID
+from javsp.config import Cfg, CrawlerID, UseJavDBCover
 from javsp.prompt import prompt
 
 actressAliasMap = {}
@@ -523,9 +567,9 @@ def RunNormalMode(all_movies):
             if movie != all_movies[-1] and Cfg().crawler.sleep_after_scraping > Duration(0):
                 time.sleep(Cfg().crawler.sleep_after_scraping.total_seconds())
             return_movies.append(movie)
-        # except Exception as e:
-        #     logger.debug(e, exc_info=True)
-        #     logger.error(f'整理失败: {e}')
+        except Exception as e:
+            # logger.debug(e, exc_info=True)
+            logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
     return return_movies

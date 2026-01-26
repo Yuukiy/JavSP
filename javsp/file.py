@@ -36,6 +36,7 @@ def scan_movies(root: str) -> List[Movie]:
         for name in dirnames.copy():
             if ignore_folder_name_pattern.match(name):
                 dirnames.remove(name)
+                continue # 直接跳过,防止因为没有访问权限到下面又报错
             # 移除有nfo的文件夹
             if Cfg().scanner.skip_nfo_dir:
                 if any(file.lower().endswith(".nfo") for file in os.listdir(os.path.join(dirpath, name)) if isinstance(file, str)):
