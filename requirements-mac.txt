@@ -1,0 +1,3 @@
+requirements-mac.txt: macOS依赖说明
+# macOS 依赖（Homebrew）
+# 详见 README.md 或 requirements.txt
