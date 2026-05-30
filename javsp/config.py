@@ -16,7 +16,7 @@ class Scanner(BaseConfig):
     ignored_folder_name_pattern: List[str]
     minimum_size: ByteSize
     skip_nfo_dir: bool
-    manual: bool
+    manual: bool = False
 
 class CrawlerID(str, Enum):
     airav = 'airav'
@@ -115,6 +115,7 @@ class Crawler(BaseConfig):
     sleep_after_scraping: Duration
     use_javdb_cover: UseJavDBCover
     normalize_actress_name: bool
+    javdb_cookie: str | None = None
 
 class MovieDefault(BaseConfig):
     title: str

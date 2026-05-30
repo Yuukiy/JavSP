@@ -25,6 +25,17 @@ else:
     base_url = str(Cfg().network.proxy_free[CrawlerID.javdb])
 
 
+def _parse_cookie_string(cookie_str):
+    """解析 'key1=val1; key2=val2' 格式的Cookie字符串为字典"""
+    cookie_dict = {}
+    for item in cookie_str.split(';'):
+        item = item.strip()
+        if '=' in item:
+            key, value = item.split('=', 1)
+            cookie_dict[key.strip()] = value.strip()
+    return cookie_dict
+
+
 def get_html_wrapper(url):
     """包装外发的request请求并负责转换为可xpath的html，同时处理Cookies无效等问题"""
     global request, cookies_pool
@@ -44,11 +55,22 @@ def get_html_wrapper(url):
                     cookies_pool = []
             if len(cookies_pool) > 0:
                 item = cookies_pool.pop()
-                # 更换Cookies时需要创建新的request实例，否则cloudscraper会保留它内部第一次发起网络访问时获得的Cookies
+                # 更换Cookies时需要创建新的request实例，否则scraper会保留它内部第一次发起网络访问时获得的Cookies
                 request = Request(use_scraper=True)
+                request.proxies = {}  # JavDB直连不走代理
                 request.cookies = item['cookies']
+                if request.scraper:
+                    request.scraper.cookies.update(request.cookies)
                 cookies_source = (item['profile'], item['site'])
                 logger.debug(f'未携带有效Cookies而发生重定向，尝试更换Cookies为: {cookies_source}')
+                return get_html_wrapper(url)
+            elif cfg_cookie := Cfg().crawler.javdb_cookie:
+                logger.debug('浏览器Cookies无效，尝试使用配置中的手动Cookie')
+                request = Request(use_scraper=True)
+                request.proxies = {}  # JavDB直连不走代理
+                request.cookies = _parse_cookie_string(cfg_cookie)
+                if request.scraper:
+                    request.scraper.cookies.update(request.cookies)
                 return get_html_wrapper(url)
             else:
                 raise CredentialError('JavDB: 所有浏览器Cookies均已过期')
@@ -77,6 +99,8 @@ def get_user_info(site, cookies):
     """获取cookies对应的JavDB用户信息"""
     try:
         request.cookies = cookies
+        if request.scraper:
+            request.scraper.cookies.update(request.cookies)
         html = request.get_html(f'https://{site}/users/profile')
     except Exception as e:
         logger.info('JavDB: 获取用户信息时出错')
@@ -114,24 +138,24 @@ def parse_data(movie: MovieInfo):
     match_count = len([i for i in ids if i == movie.dvdid.lower()])
     if match_count == 0:
         raise MovieNotFoundError(__name__, movie.dvdid, ids)
-    elif match_count == 1:
-        index = ids.index(movie.dvdid.lower())
-        new_url = movie_urls[index]
-        try:
-            html2 = get_html_wrapper(new_url)
-        except (SitePermissionError, CredentialError):
-            # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
-            box = html.xpath("//a[@class='box']")[index]
-            movie.url = new_url
-            movie.title = box.get('title')
-            movie.cover = box.xpath("div/img/@src")[0]
-            score_str = box.xpath("div[@class='score']/span/span")[0].tail
-            score = re.search(r'([\d.]+)分', score_str).group(1)
-            movie.score = "{:.2f}".format(float(score)*2)
-            movie.publish_date = box.xpath("div[@class='meta']/text()")[0].strip()
-            return
-    else:
-        raise MovieDuplicateError(__name__, movie.dvdid, match_count)
+    if match_count > 1:
+        logger.warning(f'JavDB: {movie.dvdid} 有 {match_count} 个重复搜索结果，使用第一个')
+
+    index = ids.index(movie.dvdid.lower())
+    new_url = movie_urls[index]
+    try:
+        html2 = get_html_wrapper(new_url)
+    except (SitePermissionError, CredentialError):
+        # 不开VIP不让看，过分。决定榨出能获得的信息，毕竟有时候只有这里能找到标题和封面
+        box = html.xpath("//a[@class='box']")[index]
+        movie.url = new_url
+        movie.title = box.get('title')
+        movie.cover = box.xpath("div/img/@src")[0]
+        score_str = box.xpath("div[@class='score']/span/span")[0].tail
+        score = re.search(r'([\d.]+)分', score_str).group(1)
+        movie.score = "{:.2f}".format(float(score)*2)
+        movie.publish_date = box.xpath("div[@class='meta']/text()")[0].strip()
+        return
 
     container = html2.xpath("/html/body/section/div/div[@class='video-detail']")[0]
     info = container.xpath("//nav[@class='panel movie-panel-info']")[0]

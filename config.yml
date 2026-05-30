@@ -25,7 +25,7 @@ scanner:
 network:
   # 设置代理服务器地址，支持 http, socks5/socks5h 代理，比如'http://127.0.0.1:1080'
   # null表示禁用代理
-  proxy_server: null
+  proxy_server: http://127.0.0.1:7897
   # 各个站点的免代理地址。地址失效时软件会自动尝试获取新地址，你也可以手动设置
   proxy_free:
     avsox: 'https://avsox.click'
@@ -62,6 +62,10 @@ crawler:
   use_javdb_cover: fallback
   # 是否统一女优艺名。启用时会尝试将女优的多个艺名统一成一个
   normalize_actress_name: true
+  # 手动设置JavDB的Cookie（浏览器Cookie读取失败时的备用方案）
+  # 格式示例: 'locale=zh; _jdb_session=xxxxx; remember_me_token=xxxxx'
+  # 注意: locale 必须设为 zh，否则 JavDB 返回英文页面导致xpath解析失败
+  javdb_cookie: null
 
 ################################
 # 配置整理时的命名规则

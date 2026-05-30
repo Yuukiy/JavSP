@@ -13,7 +13,7 @@ format = "v{base}.{distance}"
 
 [tool.poetry.dependencies]
 python = "<3.13,>=3.10"
-cloudscraper = "1.2.71"
+curl-cffi = "^0.15.0"
 colorama = "0.4.4"
 pillow = "10.2.0"
 pretty-errors = "1.2.19"

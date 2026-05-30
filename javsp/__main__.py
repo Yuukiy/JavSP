@@ -489,7 +489,7 @@ def RunNormalMode(all_movies):
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'
-                    os.mkdir(extrafanartdir)
+                    os.makedirs(extrafanartdir, exist_ok=True)
                     for (id, pic_url) in enumerate(movie.info.preview_pics):
                         inner_bar.set_description(f"Downloading extrafanart {id} from url: {pic_url}")
                                                                                                                                 
@@ -523,9 +523,9 @@ def RunNormalMode(all_movies):
             if movie != all_movies[-1] and Cfg().crawler.sleep_after_scraping > Duration(0):
                 time.sleep(Cfg().crawler.sleep_after_scraping.total_seconds())
             return_movies.append(movie)
-        # except Exception as e:
-        #     logger.debug(e, exc_info=True)
-        #     logger.error(f'整理失败: {e}')
+        except Exception as e:
+            logger.debug(e, exc_info=True)
+            logger.error(f'整理失败: {e}')
         finally:
             inner_bar.close()
     return return_movies
@@ -585,6 +585,13 @@ def error_exit(success, err_info):
 
 
 def entry():
+    # 设置日志格式（源码运行时默认没有日志配置）
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(name)s:%(lineno)d %(levelname)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        force=True,
+    )
     try:
         Cfg()
     except ValidationError as e:

@@ -21,8 +21,9 @@ for file in os.listdir('javsp/web'):
     if ext == '.py':
         includes.append('javsp.web.' + name)
 
-packages = [ 
-    'pendulum' # pydantic_extra_types depends on pendulum
+packages = [
+    'pendulum', # pydantic_extra_types depends on pendulum
+    'curl_cffi'
 ]
 
 build_exe = {
