@@ -489,7 +489,7 @@ def RunNormalMode(all_movies):
                 inner_bar.set_description('下载剧照')
                 if movie.info.preview_pics:
                     extrafanartdir = movie.save_dir + '/extrafanart'
-                    os.mkdir(extrafanartdir)
+                    os.makedirs(extrafanartdir, exist_ok=True)
                     for (id, pic_url) in enumerate(movie.info.preview_pics):
                         inner_bar.set_description(f"Downloading extrafanart {id} from url: {pic_url}")
                                                                                                                                 
@@ -523,9 +523,9 @@ def RunNormalMode(all_movies):
             if movie != all_movies[-1] and Cfg().crawler.sleep_after_scraping > Duration(0):
                 time.sleep(Cfg().crawler.sleep_after_scraping.total_seconds())
             return_movies.append(movie)
-        # except Exception as e:
-        #     logger.debug(e, exc_info=True)
-        #     logger.error(f'整理失败: {e}')
+        except Exception as e:
+            logger.debug(e, exc_info=True)
+            logger.error(f"整理失败: {e}")
         finally:
             inner_bar.close()
     return return_movies
@@ -585,6 +585,9 @@ def error_exit(success, err_info):
 
 
 def entry():
+    # 打包模式：切换工作目录到可执行文件所在目录，保证 data/ 等相对路径资源可找到
+    if getattr(sys, 'frozen', False):
+        os.chdir(os.path.dirname(sys.executable))
     try:
         Cfg()
     except ValidationError as e:
@@ -622,4 +625,7 @@ def entry():
     sys.exit(0)
 
 if __name__ == "__main__":
+    # PyInstaller frozen 模式必需：防止 spawn 子进程重新执行主程序导致 fork 炸弹
+    import multiprocessing
+    multiprocessing.freeze_support()
     entry()
