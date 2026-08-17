@@ -18,7 +18,8 @@ def re_escape(s: str) -> str:
 def resource_path(path: str) -> str:
     """获取一个随代码打包的文件在解压后的路径"""
     if getattr(sys, "frozen", False):
-        return path
+        # 打包后：资源与配置独立放置在可执行文件所在目录（与 Windows 版布局一致）
+        return str(Path(sys.executable).parent / path)
     else:
         path_joined = Path(__file__).parent.parent / path
         return str(path_joined)

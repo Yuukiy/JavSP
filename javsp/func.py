@@ -43,7 +43,10 @@ def select_folder(default_dir=''):
         exit(1)
     window = Tk()
     window.withdraw()
-    window.iconbitmap(resource_path('image/JavSP.ico'))
+    try:
+        window.iconbitmap(resource_path('image/JavSP.ico'))
+    except Exception:
+        pass  # macOS 的 tkinter 不支持 iconbitmap 设置 .ico
     path = filedialog.askdirectory(initialdir=default_dir)
     if path != '':
         return os.path.normpath(path)
@@ -173,7 +176,10 @@ def check_update(allow_check=True, auto_update=True):
         print('')
 
     # 使用pyinstaller打包exe时生成hook，运行时由该hook将版本信息注入到sys中
-    local_version = meta.version('javsp')
+    try:
+        local_version = meta.version('javsp')
+    except meta.PackageNotFoundError:
+        local_version = ''
     if local_version == "":
         return
     # 检查更新

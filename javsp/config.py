@@ -220,7 +220,8 @@ def get_config_source():
     parser.add_argument('-c', '--config', help='使用指定的配置文件')
     args, _ = parser.parse_known_args()
     sources = []
-    if args.config is None:
+    if args.config is None or not str(args.config).endswith(('.yml', '.yaml', '.json', '.toml')):
+        # 打包模式下多进程 bootstrap 可能注入杂音参数（如 -c 'from multiprocessing...')，过滤之
         args.config = resource_path('config.yml')
     sources.append(FileSource(file=args.config))
     sources.append(EnvSource(prefix='JAVSP_', allow_all=True))
